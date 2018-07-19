@@ -3,7 +3,6 @@
 #INCLUDE "TOPCONN.CH"
 
 
-//teste
 /*/
 ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
@@ -105,7 +104,6 @@ Static Function BRI14_01(_lFim)
 
 		IncProc()
 
-		//nTamLin := 193
 		nTamLin := 204
 		cLin    := Space(nTamLin)+cEOL
 		_nCont  := 0
@@ -279,19 +277,8 @@ Static Function BRI14_01(_lFim)
 			_cGrav := DTOC(dDataBase)
 			_cFil  := ZZ->E5_FILIAL
 
-			/*
-			_aArray := {_cDoc,_cCusto,_cCaixa,_cOrigem,_cData,_cTipo,_cClas,_cValor,_cHist,_cDocBx,_cTrCaixa,_cTrCusto,_cTrOrigem,_cStat,_cGrav,_cFil}
-			_nColI  := 1
-			_nColF  := 0
 
-			For F := 1 To Len(_aArray)
-			_nTam	:= Len(Alltrim(_aArray[F]))
-			_nColF  := (_nTam+1)
-			cCpo 	:= PADR(_aArray[F],_nTam)+";"
-			cLin 	:= Stuff(cLin,_nColI,_nColF,cCpo)						
-			_nColI  += _nColF
-			Next F
-			*/
+
 
 			cCpo 	:= PADR(_cDoc,11)+";"
 			cLin 	:= Stuff(cLin,01,12,cCpo)
@@ -379,8 +366,8 @@ Static Function ATUSX1()
 
 	cPerg := "BRI015"
 
-	//    	   Grupo/Ordem/Pergunta               /perg_spa /perg_eng/Variavel/Tipo/Tamanho/Decimal/Presel/GSC/Valid          /Var01     /Def01        /defspa1/defeng1/Cnt01/Var02/Def02               /Defspa2/defeng2/Cnt02/Var03/Def03  /defspa3/defeng3/Cnt03/Var04/Def04/defspa4/defeng4/Cnt04/Var05/Def05/deefspa5/defeng5/Cnt05/F3
-	U_CRIASX1(cPerg,"01","Data De              	   ?",""       ,""      ,"mv_ch1","D" ,08     ,0      ,0     ,"G",""        ,"MV_PAR01","              ",""     ,""     ,""   ,""   ,"                 ",""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""  ,"")
-	U_CRIASX1(cPerg,"02","Data Ate             	   ?",""       ,""      ,"mv_ch2","D" ,08     ,0      ,0     ,"G",""        ,"MV_PAR02","              ",""     ,""     ,""   ,""   ,"                 ",""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""  ,"")
+	//    	   Grupo/Ordem/Pergunta   /perg_spa /perg_eng/Variavel/Tipo/Tamanho/Decimal/Presel/GSC/Valid          /Var01     /Def01        /defspa1/defeng1/Cnt01/Var02/Def02               /Defspa2/defeng2/Cnt02/Var03/Def03  /defspa3/defeng3/Cnt03/Var04/Def04/defspa4/defeng4/Cnt04/Var05/Def05/deefspa5/defeng5/Cnt05/F3
+	U_CRIASX1(cPerg,"01","Data De     ?",""       ,""      ,"mv_ch1","D" ,08     ,0      ,0     ,"G",""        ,"MV_PAR01","              ",""     ,""     ,""   ,""   ,"                 ",""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""  ,"")
+	U_CRIASX1(cPerg,"02","Data Ate    ?",""       ,""      ,"mv_ch2","D" ,08     ,0      ,0     ,"G",""        ,"MV_PAR02","              ",""     ,""     ,""   ,""   ,"                 ",""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""  ,"")
 
 Return
