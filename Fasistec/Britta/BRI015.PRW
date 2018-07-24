@@ -63,6 +63,8 @@ Return
 
 Static Function BRI14_01(_lFim)
 
+	Local _aRateio := {}
+	Local _lPare   := .F.
 
 	Private cArqTxt := "\RELSYS\"+DTOS(DDATABASE)+".CSV"
 	Private nHdl    := fCreate(cArqTxt)
@@ -76,13 +78,14 @@ Static Function BRI14_01(_lFim)
 	Endif
 
 	If nHdl == -1
-		MsgAlert("O arquivo de nome "+cArqTxt+" nao pode ser executado! Verifique os parametros.","Atencao!")
+		MsgAlert("O arquivo de nome "+cArqTxt+" nao pode ser executado! Verifique os parâmetros.","Atencao!")
 		Return
 	Endif
 
 	Private nTamLin, cLin, cCpo
 
-	_cQ := " SELECT * FROM "+RetSqlName("SE5")+" A INNER JOIN "+RetSqlName("SZF")+ " B ON E5_FILIAL=ZF_FILIAL AND E5_BANCO=ZF_COD AND E5_AGENCIA=ZF_AGENCIA AND E5_CONTA=ZF_NUMCON "
+	_cQ := " SELECT * FROM "+RetSqlName("SE5")+" A "
+	_cQ += " INNER JOIN "+RetSqlName("SZF")+ " B ON E5_FILIAL=ZF_FILIAL AND E5_BANCO=ZF_COD AND E5_AGENCIA=ZF_AGENCIA AND E5_CONTA=ZF_NUMCON "
 	_cQ += " INNER JOIN "+RetSqlName("SED")+" C ON E5_NATUREZ=ED_CODIGO"
 	_cQ += " WHERE A.D_E_L_E_T_ = '' AND B.D_E_L_E_T_ = '' AND C.D_E_L_E_T_ = '' AND E5_NATUREZ <> '' AND E5_BANCO <> '' "
 	_cQ += " AND E5_DTDISPO BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"' AND E5_SITUACA = '' AND E5_RECONC <> '' "
@@ -111,62 +114,33 @@ Static Function BRI14_01(_lFim)
 		_cChavZZ := ZZ->E5_DTDISPO
 
 		While ZZ->(!Eof()) .And. 	_cChavZZ == ZZ->E5_DTDISPO
+
 			If _lPrim
 				_lPrim := .F.
 
-				cCpo := PADR("Documento",11)+";"
-				cLin := Stuff(cLin,01,12,cCpo)
+				_cDoc		:= "Documento"
+				_cCusto		:= "Custo"
+				_cCaixa		:= "Caixa"
+				_cOrigem	:= "Origem"
+				_cData		:= "Data"
+				_cTipo		:= "Tipo"
+				_cClas		:= "Classificação"
+				_cValor		:= "Valor"
+				_cHist		:= "Histórico"
+				_cDocBx		:= "Doc Baixa"
+				_cTrCaixa	:= "Transf Caixa"
+				_cTrCusto	:= "Transf Custo"
+				_cTrOrigem	:= "Transf Origem"
+				_cStat		:= "Status"
+				_cGrav		:= "Gravação"
+				_cFil		:= "Filial"
 
-				cCpo := PADR("Custo",07)+";"
-				cLin := Stuff(cLin,13,08,cCpo)
+				_lPare := GeraLine(_cDoc,_cCusto,_cCaixa,_cOrigem,_cData,_cTipo,_cClas,_cValor,_cHist,_cDocBx,_cTrCaixa,_cTrCusto,_cTrOrigem,_cStat,_cGrav,_cFil)
 
-				cCpo := PADR("Caixa;",05)+";"
-				cLin := Stuff(cLin,21,06,cCpo)
-
-				cCpo := PADR("Origem",10)+";"
-				cLin := Stuff(cLin,27,11,cCpo)
-
-				cCpo := PADR("Data",10)+";"
-				cLin := Stuff(cLin,38,11,cCpo)
-
-				cCpo := PADR("Tipo",04)+";"
-				cLin := Stuff(cLin,49,05,cCpo)
-
-				cCpo := PADR("Classificação",13)+";"
-				cLin := Stuff(cLin,54,14,cCpo)
-
-				cCpo := PADR("Valor",17)+";"
-				cLin := Stuff(cLin,68,18,cCpo)
-
-				cCpo := PADR("Histórico",40)+";"
-				cLin := Stuff(cLin,86,41,cCpo)
-
-				cCpo := PADR("Doc Baixa",09)+";"
-				cLin := Stuff(cLin,127,10,cCpo)
-
-				cCpo := PADR("Transf Caixa",12)+";"
-				cLin := Stuff(cLin,137,13,cCpo)
-
-				cCpo := PADR("Transf Custo",12)+";"
-				cLin := Stuff(cLin,150,13,cCpo)
-
-				cCpo := PADR("Transf Origem",13)+";"
-				cLin := Stuff(cLin,163,14,cCpo)
-
-				cCpo := PADR("Status",06)+";"
-				cLin := Stuff(cLin,177,07,cCpo)
-
-				cCpo := PADR("Gravação",10)+";"
-				cLin := Stuff(cLin,184,11,cCpo)
-
-				cCpo := PADR("Filial",10)+";"
-				cLin := Stuff(cLin,195,11,cCpo)
-
-				If fWrite(nHdl,cLin,Len(cLin)) != Len(cLin)
-					If !MsgAlert("Ocorreu um erro na gravacao do arquivo. Continua?","Atencao!")
-						Exit
-					Endif
+				If _lPare
+					Return(Nil)
 				Endif
+
 			Endif
 
 			If ZZ->E5_MOEDA == "TB" .And. ZZ->E5_RECPAG == "R"
@@ -222,6 +196,7 @@ Static Function BRI14_01(_lFim)
 				_cParc := "-"+ZZ->E5_PARCELA+"-"
 			Endif
 
+			_lRateio := .F.
 			If Empty(ZZ->E5_TIPO) .And. !Empty(ZZ->E5_MOEDA)
 				_cHist  := Lower(Alltrim(ZZ->E5_HISTOR))
 			ElseIf !Empty(ZZ->E5_CLIENTE)
@@ -269,7 +244,80 @@ Static Function BRI14_01(_lFim)
 					Else
 						_cHist := Lower(ZZ->E5_PREFIXO+"-"+Alltrim(ZZ->E5_NUMERO)+_cParc+ALLTRIM(SA2->A2_NREDUZ))
 					Endif
+					If SA2->(FieldPos("A2_YRATEIO")) > 0
+						If SA2->A2_YRATEIO = 'S'
+							_lRateio := .T.
+						Endif
+					Endif
+//					If ZZ->E5_FORNECE  = '003360'
+//						_lRateio := .T.
+//					Endif
+
 				Endif
+			Endif
+
+			_aRateio	:= {}
+
+			If _lRateio .And. ZZ->E5_RECPAG = 'P' .And. ZZ->E5_TIPO = 'NF'
+
+				SD1->(dbSetOrder(1))
+				If SD1->(msSeek(ZZ->E5_FILIAL+ZZ->E5_NUMERO+ZZ->E5_PREFIXO+ZZ->E5_FORNECE+ZZ->E5_LOJA))
+
+					_cKey := ZZ->E5_FILIAL+ZZ->E5_NUMERO+ZZ->E5_PREFIXO+ZZ->E5_FORNECE+ZZ->E5_LOJA
+					_nTot := 0
+
+					While SD1->(!EOF()) .And. _cKey == SD1->D1_FILIAL+SD1->D1_DOC+SD1->D1_SERIE+SD1->D1_FORNECE+SD1->D1_LOJA
+
+						_cFilCC:= ZZ->E5_FILIAL
+
+						If CTT->(FieldPos("CTT_YEMFIL")) > 0
+							CTT->(dbsetOrder(1))
+							If CTT->(msSeek(xFilial("CTT")+SD1->D1_CC))
+								_cFilCC := Alltrim(CTT->CTT_YEMFIL)
+							Endif
+						Endif
+//						If SD1->D1_CC = '0104'
+//							_cFilCC := '01'
+//						ElseIf SD1->D1_CC = '0110'
+//							_cFilCC := '02'
+//						ElseIf SD1->D1_CC = '0111'
+//							_cFilCC := '03'
+//						ElseIf SD1->D1_CC = '0112'
+//							_cFilCC := '04'
+//						ElseIf SD1->D1_CC = '0113'
+//							_cFilCC := '05'
+//						ElseIf SD1->D1_CC = '0114'
+//							_cFilCC := '06'
+//						ElseIf SD1->D1_CC = '0115'
+//							_cFilCC := '07'
+//						ElseIf SD1->D1_CC = '0117'
+//							_cFilCC := '08'
+//						ElseIf SD1->D1_CC = '0118'
+//							_cFilCC := '09'
+//						ElseIf SD1->D1_CC = '0120'
+//							_cFilCC := '10'
+//						ElseIf SD1->D1_CC = '0122'
+//							_cFilCC := '10'
+//						ElseIf SD1->D1_CC = '0123'
+//							_cFilCC := '12'
+//						ElseIf SD1->D1_CC = '0128'
+//							_cFilCC := '13'
+//						Endif
+
+						_nTot += SD1->D1_TOTAL
+
+						_nPos := aScan(_aRateio,{|x| x[1] = _cFilCC})
+						If _nPos = 0
+							AADD(_aRateio,{_cFilCC,SD1->D1_TOTAL})
+						Else
+							_aRateio[_nPos][2] += SD1->D1_TOTAL
+						Endif
+
+						SD1->(dbSkip())
+					EndDo
+
+				Endif
+
 			Endif
 
 			_cDocBx:= Space(09)
@@ -277,62 +325,33 @@ Static Function BRI14_01(_lFim)
 			_cGrav := DTOC(dDataBase)
 			_cFil  := ZZ->E5_FILIAL
 
+			If !Empty(_aRateio)
 
+				ASORT(_aRateio, , , { | x,y | y[1] > x[1] })
 
+				_lPare := .F.
+				For _nRat := 1 to Len(_aRateio)
 
-			cCpo 	:= PADR(_cDoc,11)+";"
-			cLin 	:= Stuff(cLin,01,12,cCpo)
+					_nPerc := _aRateio[_nRat][2] / _nTot
 
-			cCpo := PADR(_cCusto,07)+";"
-			cLin := Stuff(cLin,13,08,cCpo)
+					_cValor := Str(_nValor*_nPerc,17,02)
+					_cValor := StrTran(_cValor, ".",",")
 
-			cCpo := PADR(_cCaixa,05)+";"
-			cLin := Stuff(cLin,21,06,cCpo)
+					_lPare := GeraLine(_cDoc,_cCusto,_cCaixa,_cOrigem,_cData,_cTipo,_cClas,_cValor,_cHist,_cDocBx,_cTrCaixa,_cTrCusto,_cTrOrigem,_cStat,_cGrav,Right(_aRateio[_nRat][1],2))
+					If _lPare
+						Exit //Sair do For...Next
+					Endif
 
-			cCpo := PADR(_cOrigem,10)+";"
-			cLin := Stuff(cLin,27,11,cCpo)
+				Next _nRat
 
-			cCpo := PADR(_cData,10)+";"
-			cLin := Stuff(cLin,38,11,cCpo)
+			Else
 
-			cCpo := PADR(_cTipo,04)+";"
-			cLin := Stuff(cLin,49,05,cCpo)
+				_lPare := GeraLine(_cDoc,_cCusto,_cCaixa,_cOrigem,_cData,_cTipo,_cClas,_cValor,_cHist,_cDocBx,_cTrCaixa,_cTrCusto,_cTrOrigem,_cStat,_cGrav,_cFil)
 
-			cCpo := PADR(_cClas,13)+";"
-			cLin := Stuff(cLin,54,14,cCpo)
+			Endif
 
-			cCpo := PADR(_cValor,17)+";"
-			cLin := Stuff(cLin,68,18,cCpo)
-
-			cCpo := PADR(_cHist,40)+";"
-			cLin := Stuff(cLin,86,41,cCpo)
-
-			cCpo := PADR(_cDocBx,09)+";"
-			cLin := Stuff(cLin,127,10,cCpo)
-
-			cCpo := PADR(_cTrCaixa,12)+";"
-			cLin := Stuff(cLin,137,13,cCpo)
-
-			cCpo := PADR(_cTrCusto,12)+";"
-			cLin := Stuff(cLin,150,13,cCpo)
-
-			cCpo := PADR(_cTrOrigem,13)+";"
-			cLin := Stuff(cLin,163,14,cCpo)
-
-			cCpo := PADR(_cStat,06)+";"
-			cLin := Stuff(cLin,177,07,cCpo)
-
-			cCpo := PADR(_cGrav,10)+";"
-			cLin := Stuff(cLin,184,11,cCpo)
-
-			cCpo := PADR(_cFil,10)+";"
-			cLin := Stuff(cLin,195,11,cCpo)
-
-
-			If fWrite(nHdl,cLin,Len(cLin)) != Len(cLin)
-				If !MsgAlert("Ocorreu um erro na gravacao do arquivo. Continua?","Atencao!")
-					Exit
-				Endif
+			If _lPare
+				Return(Nil)
 			Endif
 
 			ZZ->(dbSkip())
@@ -359,7 +378,7 @@ Static Function BRI14_01(_lFim)
 		oExcelApp:SetVisible(.T.)
 	Endif
 
-Return
+Return(Nil)
 
 
 Static Function ATUSX1()
@@ -371,3 +390,64 @@ Static Function ATUSX1()
 	U_CRIASX1(cPerg,"02","Data Ate    ?",""       ,""      ,"mv_ch2","D" ,08     ,0      ,0     ,"G",""        ,"MV_PAR02","              ",""     ,""     ,""   ,""   ,"                 ",""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""  ,"")
 
 Return
+
+
+Static Function GeraLine(_xDoc,_xCusto,_xCaixa,_xOrigem,_xData,_xTipo,_xClass,_xValor,_xHist,_xDocBx,_xTrfCx,_xTrfCu,_xTrfOr,_xStatus,_xGrava,_xFili)
+
+	Local _lExit := .F.
+
+	cCpo := PADR(_xDoc,11)+";"
+	cLin := Stuff(cLin,01,12,cCpo)
+
+	cCpo := PADR(_xCusto,07)+";"
+	cLin := Stuff(cLin,13,08,cCpo)
+
+	cCpo := PADR(_xCaixa,05)+";"
+	cLin := Stuff(cLin,21,06,cCpo)
+
+	cCpo := PADR(_xOrigem,10)+";"
+	cLin := Stuff(cLin,27,11,cCpo)
+
+	cCpo := PADR(_xData,10)+";"
+	cLin := Stuff(cLin,38,11,cCpo)
+
+	cCpo := PADR(_xTipo,04)+";"
+	cLin := Stuff(cLin,49,05,cCpo)
+
+	cCpo := PADR(_xClass,13)+";"
+	cLin := Stuff(cLin,54,14,cCpo)
+
+	cCpo := PADR(_xValor,17)+";"
+	cLin := Stuff(cLin,68,18,cCpo)
+
+	cCpo := PADR(_xHist,40)+";"
+	cLin := Stuff(cLin,86,41,cCpo)
+
+	cCpo := PADR(_xDocBx,09)+";"
+	cLin := Stuff(cLin,127,10,cCpo)
+
+	cCpo := PADR(_xTrfCx,12)+";"
+	cLin := Stuff(cLin,137,13,cCpo)
+
+	cCpo := PADR(_xTrfCu,12)+";"
+	cLin := Stuff(cLin,150,13,cCpo)
+
+	cCpo := PADR(_xTrfOr,13)+";"
+	cLin := Stuff(cLin,163,14,cCpo)
+
+	cCpo := PADR(_xStatus,06)+";"
+	cLin := Stuff(cLin,177,07,cCpo)
+
+	cCpo := PADR(_xGrava,10)+";"
+	cLin := Stuff(cLin,184,11,cCpo)
+
+	cCpo := PADR(_xFili,10)+";"
+	cLin := Stuff(cLin,195,11,cCpo)
+
+	If fWrite(nHdl,cLin,Len(cLin)) != Len(cLin)
+		If !MsgYesNo("Ocorreu um erro na gravacao do arquivo. Continua?")
+			_lExit:= .T.
+		Endif
+	Endif
+
+Return(_lExit)
