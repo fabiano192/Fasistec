@@ -1,14 +1,12 @@
-//#INCLUDE 'TOTVS.CH'
-#include "rwmake.ch"
+#INCLUDE "RWMAKE.CH"
 #INCLUDE "PROTHEUS.CH"
-
 #INCLUDE 'TOPCONN.CH'
 
 /*/{Protheus.doc} MZ0223
 //Controle de Pedidos Mizu
 @author Fabiano
 @since 29/06/2017
-@version 1.0
+@version 2.0
 @type Function
 /*/
 User Function MZ0223()
@@ -66,10 +64,12 @@ User Function MZ0223()
 		Return(Nil)
 	Endif
 
+
 	If SC6->(Fieldpos("C6_YPEDGER")) = 0
 		ShowHelpDlg("MZ0223", {'Campo "C6_YPEDGER" não existe na Base de Dados!'},2,{'Solicite a criação do mesmo.'},2)
 		Return(Nil)
 	Endif
+
 
 	AAdd( _aObjects, { 45 , 100, .T. , .T. , .F. } )
 	AAdd( _aObjects, { 45 , 100, .T. , .T. , .F. } )
@@ -82,7 +82,7 @@ User Function MZ0223()
 
 	_oDlg:lEscClose := .F. //Não permite fechar a janela pelo botão "ESC"
 
-	_nTimeOut	:= GetnewPar('MV_TIME999',30000)  // 1minuto - tempo em milesegundos
+	_nTimeOut	:= getnewPar('MV_TIME999',30000)  // 1minuto - tempo em milesegundos
 	_oTimer001	:= ""
 
 	//_oTimer001	:= TTimer():New(_nTimeOut,{ || MZ223C("A") },_oDlg) //Marcus Vinicius - 28/02/2018 - criado nova função para montagem da grid MVSZ223C
@@ -132,6 +132,7 @@ Static Function BoxPro(_aPos)
 	*/
 	_aFldPro := {{"C6_OK"		,1,"C","N"},;
 	{"C6_NUM"		,38,"C","S"},;
+	{"C5_YTIPOPD"	,25,"C","N"},;
 	{"C6_ITEM"		,17,"C","N"},;
 	{"C6_CLI"		,25,"C","N"},;
 	{"C6_LOJA"		,17,"C","N"},;
@@ -196,12 +197,15 @@ Static Function BoxPro(_aPos)
 
 	_oBrwPro:bLine := {|| GetArray(_oBrwPro,_aBrwPro,_aFldPro)}
 
+	//	If _lAcesso
 	_oBrwPro:blDBLClick	:= {|| MZ223D(_oBrwPro,_aBrwPro,_aFldPro) }
 	//	_oBrwPro:bRClicked	:= {|_aObj,X,Y| _cOK := But_Right(),If(_cOK = "0",_oMenu01:Activate( X, Y, _aObj ),Nil)}
 	_oBrwPro:bRClicked	:= {|_aObj,X,Y| _cOK := But_Right(),_oMenu01:Activate( X, Y, _aObj )}
+	//	Endif
 
 Return(Nil)
 
+//TGrid():SetColumnColor( [ nCol], [ nClrBack], [ nClrFore] )
 
 
 Static Function BoxPed(_aPos)
@@ -218,6 +222,7 @@ Static Function BoxPed(_aPos)
 
 	_aFldPed := {{"Z1_OK"		,1,"C","N"},;
 	{"Z1_NUM"		,30,"C","S"},;
+	{"Z1_TIPO"		,15,"C","N"},;
 	{"Z1_CLIENTE"	,25,"C","N"},;
 	{"Z1_LOJA"		,17,"C","N"},;
 	{"Z1_NOMCLI"	,40,"C","S"},;
@@ -229,7 +234,6 @@ Static Function BoxPed(_aPos)
 	{"Z1_QUANT"		,30,"N","N"},;
 	{"Z1_PCOREF"	,33,"N","N"},;
 	{"Z1_TES"		,15,"C","N"},;
-	{"Z1_TIPO"		,15,"C","N"},;
 	{"Z1_USUARIO"	,40,"C","N"},;
 	{"Z1_LIBER"		,20,"C","N"},;
 	{"Z1_PEDIDO"	,35,"C","S"},;
@@ -245,6 +249,7 @@ Static Function BoxPed(_aPos)
 			ElseIf _aFldPed[F][1] = 'Z1_ITEMPV'
 				_cTit := "It.Progr."
 			Else
+				//_cTit := Trim(X3Titulo())
 				_cTit := Trim(SX3->X3_TITULO)
 			Endif
 
@@ -301,6 +306,7 @@ Static Function BoxBut(_aPos)
 	_nEspaco	:= 010
 	_nCol		:= _nColi += 6
 
+	//	_oBt_Cli      := TButton():New( _nLini+=_nEspaco ,_nCol,"Cliente" 			, _oDlg		, {||  MATA030()  } ,050,_nAltura,,          ,,.T.,,"",,,,.F. )
 	_oBt_Mot      := TButton():New( _nLini+=_nEspaco ,_nCol,"Motorista" 		, _oDlg		, {||  u_Miz010() } ,050,_nAltura,,          ,,.T.,,"",,,,.F. )
 	_oBt_Tra      := TButton():New( _nLini+=_nEspaco ,_nCol,"Transportadora"	, _oDlg		, {||  MATA050()  } ,050,_nAltura,,          ,,.T.,,"",,,,.F. )
 	_oBt_Cam      := TButton():New( _nLini+=_nEspaco ,_nCol,"Caminhão"			, _oDlg		, {||  u_Miz005() } ,050,_nAltura,,          ,,.T.,,"",,,,.F. )
@@ -308,6 +314,14 @@ Static Function BoxBut(_aPos)
 	_nLini+=_nEspaco
 	oBt_Ped      := TButton():New( _nLini+=_nEspaco ,_nCol,"Pedido Mizu" 		, _oDlg		, {||  u_Miz016() } ,050,_nAltura,,          ,,.T.,,"",,,,.F. )
 	oBt_Age      := TButton():New( _nLini+=_nEspaco ,_nCol,"Agenciamento" 		, _oDlg		, {||  u_Miz996() } ,050,_nAltura,,          ,,.T.,,"",,,,.F. )
+
+	//	If !_lAcesso
+	//		_oBt_Cli:Disable()
+	//		_oBt_Mot:Disable()
+	//		_oBt_Tra:Disable()
+	//		_oBt_Cam:Disable()
+	//		_oBt_Car:Disable()
+	//	Endif
 
 Return(Nil)
 
@@ -358,7 +372,7 @@ Static Function BoxRod(_aPos1,_aPos3)
 	_oBmpE	:= TBitmap():New( _nLin2,_nColA+=_nTam,008,008,,"BR_BRANCO"	,.T.,_oDlg,,,.F.,.T.,,"",.T.,,.T.,,.F. )
 	_oSayE	:= TSay():New( _nLin2,_nColB+=_nTam,{||'Cliente Bloqueado'}		,_oDlg,,_oFont3,.F.,.F.,.F.,.T.,CLR_BLACK,CLR_WHITE,100,008)
 
-
+	//
 
 	_nTam	:= 080
 	_oBmp6	:= TBitmap():New( _nLin1,_nCol1+=_nTam,008,008,,"BR_PRETO"		,.T.,_oDlg,,,.F.,.T.,,"",.T.,,.T.,,.F. )
@@ -531,6 +545,10 @@ Return(Nil)
 
 Static Function GetArray(_oBrw,_aBrw,_aFld)
 
+	If _aBrw[_oBrw:nAt,2] = '000024'
+		_lPare := .T.
+	Endif
+
 	_aRet := {}
 	For Fb := 1 To Len(_aFld)
 		If _aFld[Fb][1] == "C6_OK"
@@ -568,7 +586,7 @@ Return(_aRet)
 Static Function PesqCpo(_cString,_aVet,_oObj,_cPesq,_aPesq,_aFld)
 
 	Local _nPos	 := 0
-	Local _nElem := aScan(_aPesq,_cPesq)
+	Local _nElem := aScan(_aPesq,_cPesq)//{|y| y[1] == _cPesq})
 
 	//³Realiza a pesquisa³
 	_cString := AllTrim(Upper(_cString))
@@ -587,7 +605,7 @@ Return(Nil)
 
 Static Function IndexGrid(_aVet,_oObj,_cPesq,_aPesq,_aFld,_nOpc)
 
-	Local _nElem := aScan(_aPesq,_cPesq)
+	Local _nElem := aScan(_aPesq,_cPesq)//{|y| y[1] == _cPesq})
 
 	_aCols := ASORT(_aVet, , , { | x,y | y[_nElem] > x[_nElem] } )
 	_oObj:SetArray(_aCols)
@@ -662,6 +680,7 @@ Static Function MZ223D()
 	_nColi 	:= _aPosObj[1][2]
 	_nLinf 	:= _aPosObj[1][3]
 	_nColf 	:= _aPosObj[1][4]
+
 
 	DEFINE MSDIALOG _oDlg2 TITLE "Programação X Pedido" FROM _aSize[7],_aSize[1] to _aSize[6],_aSize[5] PIXEL Style DS_MODALFRAME
 
@@ -778,7 +797,8 @@ Static Function AtuGrid()
 			_nVlUn := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C6_PRCVEN"	})]
 			_cPedi := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C6_NUM"		})]
 			_cItem := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C6_ITEM"		})]
-			_cTipo := 'N'
+			//			_cTipo := 'N'
+			_cTipo := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C5_YTIPOPD"	})]
 			_cNum  := GETSX8NUM("SZ1","Z1_NUM")
 			_cHora := TIME()
 			ConfirmSx8()
@@ -949,7 +969,7 @@ Static Function AtuGat(_aCols,_nCont,_cCli,_cLj,_cProd,_nQtde,_nVlUn,_cTipo)
 			lFazerAnalise := .F.
 		ENDIF
 	Endif
-
+	//
 	If Alltrim(Funname()) <> "RPC"  .and. lFazerAnalise
 
 		If (ddatabase - SA1->A1_YBLQSCI) < GetMV("MV_YBLQSCI")  .and. (ddatabase - SA1->A1_YBLQSIN) < GetMV("MV_YBLQSIN")
@@ -1058,6 +1078,7 @@ Static Function AtuGat(_aCols,_nCont,_cCli,_cLj,_cProd,_nQtde,_nVlUn,_cTipo)
 
 				_lBloq := .F.
 
+				//If cEmpAnt == "01" .And. cFilAnt == "04" 		Comentado por Alison - 18/04/18
 				If cEmpAnt + cFilAnt $ "0104|0222"
 					_cQ:= " SELECT E1_CLIENTE,E1_LOJA,E1_NOMCLI,E1_VENCREA, SUM(E1_SALDO) AS SALDO FROM SE1200 A "
 					If !Empty(SA1->A1_GRPVEN)
@@ -1319,12 +1340,32 @@ User Function GrvMZ223()
 				_nQtPed += _oDadosGet:aCols[C][_nPQtd]
 
 				If SA1->A1_RISCO != "S"
-					If _oDadosGet:aCols[C][_nPCon] == "100"
-						_nSdoRA := 0
-						//If cEmpAnt == "01" .And. cFilAnt == "04" 			Comentado por Alison - 18/04/18
-						If cEmpAnt + cFilAnt $ "0104|0222"
-							_cQ := " SELECT E1_CLIENTE,E1_LOJA,E1_TIPO, SALDO = CASE E1_TIPO WHEN 'RA' THEN SUM(E1_SALDO) * -1 ELSE SUM(E1_SALDO) END
-							_cQ += " FROM SE1200 A WHERE A.D_E_L_E_T_ = '' AND E1_SALDO > 0 AND E1_CLIENTE = '"+SA1->A1_COD+"' "
+					If _oDadosGet:aCols[C][_nPTip] != "B"
+						If _oDadosGet:aCols[C][_nPCon] == "100"
+							_nSdoRA := 0
+							If cEmpAnt + cFilAnt $ "0104|0222"
+								_cQ := " SELECT E1_CLIENTE,E1_LOJA,E1_TIPO, SALDO = CASE E1_TIPO WHEN 'RA' THEN SUM(E1_SALDO) * -1 ELSE SUM(E1_SALDO) END
+								_cQ += " FROM SE1200 A WHERE A.D_E_L_E_T_ = '' AND E1_SALDO > 0 AND E1_CLIENTE = '"+SA1->A1_COD+"' "
+								_cQ += " AND E1_LOJA = '"+SA1->A1_LOJA+"' AND E1_TIPO IN ('RA','NF') "
+								_cQ += " GROUP BY E1_CLIENTE,E1_LOJA,E1_TIPO "
+								_cQ += " ORDER BY E1_CLIENTE,E1_LOJA "
+
+								TCQUERY _cQ NEW ALIAS "ZRA"
+
+								ZRA->(dbGotop())
+
+								While ZRA->(!Eof())
+
+									_nSdoRA += ZRA->SALDO
+
+									ZRA->(dbSkip())
+								EndDo
+
+								ZRA->(dbCloseArea())
+							Endif
+
+							_cQ := " SELECT E1_CLIENTE,E1_LOJA,E1_TIPO, SALDO = CASE E1_TIPO WHEN 'RA' THEN SUM(E1_SALDO) * -1 ELSE SUM(E1_SALDO) END "
+							_cQ += " FROM "+RetSqlName("SE1")+" A WHERE A.D_E_L_E_T_ = '' AND E1_SALDO > 0 AND E1_CLIENTE = '"+SA1->A1_COD+"' "
 							_cQ += " AND E1_LOJA = '"+SA1->A1_LOJA+"' AND E1_TIPO IN ('RA','NF') "
 							_cQ += " GROUP BY E1_CLIENTE,E1_LOJA,E1_TIPO "
 							_cQ += " ORDER BY E1_CLIENTE,E1_LOJA "
@@ -1341,47 +1382,28 @@ User Function GrvMZ223()
 							EndDo
 
 							ZRA->(dbCloseArea())
-						Endif
 
-						_cQ := " SELECT E1_CLIENTE,E1_LOJA,E1_TIPO, SALDO = CASE E1_TIPO WHEN 'RA' THEN SUM(E1_SALDO) * -1 ELSE SUM(E1_SALDO) END "
-						_cQ += " FROM "+RetSqlName("SE1")+" A WHERE A.D_E_L_E_T_ = '' AND E1_SALDO > 0 AND E1_CLIENTE = '"+SA1->A1_COD+"' "
-						_cQ += " AND E1_LOJA = '"+SA1->A1_LOJA+"' AND E1_TIPO IN ('RA','NF') "
-						_cQ += " GROUP BY E1_CLIENTE,E1_LOJA,E1_TIPO "
-						_cQ += " ORDER BY E1_CLIENTE,E1_LOJA "
+							_cQ := " SELECT Z1_CLIENTE,Z1_LOJA,SUM(Z1_QUANT * Z1_PCOREF) AS TOTAL "
+							_cQ += " FROM "+RetSqlName("SZ1")+" A WHERE A.D_E_L_E_T_ = '' AND Z1_CLIENTE = '"+SA1->A1_COD+"' "
+							_cQ += " AND Z1_LOJA = '"+SA1->A1_LOJA+"' AND Z1_DTCANC = '' "             // Marcus Vinicius - 09/08/16 - Adicionado Z1_DTCANC
+							_cQ += " GROUP BY Z1_CLIENTE,Z1_LOJA "
+							_cQ += " ORDER BY Z1_CLIENTE,Z1_LOJA "
 
-						TCQUERY _cQ NEW ALIAS "ZRA"
+							TCQUERY _cQ NEW ALIAS "ZZ1"
 
-						ZRA->(dbGotop())
+							_nSdoRa  += (ZZ1->TOTAL + (_nQtPed * _oDadosGet:aCols[C][_nPVlR]) )
 
-						While ZRA->(!Eof())
+							ZZ1->(dbCloseArea())
 
-							_nSdoRA += ZRA->SALDO
-
-							ZRA->(dbSkip())
-						EndDo
-
-						ZRA->(dbCloseArea())
-
-						_cQ := " SELECT Z1_CLIENTE,Z1_LOJA,SUM(Z1_QUANT * Z1_PCOREF) AS TOTAL "
-						_cQ += " FROM "+RetSqlName("SZ1")+" A WHERE A.D_E_L_E_T_ = '' AND Z1_CLIENTE = '"+SA1->A1_COD+"' "
-						_cQ += " AND Z1_LOJA = '"+SA1->A1_LOJA+"' AND Z1_DTCANC = '' "             // Marcus Vinicius - 09/08/16 - Adicionado Z1_DTCANC
-						_cQ += " GROUP BY Z1_CLIENTE,Z1_LOJA "
-						_cQ += " ORDER BY Z1_CLIENTE,Z1_LOJA "
-
-						TCQUERY _cQ NEW ALIAS "ZZ1"
-
-						_nSdoRa  += (ZZ1->TOTAL + (_nQtPed * _oDadosGet:aCols[C][_nPVlR]) )
-
-						ZZ1->(dbCloseArea())
-
-						If _nSdoRa > 0
-							MSGALERT(" 4 -Cliente Sem RA (Recebimento Antecipado) Em Aberto!! ")
-							_lRet := .F.
-							Exit
+							If _nSdoRa > 0
+								MSGALERT(" 4 -Cliente Sem RA (Recebimento Antecipado) Em Aberto!! ")
+								_lRet := .F.
+								Exit
+							Endif
 						Endif
 					Endif
-					//				Endif
 				Endif
+
 
 				If  SuperGetMv("MV_YOBGPL",,.F.) .And. cEmpAnt + cFilAnt $ '0210|3001|4001|0203'
 
@@ -1806,6 +1828,29 @@ User Function GMZ223A(_cOpt)
 					_nFMOT:= _nQtde * SZ4->Z4_FMOT
 				Endif
 
+				/*
+				If cEmpAnt + cFilAnt $ '0210|3001'
+				SZ3->(dbSetOrder(1))
+				If SZ3->(dbSeek(xFilial("SZ3") + M->Z1_MOTOR))
+				If laltped <> nil .and. laltped
+				If SA1->A1_YFRECLI>0
+				_nFTRA := SA1->A1_YFRECLI * _nQtde
+				Else
+				if  _cCDesc == "S" // Com Descarga? S  -  Frete Descarga - 13/02/15  Juailson-Semar
+				_nFTRA := Round(_nQtde * Iif(SZ3->Z3_AGREGA=="S",SZ4->Z4_FAGRTRD,SZ4->Z4_FRETED) ,2) //// ALTERADO 11/01/12  // Frete Descarga
+				else
+				_nFTRA := Round(_nQtde * Iif(SZ3->Z3_AGREGA=="S",SZ4->Z4_FAGRTRA,SZ4->Z4_FRETE) ,2) //// ALTERADO 11/01/12
+				endif
+				Endif
+				If SA1->A1_YFMOT > 0
+				_nFMOT:= _nQtde * SA1->A1_YFMOT
+				Else
+				_nFMOT := Round(_nQtde * Iif(SZ3->Z3_AGREGA=="S",SZ4->Z4_FAGRMOT,SZ4->Z4_FMOT) ,2)  //// ALTERADO 11/01/12
+				endif
+				Endif
+				endif
+				endif
+				*/
 			Else
 				_nFTRA := 0
 				_nFMOT := 0
@@ -2643,12 +2688,14 @@ Return(_cOpc)
 //Popula o Grid
 Static Function MVSZ223C(_cOpc)
 
-	Local 	_aAreaAtu		:= GetArea()
-	Local 	_cYBLQSCI		:= GetMV('MV_YBLQSCI')
-	Local 	_cYBLQSIN		:= GetMV('MV_YBLQSIN')
+	Local _aAreaAtu		:= GetArea()
+	Local _cYBLQSCI		:= GetMV('MV_YBLQSCI')
+	Local _cYBLQSIN		:= GetMV('MV_YBLQSIN')
+	Local _xContent		:= Nil
+
 	Private _cPerLimCred	:= GETMV("MZ_PERLIM")
 	Private _cCliLoja		:= ''
-	Private _dData    := Date()
+	Private _dData			:= Date()
 
 	If Dow(_dData) == 7      // SABADO
 		_dData    := _dData - 2
@@ -2736,7 +2783,15 @@ Static Function MVSZ223C(_cOpc)
 
 				_aBrwPro[_nLen][Fd] := _cLeg
 			Else
-				_aBrwPro[_nLen][Fd] := &('TSC6->'+_aFldPro[Fd][1])
+				_xContent := &('TSC6->'+_aFldPro[Fd][1])
+				If _aFldPro[Fd][1] = 'C5_YTIPOPD'
+					If Empty(_xContent)
+						_xContent := 'N'
+					Endif
+				Endif
+				//				_aBrwPro[_nLen][Fd] := &('TSC6->'+_aFldPro[Fd][1])
+				_aBrwPro[_nLen][Fd] := _xContent
+
 			Endif
 		Next Fd
 
@@ -2833,7 +2888,6 @@ Static Function MVSZ223C(_cOpc)
 	Endif
 
 Return(Nil)
-
 
 
 Static Function MvsChkCli(_cOpc,_cCli,_cLj)

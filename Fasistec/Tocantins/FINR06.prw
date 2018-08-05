@@ -28,6 +28,7 @@ User Function FINR06()
 	Private _cMsgTit	:= 'Aguarde, analisando Comissão...'
 	Private _aCabec		:= {}
 	Private _nTotlin 	:= 790
+	Private _nTFor		:= 0
 
 	AtuSX1()
 
@@ -100,6 +101,7 @@ Static Function FIN06A(_oMsg)
 
 	Private _aStru := {}
 
+	AADD(_aStru,{"TPVEN"	, "C" , 06, 0 })
 	AADD(_aStru,{"GERENTE"	, "C" , 06, 0 })
 	AADD(_aStru,{"NOMEGER"	, "C" , 25, 0 })
 	AADD(_aStru,{"VENDEDO"	, "C" , 06, 0 })
@@ -128,10 +130,12 @@ Static Function FIN06A(_oMsg)
 	AADD(_aStru,{"CHEQUE"	, "C" , 15, 0 })
 	AADD(_aStru,{"RETIDO"	, "C" , 01, 0 })
 	AADD(_aStru,{"FORNECE"	, "C" , 006, 0 })
-	AADD(_aStru,{"LOJA"		, "C" , 002, 0 })
+	AADD(_aStru,{"LJFOR"	, "C" , 002, 0 })
+	AADD(_aStru,{"NOMFOR"	, "C" , 100, 0 })
 
 	Private _cArqTrb := CriaTrab(_aStru,.T.)
-	Private _cIndTrb := "GERENTE+VENDEDO+PREFIXO+TITULO+PARCELA+TPPAG+DTOS(DBAIXA)+SERIE+NUMERO"
+	//	Private _cIndTrb := "GERENTE+VENDEDO+PREFIXO+TITULO+PARCELA+TPPAG+DTOS(DBAIXA)+SERIE+NUMERO"
+	Private _cIndTrb := "GERENTE+FORNECE+LJFOR+VENDEDO+PREFIXO+TITULO+PARCELA+TPPAG+DTOS(DBAIXA)+SERIE+NUMERO"
 
 	dbUseArea(.T.,,_cArqTrb,"TRB",.F.,.F.)
 
@@ -143,7 +147,7 @@ Static Function FIN06A(_oMsg)
 	Private _aCamp := {}
 
 	AADD(_aCamp,{"FORNECE"	, "C" , 006, 0 })
-	AADD(_aCamp,{"LOJA"		, "C" , 002, 0 })
+	AADD(_aCamp,{"LJFOR"	, "C" , 002, 0 })
 	AADD(_aCamp,{"PREFIXO"	, "C" , 003, 0 })
 	AADD(_aCamp,{"TITULO"	, "C" , 009, 0 })
 	AADD(_aCamp,{"PARCELA"	, "C" , 001, 0 })
@@ -155,7 +159,7 @@ Static Function FIN06A(_oMsg)
 	AADD(_aCamp,{"HIST"		, "C" , 100, 0 })
 
 	Private _cArq2 := CriaTrab(_aCamp,.T.)
-	Private _cInd2 := "FORNECE+LOJA+DTOS(VENCTO)+PREFIXO+TITULO+PARCELA+TIPO"
+	Private _cInd2 := "FORNECE+LJFOR+DTOS(VENCTO)+PREFIXO+TITULO+PARCELA+TIPO"
 
 	dbUseArea(.T.,,_cArq2,"TSB",.F.,.F.)
 
@@ -173,9 +177,9 @@ Static Function FIN06A(_oMsg)
 	_cQuery += " INNER JOIN "+RetSqlName("SA2")+" A2 ON A2_COD = E2_FORNECE AND A2_LOJA = E2_LOJA " +CRLF
 	_cQuery += " WHERE E2.D_E_L_E_T_ = '' AND A2.D_E_L_E_T_ = '' "  +CRLF
 	_cQuery += " AND E2_FILIAL = '"+xFilial("SE2")+"' AND A2_FILIAL = '"+xFilial("SA2")+"' "  +CRLF
-	_cQuery += " AND E2_TIPO = 'DP' " +CRLF
-	_cQuery += " AND E2_PREFIXO = 'COM' " +CRLF
-	//	_cQuery += " AND A2_XCOMISS = 'S' " +CRLF
+	//	_cQuery += " AND E2_TIPO = 'DP' " +CRLF
+	//	_cQuery += " AND E2_PREFIXO = 'COM' " +CRLF
+	_cQuery += " AND A2_XCOMISS = 'S' " +CRLF
 	_cQuery += " AND E2_FORNECE BETWEEN '"+MV_PAR05+"'			AND '"+MV_PAR06+"' " +CRLF
 	_cQuery += " AND E2_NUM		BETWEEN '"+MV_PAR07+"'			AND '"+MV_PAR08+"' " +CRLF
 	_cQuery += " AND E2_VENCREA BETWEEN '"+DTOS(MV_PAR09)+"'	AND '"+DTOS(MV_PAR10)+"' " +CRLF
@@ -277,7 +281,7 @@ Static Function FIN06A(_oMsg)
 				Endif
 
 				TRB->(RecLock("TRB",.T.))
-				TRB->TIPO		:= TSE3->A3_XTIPO
+				TRB->TPVEN		:= TSE3->A3_XTIPO
 				TRB->GERENTE	:= _cGerente
 				TRB->NOMEGER	:= _nNomGere
 				TRB->VENDEDO	:= TSE3->E3_VEND
@@ -302,9 +306,11 @@ Static Function FIN06A(_oMsg)
 				TRB->PERCOM		:= TSE3->E3_PORC
 				TRB->VALCOM		:= TSE3->E3_COMIS
 				TRB->CHEQUE		:= Alltrim(TSE3->E3_XNRCHEQ)
-				TRB->RETIDO		:= IF(!Empty(TSE3->E3_XBLOTIT),'S','')
+				//				TRB->RETIDO		:= IF(!Empty(TSE3->E3_XBLOTIT),'S','')
+				TRB->RETIDO		:= IF(!Empty(TSE3->E3_XLIBDAT) .Or. (Empty(TSE3->E3_XLIBDAT) .And. Empty(TSE3->E3_XBLOTIT)),'','S')
 				TRB->FORNECE	:= TSE2->E2_FORNECE
-				TRB->LOJA		:= TSE2->E2_LOJA
+				TRB->LJFOR		:= TSE2->E2_LOJA
+				TRB->NOMFOR		:= Alltrim(Posicione("SA2",1,xFilial("SA2")+TSE2->E2_FORNECE+TSE2->E2_LOJA,"A2_NOME"))
 				TRB->(msUnLock())
 
 				TSE3->(dbSkip())
@@ -312,18 +318,27 @@ Static Function FIN06A(_oMsg)
 
 			TSE3->(dbCloseArea())
 		Else
-//			TSB->(RecLock("TSB",.T.))
-//			TSB->FORNECE	:= TSE2->E2_FORNECE
-//			TSB->LOJA		:= TSE2->E2_LOJA
-//			TSB->PREFIXO	:= TSE2->E2_PREFIXO
-//			TSB->PARCELA	:= TSE2->E2_PARCELA
-//			TSB->TIPO		:= TSE2->E2_TIPO
-//			TSB->EMISSAO	:= TSE2->E2_EMISSAO
-//			TSB->VENCTO		:= TSE2->E2_VENCREA
-//			TSB->VALOR		:= TSE2->E2_VALOR
-//			TSB->SALDO		:= TSE2->E2_SALDO
-//			TSB->HIST		:= TSE2->E2_HIST
-//			TSB->(msUnLock())
+			If TSE2->E2_TIPO $ 'NDF|PA '
+				_nE2Vlr := TSE2->E2_VALOR * -1
+				_nE2Sld := TSE2->E2_SALDO * -1
+			Else
+				_nE2Vlr := TSE2->E2_VALOR
+				_nE2Sld := TSE2->E2_SALDO
+			Endif
+
+			TSB->(RecLock("TSB",.T.))
+			TSB->FORNECE	:= TSE2->E2_FORNECE
+			TSB->LJFOR		:= TSE2->E2_LOJA
+			TSB->PREFIXO	:= TSE2->E2_PREFIXO
+			TSB->TITULO		:= TSE2->E2_NUM
+			TSB->PARCELA	:= TSE2->E2_PARCELA
+			TSB->TIPO		:= TSE2->E2_TIPO
+			TSB->EMISSAO	:= TSE2->E2_EMISSAO
+			TSB->VENCTO		:= TSE2->E2_VENCREA
+			TSB->VALOR		:= _nE2Vlr
+			TSB->SALDO		:= _nE2Sld
+			TSB->HIST		:= TSE2->E2_HIST
+			TSB->(msUnLock())
 		Endif
 
 		TSE2->(dbSkip())
@@ -346,7 +361,7 @@ Static Function GeraExcel(_oMsg)
 	Local _cPlan	:= ""
 	Local _cTable	:= ""
 
-	_oExcel	:= FWMsExcel():New()
+	Private _oExcel	:= FWMsExcel():New()
 
 	_oMsg:cCaption := ('Gerando Relatório em Excel...')
 	ProcessMessages()
@@ -407,7 +422,7 @@ Static Function GeraExcel(_oMsg)
 			TRB->PARCREC	,;
 			TRB->CODCLI		,;
 			TRB->LOJA		,;
-			TRB->NOMCLI		,; //			TRB->VENCTIT	,; //			TRB->VALREC		,;
+			TRB->NOMCLI		,;
 			TRB->DBAIXA		,;
 			TRB->BASCOM		,;
 			TRB->PERCOM		,;
@@ -422,6 +437,12 @@ Static Function GeraExcel(_oMsg)
 	EndDo
 
 	TRB->(dbCloseArea())
+
+	If MV_PAR13 == 2
+		ImpRetida(Nil,.F.)
+	Endif
+
+
 
 	_oExcel:Activate()
 
@@ -484,19 +505,21 @@ Static Function GeraPdf(_oMsg)
 			_oPrinter:SayAlign(_nLin,_nCol+2,"Gerente: "+_cGerente,_oFont2,_nColTot,7,CLR_RED,0, 1 )
 
 			_nLin 	+= 8
+		Else
+			_cPath	:= _cDir+"\"+Alltrim(TRB->NOMEGER)
+			//		_cPath	:= _cDir+"\"+Alltrim(TRB->NOMFOR)
+
+			If !ExistDir(_cPath)
+				If MakeDir(_cPath) <> 0
+					MsgAlert("Nao foi possível criar o diretório "+_cPath)
+					Return(Nil)
+				Endif
+			Endif
 		Endif
 
 		_nTComG	:= 0
 		_cKey := TRB->GERENTE
-
-		_cPath	:= _cDir+"\"+Alltrim(TRB->NOMEGER)
-
-		If !ExistDir(_cPath)
-			If MakeDir(_cPath) <> 0
-				MsgAlert("Nao foi possível criar o diretório "+_cPath)
-				Return(Nil)
-			Endif
-		Endif
+		//		_cKey :=TRB->FORNECE+TRB->LJFOR
 
 		While !TRB->(EOF()) .And. _cKey == TRB->GERENTE
 
@@ -504,10 +527,10 @@ Static Function GeraPdf(_oMsg)
 
 				_nPag 		:= _nTPageF := _nTPageA := _nTPageT := 0
 
-				_cTit2  := Substr(_cTitPdf,10)+"_"+Alltrim(TRB->NOMEVEN)
+				//					_cTit2  := Substr(_cTitPdf,10)+"_"+Alltrim(TRB->NOMEVEN)
+				_cTit2  := Substr(_cTitPdf,10)+"_"+Alltrim(TRB->NOMFOR)
 
-				_oPrinter := FWMSPrinter():New(_cTit2, 6, _lAdjustToLegacy, , _lDisableSetup,    , , , .F./*lserver*/ ,.F./*lPDFAsPNG*/,;
-				.F. /*lRaw*/,.F./*lViewPDF*/ )
+				_oPrinter := FWMSPrinter():New(_cTit2, 6, _lAdjustToLegacy, , _lDisableSetup,    , , , .F. ,.F.,.F. ,.F. )
 
 				_oPrinter:SetPortrait()
 				_oPrinter:SetPaperSize(9)
@@ -516,122 +539,149 @@ Static Function GeraPdf(_oMsg)
 				_nLin = _nTotlin +1
 			Endif
 
-			If _lSepVend .And. _nTComG > 0
-				_nLin = _nTotlin +1
-
-				CheckLine()
-
-				_cGerente := TRB->GERENTE + " - "+ Alltrim(TRB->NOMEGER)
-				_oPrinter:SayAlign(_nLin,_nCol+2,"Gerente: "+_cGerente,_oFont2,_nColTot,7,CLR_HRED,0, 1 )
-
-				_nLin 	+= 8
-
-			Endif
-
 			CheckLine()
 
-			_cVenGer := "Vendedor: "
-			If TRB->VENDEDO == TRB->GERENTE
-				_cVenGer := "Gerente: "
-			Endif
-
-			_cVendedor := TRB->VENDEDO + " - "+ Alltrim(TRB->NOMEVEN)
-			_oPrinter:SayAlign(_nLin,_nCol+5,_cVenGer+_cVendedor,_oFont2,_nColTot,7,CLR_BLUE,0, 1 )
+			_cFornece := TRB->FORNECE+'-'+TRB->LJFOR + " - "+ Alltrim(TRB->NOMFOR)
+			_oPrinter:SayAlign(_nLin,_nCol+2,"Fornecedor: "+_cFornece,_oFont2N,_nColTot,7,CLR_BLACK,0, 1 )
 
 			_nLin 	+= 8
-			_nTComV	:= 0
+
+			_cForLj	:= TRB->FORNECE + TRB->LJFOR
+
+			//			_cKey2 := TRB->GERENTE  + TRB->VENDEDO
+			_cKey2 := TRB->GERENTE + TRB->FORNECE + TRB->LJFOR
+
 			_nTEmp1	:=0
 			_nTEmp2	:=0
-			_cCodV	:= TRB->VENDEDO
-			_cForLj	:= TRB->FORNECE + TRB->LOJA
+			_nTFor	:=0
 
-			_cKey2 := TRB->GERENTE  + TRB->VENDEDO
+			While !TRB->(EOF()) .And. _cKey2 == TRB->GERENTE + TRB->FORNECE + TRB->LJFOR
 
-			While !TRB->(EOF()) .And. _cKey2 == TRB->GERENTE  + TRB->VENDEDO
+				If _lSepVend .And. _nTComG > 0
+					_nLin = _nTotlin +1
+					CheckLine()
+					_cGerente := TRB->GERENTE + " - "+ Alltrim(TRB->NOMEGER)
+					_oPrinter:SayAlign(_nLin,_nCol+2,"Gerente: "+_cGerente,_oFont2,_nColTot,7,CLR_HRED,0, 1 )
+					_nLin += 8
+				Endif
 
 				CheckLine()
 
-				_cInfoAd1 := Alltrim(TRB->PREFIXO) +"-"+;
-				Alltrim(TRB->TITULO) +"-"+;
-				Alltrim(TRB->PARCELA) +Space(10)+;
-				"Tipo: "+TRB->TPPAG +Space(10)+;
-				"Emissão: "+dToc(TRB->EMISSAO) + Space(10)+;
-				"Vencimento: "+dToc(TRB->VENCTO)+ Space(10)+;
-				"Valor: "+Alltrim(Transform(TRB->VALPAG,'@E 999,999.99'))
+				_cVenGer := "Vendedor: "
+				If TRB->VENDEDO == TRB->GERENTE
+					_cVenGer := "Gerente: "
+				Endif
 
-				_oPrinter:SayAlign(_nLin,_nCol+8,_cInfoAd1,_oFont2,_nColTot,7,CLR_GREEN,0, 1 )
-				_nLin 	+= 8
+				_cVendedor := TRB->VENDEDO + " - "+ Alltrim(TRB->NOMEVEN)
+				_oPrinter:SayAlign(_nLin,_nCol+5,_cVenGer+_cVendedor,_oFont2,_nColTot,7,CLR_BLUE,0, 1 )
 
-				_cKey3		:= TRB->GERENTE + TRB->VENDEDO + TRB->PREFIXO + TRB->TITULO + TRB->PARCELA + TRB->TPPAG
-				_nTComTit	:= 0
+				CheckLine()
 
-				While !TRB->(EOF()) .And. _cKey3 == TRB->GERENTE + TRB->VENDEDO + TRB->PREFIXO + TRB->TITULO + TRB->PARCELA + TRB->TPPAG
+				_nLin	+= 8
+				_nTComV	:= 0
+				_cCodV	:= TRB->VENDEDO
+
+				_cKey4 := TRB->GERENTE + TRB->FORNECE + TRB->LJFOR + TRB->VENDEDO
+
+				While !TRB->(EOF()) .And. _cKey4 == TRB->GERENTE + TRB->FORNECE + TRB->LJFOR + TRB->VENDEDO
 
 					CheckLine()
 
-					For _nCab := 1 to Len(_aCabec)
+					_cInfoAd1 := Alltrim(TRB->PREFIXO) +"-"+;
+					Alltrim(TRB->TITULO) +"-"+;
+					Alltrim(TRB->PARCELA) +Space(10)+;
+					"Tipo: "+TRB->TPPAG +Space(10)+;
+					"Emissão: "+dToc(TRB->EMISSAO) + Space(10)+;
+					"Vencimento: "+dToc(TRB->VENCTO)+ Space(10)+;
+					"Valor: "+Alltrim(Transform(TRB->VALPAG,'@E 999,999.99'))
 
-						If _aCabec[_nCab][5] = 'N'
-							_cImp := Alltrim(Transform(&('TRB->'+_aCabec[_nCab][4]),_aCabec[_nCab][6]))
-						ElseIf _aCabec[_nCab][5] = 'D'
-							_cImp := dToc(&('TRB->'+_aCabec[_nCab][4]))
-						Else
-							_cImp := Alltrim(&('TRB->'+_aCabec[_nCab][4]))
+					_oPrinter:SayAlign(_nLin,_nCol+8,_cInfoAd1,_oFont2,_nColTot,7,CLR_GREEN,0, 1 )
+					_nLin 	+= 8
+
+					//				_cKey3		:= TRB->GERENTE + TRB->VENDEDO + TRB->PREFIXO + TRB->TITULO + TRB->PARCELA + TRB->TPPAG
+					_cKey3		:= TRB->GERENTE + TRB->FORNECE + TRB->LJFOR + TRB->VENDEDO + TRB->PREFIXO + TRB->TITULO + TRB->PARCELA + TRB->TPPAG
+					_nTComTit	:= 0
+
+					While !TRB->(EOF()) .And. _cKey3 == TRB->GERENTE + TRB->FORNECE + TRB->LJFOR + TRB->VENDEDO + TRB->PREFIXO + TRB->TITULO + TRB->PARCELA + TRB->TPPAG
+
+						CheckLine()
+
+						For _nCab := 1 to Len(_aCabec)
+
+							If _aCabec[_nCab][5] = 'N'
+								_cImp := Alltrim(Transform(&('TRB->'+_aCabec[_nCab][4]),_aCabec[_nCab][6]))
+							ElseIf _aCabec[_nCab][5] = 'D'
+								_cImp := dToc(&('TRB->'+_aCabec[_nCab][4]))
+							Else
+								_cImp := Alltrim(&('TRB->'+_aCabec[_nCab][4]))
+							Endif
+
+							_nColRel := _aCabec[_nCab][Len(_aCabec[_nCab])]
+
+							_oPrinter:SayAlign(_nLin,_nColRel,_cImp,_oFont2,_aCabec[_nCab][2],7,,_aCabec[_nCab][3], 1 )
+						Next _nCab
+
+						_nTComTit	+= TRB->VALCOM
+						_nTComV		+= TRB->VALCOM
+						_nTComG		+= TRB->VALCOM
+						_nTComT		+= TRB->VALCOM
+						_nTFor		+= TRB->VALCOM
+
+						If TRB->ORIGEM $ '1|2'
+							_nTEmp1	+= TRB->VALCOM
+						ElseIf TRB->ORIGEM $ '3|4'
+							_nTEmp2	+= TRB->VALCOM
 						Endif
 
-						_nColRel := _aCabec[_nCab][Len(_aCabec[_nCab])]
+						_nLin += 8
 
-						_oPrinter:SayAlign(_nLin,_nColRel,_cImp,_oFont2,_aCabec[_nCab][2],7,,_aCabec[_nCab][3], 1 )
-					Next _nCab
+						TRB->(dbSkip())
+					EndDo
 
-					_nTComTit	+= TRB->VALCOM
-					_nTComV		+= TRB->VALCOM
-					_nTComG		+= TRB->VALCOM
-					_nTComT		+= TRB->VALCOM
+					CheckLine()
 
-					If TRB->ORIGEM $ '1|2'
-						_nTEmp1	+= TRB->VALCOM
-					ElseIf TRB->ORIGEM $ '3|4'
-						_nTEmp2	+= TRB->VALCOM
-					Endif
+					_cMsg := "Total Título: "
+					ImpTotal(_cMsg,_oFont2N,'VALCOM',_nTComTit,CLR_GREEN,_nCol+8)
 
 					_nLin += 8
-
-					TRB->(dbSkip())
 				EndDo
 
-				CheckLine()
+				If MV_PAR13 == 2
+					//					_nLin += 8
+					CheckLine()
+					ImpRetida(_cCodV,.T.)
+				Endif
 
-				_cMsg := "Total Título: "
-				ImpTotal(_cMsg,_oFont2N,'VALCOM',_nTComTit,CLR_GREEN,_nCol+8)
+				_cMsg := "Total "+_cVenGer+_cVendedor
+				ImpTotal(_cMsg,_oFont2N,'VALCOM',_nTComV,CLR_BLUE,_nCol+5)
 
-				_nLin += 8
+				//				_nLin += 8
+
 			EndDo
 
 			If _nTEmp1 > 0
+				CheckLine()
 				_cMsg := "Total Tocantins:"
 				ImpTotal(_cMsg,_oFont2N,'VALCOM',_nTEmp1,CLR_BROWN,_nCol+5)
-				CheckLine()
+				//				_nLin += 8
 			Endif
 
 			If _nTEmp2 > 0
+				CheckLine()
 				_cMsg := "Total Ponte Nova"
 				ImpTotal(_cMsg,_oFont2N,'VALCOM',_nTEmp2,CLR_BROWN,_nCol+5)
-				CheckLine()
+				//				_nLin += 8
 			Endif
 
-//			ImpDebCre(_cForLj)
-
-			_cMsg := "Total "+_cVenGer+_cVendedor
-			ImpTotal(_cMsg,_oFont2N,'VALCOM',_nTComV,CLR_BLUE,_nCol+5)
-
-			_nLin += 8
-
-			If MV_PAR13 == 2
-				_nLin += 8
-				CheckLine()
-				ImpRetida(_cCodV)
+			If MV_PAR14 = 2
+				ImpDebCre(_cForLj)
 			Endif
+
+			CheckLine()
+			_cMsg := "Total Fornecedor: "+_cFornece
+			ImpTotal(_cMsg,_oFont2N,'VALCOM',_nTFor,CLR_BLACK,_nCol+2)
+
+			//			_nLin += 8
 
 			If _lArqInd
 				Ms_Flush()
@@ -644,13 +694,11 @@ Static Function GeraPdf(_oMsg)
 		If !_lArqInd .And. !_lSepVend
 			CheckLine()
 
-			//			_nLin += 8
-
-			//			CheckLine()
-
 			_cMsg := "Total Gerente: "+_cGerente
 			ImpTotal(_cMsg,_oFont2N,'VALCOM',_nTComG,CLR_RED,_nCol+2)
 
+			_nLin += 16
+		Else
 			_nLin += 8
 		Endif
 	EndDo
@@ -784,7 +832,7 @@ Return()
 
 
 
-Static Function ImpRetida(_cCodVen)
+Static Function ImpRetida(_cCodVen,_lPdf)
 
 	Local _cQryRet := ''
 
@@ -795,7 +843,9 @@ Static Function ImpRetida(_cCodVen)
 	_cQryRet += " SELECT * FROM "+RetSqlName("SE3")+" E3RET " +CRLF
 	_cQryRet += " INNER JOIN "+RetSqlName("SA3")+" A3RET ON E3_VEND = A3_COD "  +CRLF
 	_cQryRet += " WHERE E3RET.D_E_L_E_T_ = '' AND A3RET.D_E_L_E_T_ = ''"  +CRLF
-	_cQryRet += " AND E3_VEND = '"+_cCodVen+"' " + CRLF
+	If _lPdf
+		_cQryRet += " AND E3_VEND = '"+_cCodVen+"' " + CRLF
+	Endif
 	_cQryRet += " AND E3_DATA = '' " +CRLF
 	_cQryRet += " AND E3_XBLOTIT <> '' " +CRLF
 	_cQryRet += " ORDER BY E3_VENCTO,E3_NUM " +CRLF
@@ -808,19 +858,50 @@ Static Function ImpRetida(_cCodVen)
 
 		TcSetField("E3RET","E3_EMISSAO","D")
 
-		CheckLine()
+		If _lPdf
+			CheckLine()
 
-		_oPrinter:SayAlign(_nLin,_nCol+5,"Comissões Retidas",_oFont2N,_nColTot,7,CLR_MAGENTA,0, 1 )
+			_oPrinter:SayAlign(_nLin,_nCol+5,"Comissões Retidas",_oFont2N,_nColTot,7,CLR_MAGENTA,0, 1 )
 
-		_nLin += 8
+			_nLin += 8
+			_nTotRet := 0
+		Else
+			_cPlan	:= 'Retidas'
+			_cTable	:= 'Comissões Retidas'
+
+			_oExcel:AddworkSheet(_cPlan)
+
+			_oExcel:AddTable (_cPlan,_cTable)
+
+			_oExcel:AddColumn(_cPlan,_cTable,"Vendedor"			,1,1,.F.)
+			_oExcel:AddColumn(_cPlan,_cTable,"Nome"				,1,1,.F.)
+			_oExcel:AddColumn(_cPlan,_cTable,"Origem"			,1,1,.F.)
+			_oExcel:AddColumn(_cPlan,_cTable,"Prefixo"			,1,1,.F.)
+			_oExcel:AddColumn(_cPlan,_cTable,"Título Pg"		,1,1,.F.)
+			_oExcel:AddColumn(_cPlan,_cTable,"Parcela Pg"		,1,1,.F.)
+			_oExcel:AddColumn(_cPlan,_cTable,"Tipo Pg"			,1,1,.F.)
+			_oExcel:AddColumn(_cPlan,_cTable,"Valor Pg"			,3,2,.F.)
+			_oExcel:AddColumn(_cPlan,_cTable,"Emissao Pg"		,1,1,.F.)
+			_oExcel:AddColumn(_cPlan,_cTable,"Vencto Pg"		,1,1,.F.)
+			_oExcel:AddColumn(_cPlan,_cTable,"Série"			,1,1,.F.)
+			_oExcel:AddColumn(_cPlan,_cTable,"Número"			,1,1,.F.)
+			_oExcel:AddColumn(_cPlan,_cTable,"Tipo"				,1,1,.F.)
+			_oExcel:AddColumn(_cPlan,_cTable,"Parcela"			,1,1,.F.)
+			_oExcel:AddColumn(_cPlan,_cTable,"Cliente"			,1,1,.F.)
+			_oExcel:AddColumn(_cPlan,_cTable,"Loja"				,1,1,.F.)
+			_oExcel:AddColumn(_cPlan,_cTable,"Nome Cliente"		,1,1,.F.)
+			_oExcel:AddColumn(_cPlan,_cTable,"Data Baixa"		,1,1,.F.)
+			_oExcel:AddColumn(_cPlan,_cTable,"Base Comissão"	,3,2,.F.)
+			_oExcel:AddColumn(_cPlan,_cTable,"% Comissão"		,3,2,.F.)
+			_oExcel:AddColumn(_cPlan,_cTable,"Valor Comissão"	,3,2,.F.)
+			_oExcel:AddColumn(_cPlan,_cTable,"Cheque"			,1,1,.F.)
+			_oExcel:AddColumn(_cPlan,_cTable,"Retido?"			,1,1,.F.)
+
+		Endif
 
 		E3RET->(dbGotop())
 
-		_nTotRet := 0
-
 		While E3RET->(!EOF())
-
-			CheckLine()
 
 			_cOrigem := ''
 			If Empty(E3RET->E3_XINFEXP) //Tocantins
@@ -853,57 +934,93 @@ Static Function ImpRetida(_cCodVen)
 				Endif
 			Endif
 
-			For _nCab := 1 to Len(_aCabec)
+			If _lPdf
 
-				_cImp := ''
-				If _aCabec[_nCab][4] = 'ORIGEM'
-					_cImp := _cOrigem
-				ElseIf _aCabec[_nCab][4] = 'SERIE'
-					_cImp := Alltrim(E3RET->E3_SERIE)
-				ElseIf _aCabec[_nCab][4] = 'NUMERO'
-					_cImp := Alltrim(E3RET->E3_NUM)
-				ElseIf _aCabec[_nCab][4] = 'PARCREC'
-					_cImp := Alltrim(E3RET->E3_PARCELA)
-				ElseIf _aCabec[_nCab][4] = 'TPREC'
-					_cImp := Alltrim(E3RET->E3_TIPO)
-				ElseIf _aCabec[_nCab][4] = 'CODCLI'
-					_cImp := Alltrim(E3RET->E3_CODCLI)
-				ElseIf _aCabec[_nCab][4] = 'LOJA'
-					_cImp := Alltrim(E3RET->E3_LOJA)
-				ElseIf _aCabec[_nCab][4] = 'NOMCLI'
-					_cImp := Alltrim(_cNomCli)
-				ElseIf _aCabec[_nCab][4] = 'DBAIXA'
-					_cImp := dToc(E3RET->E3_EMISSAO)
-				ElseIf _aCabec[_nCab][4] = 'BASCOM'
-					_cImp := Alltrim(Transform(E3RET->E3_BASE,_aCabec[_nCab][6]))
-				ElseIf _aCabec[_nCab][4] = 'PERCOM'
-					_cImp := Alltrim(Transform(E3RET->E3_PORC,_aCabec[_nCab][6]))
-				ElseIf _aCabec[_nCab][4] = 'VALCOM'
-					_cImp := Alltrim(Transform(E3RET->E3_COMIS,_aCabec[_nCab][6]))
-					_nTotRet += E3RET->E3_COMIS
-				Endif
+				CheckLine()
 
-				If !Empty(_cImp)
-					_nColRel := _aCabec[_nCab][Len(_aCabec[_nCab])]
-					_oPrinter:SayAlign(_nLin,_nColRel,_cImp,_oFont2,_aCabec[_nCab][2],7,CLR_HMAGENTA,_aCabec[_nCab][3], 1 )
-				Endif
-			Next _nCab
+				For _nCab := 1 to Len(_aCabec)
 
-			_nLin += 8
+					_cImp := ''
+					If _aCabec[_nCab][4] = 'ORIGEM'
+						_cImp := _cOrigem
+					ElseIf _aCabec[_nCab][4] = 'SERIE'
+						_cImp := Alltrim(E3RET->E3_SERIE)
+					ElseIf _aCabec[_nCab][4] = 'NUMERO'
+						_cImp := Alltrim(E3RET->E3_NUM)
+					ElseIf _aCabec[_nCab][4] = 'PARCREC'
+						_cImp := Alltrim(E3RET->E3_PARCELA)
+					ElseIf _aCabec[_nCab][4] = 'TPREC'
+						_cImp := Alltrim(E3RET->E3_TIPO)
+					ElseIf _aCabec[_nCab][4] = 'CODCLI'
+						_cImp := Alltrim(E3RET->E3_CODCLI)
+					ElseIf _aCabec[_nCab][4] = 'LOJA'
+						_cImp := Alltrim(E3RET->E3_LOJA)
+					ElseIf _aCabec[_nCab][4] = 'NOMCLI'
+						_cImp := Alltrim(_cNomCli)
+					ElseIf _aCabec[_nCab][4] = 'DBAIXA'
+						_cImp := dToc(E3RET->E3_EMISSAO)
+					ElseIf _aCabec[_nCab][4] = 'BASCOM'
+						_cImp := Alltrim(Transform(E3RET->E3_BASE,_aCabec[_nCab][6]))
+					ElseIf _aCabec[_nCab][4] = 'PERCOM'
+						_cImp := Alltrim(Transform(E3RET->E3_PORC,_aCabec[_nCab][6]))
+					ElseIf _aCabec[_nCab][4] = 'VALCOM'
+						_cImp := Alltrim(Transform(E3RET->E3_COMIS,_aCabec[_nCab][6]))
+						_nTotRet += E3RET->E3_COMIS
+					Endif
+
+					If !Empty(_cImp)
+						_nColRel := _aCabec[_nCab][Len(_aCabec[_nCab])]
+						_oPrinter:SayAlign(_nLin,_nColRel,_cImp,_oFont2,_aCabec[_nCab][2],7,CLR_HMAGENTA,_aCabec[_nCab][3], 1 )
+					Endif
+				Next _nCab
+
+				_nLin += 8
+			Else
+
+				_aCel := {		;
+				E3RET->E3_VEND	,;
+				Alltrim(Posicione("SA3",1,xFilial("SA3")+E3RET->E3_VEND,"A3_NOME"))	,;
+				_cOrigem	,;
+				''	,;
+				''	,;
+				''	,;
+				''	,;
+				''	,;
+				''	,;
+				''	,;
+				Alltrim(E3RET->E3_SERIE)		,;
+				Alltrim(E3RET->E3_NUM)		,;
+				Alltrim(E3RET->E3_TIPO)		,;
+				Alltrim(E3RET->E3_PARCELA)	,;
+				Alltrim(E3RET->E3_CODCLI)	,;
+				Alltrim(E3RET->E3_LOJA)		,;
+				_cNomCli				,;
+				E3RET->E3_EMISSAO	,;
+				E3RET->E3_BASE		,;
+				E3RET->E3_PORC		,;
+				E3RET->E3_COMIS		,;
+				''	,;
+				'S'	}
+
+				_oExcel:AddRow(_cPlan,_cTable,_aCel) //Insere uma linha na Tabela
+
+			Endif
 
 			E3RET->(dbSkip())
 		EndDo
 
-		_cMsg := "Total Comissões Retidas: "
-		ImpTotal(_cMsg,_oFont2N,'VALCOM',_nTotRet,CLR_MAGENTA,_nCol+5)
+		If _lPdf
+			_cMsg := "Total Comissões Retidas: "
+			ImpTotal(_cMsg,_oFont2N,'VALCOM',_nTotRet,CLR_MAGENTA,_nCol+5)
 
-		_nLin += 8
+			_nLin += 8
+		Endif
 
 	Endif
 
 	E3RET->(dbCloseArea())
 
-	_nLin += 8
+	//	_nLin += 8
 
 Return(Nil)
 
@@ -911,45 +1028,58 @@ Return(Nil)
 
 Static Function ImpDebCre(_cForLj)
 
-
 	If TSB->(msSeek(_cForLj))
 
-		_nLin += 8
 		CheckLine()
 
-		_cMsg := "Informações Adicionais: "
-		ImpTotal(_cMsg,_oFont2N,'VALCOM',0,CLR_HCYAN,_nCol+5)
+		_oPrinter:SayAlign(_nLin,_nCol+5,"Débitos/Créditos:",_oFont2N,_nColTot,7,CLR_GRAY,0, 1 )
 
-		While TSB->(!EOF()) .And. TSB->FORNECE + TSB->LOJA = _cForLj
+		While TSB->(!EOF()) .And. TSB->FORNECE + TSB->LJFOR = _cForLj
 
-			//			_nLin += 8
-			//			CheckLine()
+			_nLin += 8
+			CheckLine()
 
-			//		_cMsg := "Total Comissões Retidas: "
-			//		ImpTotal(_cMsg,_oFont2N,'VALCOM',_nTotRet,CLR_MAGENTA,_nCol+5)
-			//
-			//	AADD(_aCamp,{"FORNECE"	, "C" , 006, 0 })
-			//	AADD(_aCamp,{"LOJA"		, "C" , 002, 0 })
-			//	AADD(_aCamp,{"PREFIXO"	, "C" , 003, 0 })
-			//	AADD(_aCamp,{"TITULO"	, "C" , 009, 0 })
-			//	AADD(_aCamp,{"PARCELA"	, "C" , 001, 0 })
-			//	AADD(_aCamp,{"TIPO"		, "C" , 003, 0 })
-			//	AADD(_aCamp,{"EMISSAO"	, "D" , 008, 0 })
-			//	AADD(_aCamp,{"VENCTO"	, "D" , 008, 0 })
-			//	AADD(_aCamp,{"VALOR"	, "N" , 012, 2 })
-			//	AADD(_aCamp,{"SALDO"	, "N" , 012, 2 })
-			//	AADD(_aCamp,{"HIST"		, "C" , 100, 0 })
+			_nPosTit := aScan(_aCabec,{|x| x[4] = 'ORIGEM'})
+			_nPosTit := _aCabec[_nPosTit][Len(_aCabec[_nPosTit])]
+			_cTit := Alltrim(TSB->PREFIXO)+'-'+Alltrim(TSB->TITULO)+If(!Empty(TSB->PARCELA),'-'+Alltrim(TSB->PARCELA),'')
+			_oPrinter:SayAlign(_nLin,_nPosTit,"Título: "+_cTit,_oFont2,_nColTot,7,CLR_HGRAY,0, 1 )
 
+			_nPosTip := aScan(_aCabec,{|x| x[4] = 'PARCREC'})
+			_nPosTip := _aCabec[_nPosTip][Len(_aCabec[_nPosTip])]
+			_cTip := Alltrim(TSB->TIPO)
+			_oPrinter:SayAlign(_nLin,_nPosTip,"Tipo: "+_cTip,_oFont2,_nColTot,7,CLR_HGRAY,0, 1 )
+
+			_nPosEmi := aScan(_aCabec,{|x| x[4] = 'CODCLI'})
+			_nPosEmi := _aCabec[_nPosEmi][Len(_aCabec[_nPosEmi])]
+			_cEmis := DTOC(TSB->EMISSAO)
+			_oPrinter:SayAlign(_nLin,_nPosEmi,"Emissão: "+_cEmis,_oFont2,_nColTot,7,CLR_HGRAY,0, 1 )
+
+			_nPosVen := aScan(_aCabec,{|x| x[4] = 'NOMCLI'})
+			_nPosVen := _aCabec[_nPosVen][Len(_aCabec[_nPosVen])]+30
+			_cVencto := DTOC(TSB->VENCTO)
+			_oPrinter:SayAlign(_nLin,_nPosVen,"Vencto: "+_cVencto,_oFont2,_nColTot,7,CLR_HGRAY,0, 1 )
+
+			_nPosVal := aScan(_aCabec,{|x| x[4] = 'DBAIXA'})
+			_nPosVal := _aCabec[_nPosVal][Len(_aCabec[_nPosVal])]
+			_cValor := Alltrim(Transform(TSB->VALOR,"@E 999,999.99"))
+			_oPrinter:SayAlign(_nLin,_nPosVal,"Valor: "+_cValor,_oFont2,_nColTot,7,CLR_HGRAY,0, 1 )
+
+			_nPosSld := aScan(_aCabec,{|x| x[4] = 'PERCOM'})
+			_nPosSld := _aCabec[_nPosSld][Len(_aCabec[_nPosSld])]
+			_cSaldo := Alltrim(Transform(TSB->SALDO,"@E 999,999.99"))
+			_oPrinter:SayAlign(_nLin,_nPosSld,"Saldo: "+_cSaldo,_oFont2,_nColTot,7,CLR_HGRAY,0, 1 )
+
+			_nPosHis := aScan(_aCabec,{|x| x[4] = 'CHEQUE'})
+			_nPosHis := _aCabec[_nPosHis][Len(_aCabec[_nPosHis])]
+			_cHis := Alltrim(TSB->HIST)
+			_oPrinter:SayAlign(_nLin,_nPosHis,"Obs: "+_cHis,_oFont2,_nColTot,7,CLR_HGRAY,0, 1 )
+
+			_nTFor	+= TSB->SALDO
 
 			TSB->(dbSkip())
 		EndDo
 
-		_nLin += 8
-		CheckLine()
-
-		_cMsg := "Total Informações Adicionais: "
-		ImpTotal(_cMsg,_oFont2N,'VALCOM',0,CLR_CYAN,_nCol+5)
-
+		_nLin += 16
 	Endif
 
 Return(Nil)
@@ -973,6 +1103,6 @@ Static Function AtuSX1()
 	U_CRIASX1(_cPerg,"11","Separa Vendedor ?"				,""       ,""      ,"mv_chb","N" ,01     ,0      ,0     ,"C",""     	,"MV_PAR11","Não"		,""     ,""     ,""   	,""   ,"Sim" 	,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""    ,""      ,""     ,""   ,"")
 	U_CRIASX1(_cPerg,"12","Gera arquivo PDF individual ?"	,""       ,""      ,"mv_chc","N" ,01     ,0      ,0     ,"C",""     	,"MV_PAR12","Não"		,""     ,""     ,""   	,""   ,"Sim" 	,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""    ,""      ,""     ,""   ,"")
 	U_CRIASX1(_cPerg,"13","Imp. Comissão Retida não Paga ?"	,""       ,""      ,"mv_chd","N" ,01     ,0      ,0     ,"C",""     	,"MV_PAR13","Não"		,""     ,""     ,""   	,""   ,"Sim" 	,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""    ,""      ,""     ,""   ,"")
-	//	U_CRIASX1(_cPerg,"14","Imp. Débitos/Créditos ?"			,""       ,""      ,"mv_che","N" ,01     ,0      ,0     ,"C",""     	,"MV_PAR14","Não"		,""     ,""     ,""   	,""   ,"Sim" 	,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""    ,""      ,""     ,""   ,"")
+	U_CRIASX1(_cPerg,"14","Imp. Débitos/Créditos ?"			,""       ,""      ,"mv_che","N" ,01     ,0      ,0     ,"C",""     	,"MV_PAR14","Não"		,""     ,""     ,""   	,""   ,"Sim" 	,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""    ,""      ,""     ,""   ,"")
 
 Return (Nil)
