@@ -9,10 +9,11 @@
 @version 2.0
 @type Function
 /*/
+
 User Function MZ0223()
 
-	Local _aSize	:= MsAdvSize(.F.)
-	Local _aObjects	:= {}
+	Local _aSize		:= MsAdvSize(.F.)
+	Local _aObjects		:= {}
 
 	Private _oDlg		:= Nil
 	Private _aHeadPro	:= {}
@@ -45,7 +46,7 @@ User Function MZ0223()
 	Private _oFont1		:= TFont():New( "Verdana",0,-17,,.T.,0,,700,.F.,.F.,,,,,, )
 	Private _oFont3		:= TFont():New( "Verdana",0,-11,,.F.,0,,400,.F.,.F.,,,,,, )
 	Private _lAcesso	:= u_ChkAcesso("MZ0223",6,.F.)
-	Private F 			:= 0;Private Fa:= 0;Private Fb := 0;Private Fc := 0;Private Fd := 0;Private Ff := 0;Private Fg := 0
+	Private F			:= 0;Private Fa:= 0;Private Fb := 0;Private Fc := 0;Private Fd := 0;Private Ff := 0;Private Fg := 0
 	Private _cRastroOC	:= ''
 	Private _nUsadGet	:= 0
 	Private _bGeraPed	:= ''
@@ -64,12 +65,10 @@ User Function MZ0223()
 		Return(Nil)
 	Endif
 
-
 	If SC6->(Fieldpos("C6_YPEDGER")) = 0
 		ShowHelpDlg("MZ0223", {'Campo "C6_YPEDGER" não existe na Base de Dados!'},2,{'Solicite a criação do mesmo.'},2)
 		Return(Nil)
 	Endif
-
 
 	AAdd( _aObjects, { 45 , 100, .T. , .T. , .F. } )
 	AAdd( _aObjects, { 45 , 100, .T. , .T. , .F. } )
@@ -82,11 +81,11 @@ User Function MZ0223()
 
 	_oDlg:lEscClose := .F. //Não permite fechar a janela pelo botão "ESC"
 
-	_nTimeOut	:= getnewPar('MV_TIME999',30000)  // 1minuto - tempo em milesegundos
+	_nTimeOut	:= GetNewPar('MZ_TIME223',30000)  // 1minuto - tempo em milesegundos
 	_oTimer001	:= ""
 
-	//_oTimer001	:= TTimer():New(_nTimeOut,{ || MZ223C("A") },_oDlg) //Marcus Vinicius - 28/02/2018 - criado nova função para montagem da grid MVSZ223C
-	_oTimer001	:= TTimer():New(_nTimeOut,{ || MVSZ223C("A") },_oDlg)
+//	_oTimer001	:= TTimer():New(_nTimeOut,{ || MVSZ223C("A") },_oDlg)
+	_oTimer001	:= TTimer():New(_nTimeOut,{ || LjMsgRun('Atualizando... (TimeOut: '+Alltrim(Str(_nTimeOut/1000))+' segundos)','Programação x Pedido',{||MVSZ223C()}) },_oDlg)
 
 	_oTimer001:Activate()
 
@@ -98,15 +97,13 @@ User Function MZ0223()
 
 	BoxRod(_aPosObj[1],_aPosObj[3])
 
-	//MZ223C("A")	//Marcus Vinicius - 28/02/2018 - criado nova função para montagem da grid MVSZ223C
-	//Set Key VK_F5 TO LjMsgRun("Atualizando dados, aguarde...","Programação x Pedido",{||MZ223C("B")})
+	LjMsgRun("Gerando dados para montagem da tela...","Programação x Pedido",{||MVSZ223C()})
 
-	MVSZ223C("A")
-	Set Key VK_F5 TO LjMsgRun("Atualizando dados, aguarde...","Programação x Pedido",{||MVSZ223C("B")})
+//	Set Key VK_F5 TO LjMsgRun("Atualizando dados, aguarde...","Programação x Pedido",{||MVSZ223C("B")})
 
 	ACTIVATE MSDIALOG _oDlg CENTERED
 
-	Set Key VK_F5 TO
+//	Set Key VK_F5 TO
 
 Return(Nil)
 
@@ -131,8 +128,8 @@ Static Function BoxPro(_aPos)
 	4 = Campo utilizado para pesquisa?
 	*/
 	_aFldPro := {{"C6_OK"		,1,"C","N"},;
-	{"C6_NUM"		,38,"C","S"},;
-	{"C5_YTIPOPD"	,25,"C","N"},;
+	{"C6_NUM"		,35,"C","S"},;
+	{"C5_YTIPOPD"	,40,"C","N"},;
 	{"C6_ITEM"		,17,"C","N"},;
 	{"C6_CLI"		,25,"C","N"},;
 	{"C6_LOJA"		,17,"C","N"},;
@@ -145,7 +142,12 @@ Static Function BoxPro(_aPos)
 	{"C6_VALOR"		,30,"N","N"},;
 	{"C6_TES"		,32,"C","N"},;
 	{"C6_UM"		,30,"C","N"},;
-	{"C6_YPEDGER"	,20,"C","N"}}
+	{"C6_YPEDGER"	,25,"C","N"},;
+	{"C5_YCDPALM"	,50,"C","N",},;
+	{"C5_YDTIMPR"	,35,"D","N"},;
+	{"C6_YITPPAL"	,55,"C","N"},;
+	{"C5_YORIGPD"	,30,"C","N"}}
+
 
 	For F := 1 To Len(_aFldPro)
 		SX3->(dbsetOrder(2))
@@ -205,7 +207,6 @@ Static Function BoxPro(_aPos)
 
 Return(Nil)
 
-//TGrid():SetColumnColor( [ nCol], [ nClrBack], [ nClrFore] )
 
 
 Static Function BoxPed(_aPos)
@@ -234,10 +235,15 @@ Static Function BoxPed(_aPos)
 	{"Z1_QUANT"		,30,"N","N"},;
 	{"Z1_PCOREF"	,33,"N","N"},;
 	{"Z1_TES"		,15,"C","N"},;
-	{"Z1_USUARIO"	,40,"C","N"},;
-	{"Z1_LIBER"		,20,"C","N"},;
+	{"Z1_USUARIO"	,45,"C","N"},;
+	{"Z1_LIBER"		,25	,"C","N"},;
 	{"Z1_PEDIDO"	,35,"C","S"},;
-	{"Z1_ITEMPV"	,20,"C","N"}}
+	{"Z1_ITEMPV"	,25,"C","N"},;
+	{"Z1_YTIPO"		,30,"C","N"},;
+	{"Z1_YCDPALM"	,50,"C","N"},;
+	{"Z1_YDTIMPR"	,35,"D","N"},;
+	{"Z1_YITPPAL"	,55,"C","N"},;
+	{"Z1_YORIGPD"	,30,"C","N"}}
 
 	For F := 1 To Len(_aFldPed)
 		SX3->(dbsetOrder(2))
@@ -249,7 +255,6 @@ Static Function BoxPed(_aPos)
 			ElseIf _aFldPed[F][1] = 'Z1_ITEMPV'
 				_cTit := "It.Progr."
 			Else
-				//_cTit := Trim(X3Titulo())
 				_cTit := Trim(SX3->X3_TITULO)
 			Endif
 
@@ -384,170 +389,7 @@ Return(Nil)
 
 
 
-//Popula o Grid
-Static Function MZ223C(_cOpc)
-
-	Local _aAreaAtu		:= GetArea()
-
-	If Select("TSC6'") > 0
-		TSC6->(DbCloseArea())
-	Endif
-
-	_cSQL := " SELECT " +CRLF
-	For Fc := 1 To Len(_aFldPro)
-		_cSQL += " "+_aFldPro[Fc][1]+If(Fc=Len(_aFldPro)," ",", ") +CRLF
-	Next Fc
-	_cSQL += " FROM "+RetSqlName("SC6") +" SC6 " +CRLF
-	_cSQL += " INNER JOIN "+RetSqlName("SC5") +" SC5 ON C5_NUM = C6_NUM AND C5_FILIAL = C6_FILIAL " +CRLF
-	_cSQL += " INNER JOIN "+RetSqlName("SA1") +" SA1 ON C6_CLI = A1_COD AND C6_LOJA = A1_LOJA " +CRLF
-	_cSQL += " INNER JOIN "+RetSqlName("SB1") +" SB1 ON C6_PRODUTO = B1_COD " +CRLF
-	_cSQL += " WHERE SC6.D_E_L_E_T_ = '' AND SC5.D_E_L_E_T_ = '' AND SA1.D_E_L_E_T_ = '' AND SB1.D_E_L_E_T_ = '' " +CRLF
-	_cSQL += " AND C5_FILIAL = '"+xFilial("SC5")+"' AND C6_FILIAL = '"+xFilial("SC6")+"' AND A1_FILIAL = '"+xFilial("SA1")+"' " +CRLF
-	_cSQL += " AND B1_FILIAL = '"+xFilial("SB1")+"' " +CRLF
-	_cSQL += " AND C6_QTDVEN > C6_QTDENT " +CRLF
-	_cSQL += " AND C6_BLQ = '' " +CRLF
-	_cSQL += " AND C5_TIPO = 'N' " +CRLF
-	_cSQL += " AND B1_YVEND = 'S' " +CRLF
-	_cSQL += " ORDER BY C6_NUM, C6_ITEM " +CRLF
-
-	//	MemoWrite("D:\MZ0223.TXT",_cSQL)
-
-	TcQuery _cSQL New Alias "TSC6"
-
-	TcSetField("TSC6","C5_EMISSAO","D")
-	TcSetField("TSC6","C6_ENTREG","D")
-
-	TSC6->(dbGoTop())
-
-	_aBrwPro		:= {}
-
-	While TSC6->(!EOF())
-
-		AADD(_aBrwPro,Array(Len(_aFldPro)))
-		_nLen := Len(_aBrwPro)
-		For Fd := 1 To Len(_aFldPro)
-			If Fd = 1
-				_cLeg := ''
-				If TSC6->C6_YPEDGER == 'S'
-					_cLeg := "0" //					_cLeg := _oClose
-				ElseIf (ddatabase - Posicione('SA1',1,XFILIAL('SA1')+TSC6->C6_CLI+TSC6->C6_LOJA,'A1_YBLQSCI')) > GetMV('MV_YBLQSCI')  .and. (ddatabase - Posicione('SA1',1,XFILIAL('SA1')+TSC6->C6_CLI+TSC6->C6_LOJA,'A1_YBLQSIN')) > GetMV('MV_YBLQSIN')
-					_cLeg := "1" //					_cLeg := _oBlack
-				ElseIf (ddatabase - Posicione('SA1',1,XFILIAL('SA1')+TSC6->C6_CLI+TSC6->C6_LOJA,'A1_YBLQSCI')) > GetMV('MV_YBLQSCI')
-					_cLeg := "2" //					_cLeg := _oYellow
-				ElseIf (ddatabase - Posicione('SA1',1,XFILIAL('SA1')+TSC6->C6_CLI+TSC6->C6_LOJA,'A1_YBLQSIN')) > GetMV('MV_YBLQSIN')
-					_cLeg := "3" //					_cLeg := _oBlue
-				Else
-					_cLeg := "4" //					_cLeg := _oChekOK
-				Endif
-
-				If _cLeg == "4"
-					_cLeg := ChkCli(_cLeg,TSC6->C6_CLI,TSC6->C6_LOJA)
-				Endif
-
-				_aBrwPro[_nLen][Fd] := _cLeg
-			Else
-				_aBrwPro[_nLen][Fd] := &('TSC6->'+_aFldPro[Fd][1])
-			Endif
-		Next Fd
-
-		TSC6->(DbSkip())
-	EndDo
-
-	TSC6->(DbCloseArea())
-
-	_oBrwPro:SetArray(_aBrwPro)
-
-	If Len(_oBrwPro:aArray) <> 0
-		_oBrwPro:bLine := {|| GetArray(_oBrwPro,_aBrwPro,_aFldPro)}
-	Endif
-
-	IndexGrid(_oBrwPro:aArray,_oBrwPro,_cPes1,_aHeadPro,_aFldPro,2)
-
-	If Select("TSZ1") > 0
-		TSZ1->(DbCloseArea())
-	Endif
-
-	_cSQL := " SELECT " +CRLF
-	For Ff := 1 To Len(_aFldPed)
-		_cSQL += " "+_aFldPed[Ff][1]+If(Ff=Len(_aFldPed)," ",", ") +CRLF
-	Next Ff
-	_cSQL += " ,Z1_DTCANC,Z1_USERLGA,Z1_FILIAL " +CRLF
-	_cSQL += " FROM "+RetSqlName("SZ1") +" SZ1 " +CRLF
-	_cSQL += " WHERE SZ1.D_E_L_E_T_ = '' " +CRLF
-	_cSQL += " AND Z1_FILIAL = '"+xFilial("SZ1")+"' " +CRLF
-	_cSQL += " AND Z1_DTCANC = '' " +CRLF
-	_cSQL += " ORDER BY Z1_NUM " +CRLF
-
-	TcQuery _cSQL New Alias "TSZ1"
-
-	TcSetField("TSZ1","Z1_EMISSAO","D")
-	TcSetField("TSZ1","Z1_DTENT","D")
-
-	TSZ1->(dbGoTop())
-
-	_aBrwPed		:= {}
-
-	While TSZ1->(!EOF())
-
-		AADD(_aBrwPed,Array(Len(_aFldPed)))
-		_nLen := Len(_aBrwPed)
-		For Fg := 1 To Len(_aFldPed)
-			If Fg = 1
-				_cLeg := ''
-				If TSZ1->Z1_LIBER == 'S' .And. Empty(Z1_DTCANC)
-					_cLeg := _oGreen
-				ElseIf TSZ1->Z1_LIBER == 'B' .and. ((ddatabase - Posicione('SA1',1,XFILIAL('SA1')+TSZ1->Z1_CLIENTE+TSZ1->Z1_LOJA,'A1_YBLQSCI')) > GetMV('MV_YBLQSCI')  .and. (ddatabase - Posicione('SA1',1,XFILIAL('SA1')+TSZ1->Z1_CLIENTE+TSZ1->Z1_LOJA,'A1_YBLQSIN')) > GetMV('MV_YBLQSIN'))
-					_cLeg := _oBlack
-				ElseIf TSZ1->Z1_LIBER == 'B' .and. ((ddatabase - Posicione('SA1',1,XFILIAL('SA1')+TSZ1->Z1_CLIENTE+TSZ1->Z1_LOJA,'A1_YBLQSIN')) > GetMV('MV_YBLQSIN'))
-					_cLeg := _oBlue
-				ElseIf TSZ1->Z1_LIBER == 'B' .and. ((ddatabase - Posicione('SA1',1,XFILIAL('SA1')+TSZ1->Z1_CLIENTE+TSZ1->Z1_LOJA,'A1_YBLQSCI')) > GetMV('MV_YBLQSCI'))
-					_cLeg := _oYellow
-				ElseIf !Empty(TSZ1->Z1_DTCANC) .AND. ALLTRIM(TSZ1->Z1_USERLGA) =='MIZ019'
-					//					_cLeg := _oCancel
-					_cLeg := _oBrow
-				ElseIf !(TSZ1->Z1_FILIAL $ _cRastroOC) .AND. !Empty(TSZ1->Z1_DTCANC)
-					_cLeg := _oBrow
-				ElseIf TSZ1->Z1_LIBER == 'B'
-					_cLeg := _oRed
-				Endif
-
-				_aBrwPed[_nLen][Fg] := _cLeg
-			Else
-				_aBrwPed[_nLen][Fg] := &('TSZ1->'+_aFldPed[Fg][1])
-			Endif
-		Next Fg
-
-		TSZ1->(DbSkip())
-	EndDo
-
-	TSZ1->(DbCloseArea())
-
-	_oBrwPed:SetArray(_aBrwPed)
-
-	If Len(_oBrwPed:aArray) <> 0
-		_oBrwPed:bLine := {|| GetArray(_oBrwPed,_aBrwPed,_aFldPed)}
-	Endif
-
-	IndexGrid(_oBrwPed:aArray,_oBrwPed,_cPes2,_aHeadPed,_aFldPed,2)
-
-	_oBrwPro:Refresh()
-	_oBrwPed:Refresh()
-
-	RestArea(_aAreaAtu)
-
-	If _cOpc <> "A"
-		MsgInfo("Status Atualizado as " + Time())
-	Endif
-
-Return(Nil)
-
-
-
 Static Function GetArray(_oBrw,_aBrw,_aFld)
-
-	If _aBrw[_oBrw:nAt,2] = '000024'
-		_lPare := .T.
-	Endif
 
 	_aRet := {}
 	For Fb := 1 To Len(_aFld)
@@ -782,23 +624,36 @@ Static Function AtuGrid()
 		_nPUNID	:= Ascan(_oDadosGet:aHeader,{|x|Alltrim(Upper(x[2]))=="Z1_UNID"})
 		_nPYTP	:= Ascan(_oDadosGet:aHeader,{|x|Alltrim(Upper(x[2]))=="Z1_YTIPO"})
 
+		_nPYPAL	:= Ascan(_oDadosGet:aHeader,{|x|Alltrim(Upper(x[2]))=="Z1_YCDPALM"}) //C5_YCDPALM
+		_nPYDIM	:= Ascan(_oDadosGet:aHeader,{|x|Alltrim(Upper(x[2]))=="Z1_YDTIMPR"}) //C5_YDTIMPR
+		_nPYITP	:= Ascan(_oDadosGet:aHeader,{|x|Alltrim(Upper(x[2]))=="Z1_YITPPAL"}) //C6_YITPPAL
+		_nPYORI	:= Ascan(_oDadosGet:aHeader,{|x|Alltrim(Upper(x[2]))=="Z1_YORIGPD"}) //“GEOSALES”
+
 		_lRet  := .T.
 		_aCols := {}
 		_nCont := 0
+
+		_nQtde := Round(_aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C6_QTDVEN"})] / _nQtPed,TamSx3("Z1_QUANT")[2])
+		_cCli  := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C6_CLI"		})]
+		_cLj   := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C6_LOJA"		})]
+		_cProd := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C6_PRODUTO"	})]
+		_nVlUn := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C6_PRCVEN"	})]
+		_cPedi := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C6_NUM"		})]
+		_cItem := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C6_ITEM"		})]
+		_cYTip := 'N'
+		_cTipo := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C5_YTIPOPD"	})]
+		_dEntr := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C6_ENTREG"	})]
+		_cUM   := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C6_UM"		})]
+
+		_cCDPa := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C5_YCDPALM"	})]
+		_dDtIm := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C5_YDTIMPR"	})]
+		_cItPa := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C6_YITPPAL"	})]
+		_cOrig := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C5_YORIGPD"	})]
 
 		For J := 1 To _nQtPed
 			_nCont++
 			AADD(_aCols,Array(_nUsadGet+1))
 
-			_nQtde := Round(_aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C6_QTDVEN"})] / _nQtPed,TamSx3("Z1_QUANT")[2])
-			_cCli  := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C6_CLI"		})]
-			_cLj   := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C6_LOJA"		})]
-			_cProd := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C6_PRODUTO"	})]
-			_nVlUn := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C6_PRCVEN"	})]
-			_cPedi := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C6_NUM"		})]
-			_cItem := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C6_ITEM"		})]
-			//			_cTipo := 'N'
-			_cTipo := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C5_YTIPOPD"	})]
 			_cNum  := GETSX8NUM("SZ1","Z1_NUM")
 			_cHora := TIME()
 			ConfirmSx8()
@@ -806,15 +661,15 @@ Static Function AtuGrid()
 			_aCols[_nCont][_nPNum]  := _cNum
 			_aCols[_nCont][_nPCli]  := _cCli
 			_aCols[_nCont][_nPLoj]  := _cLj
-			_aCols[_nCont][_nPEmi]  := dDataBase//_aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C5_EMISSAO"})]
+			_aCols[_nCont][_nPEmi]  := dDataBase
 			_aCols[_nCont][_nPHor]  := _cHora
-			_aCols[_nCont][_nPEnt]  := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C6_ENTREG"})]
+			_aCols[_nCont][_nPEnt]  := _dEntr
 			_aCols[_nCont][_nPPro]  := _cProd
 			_aCols[_nCont][_nPQtd]  := _nQtde
 			_aCols[_nCont][_nPVlR]  := _nVlUn
 			_aCols[_nCont][_nPTip]  := _cTipo
 			_aCols[_nCont][_nPUsu]  := Alltrim(USRRETNAME(RETCODUSR()))
-			_aCols[_nCont][_nPDLi]  := dDataBase//_aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C6_ENTREG"})]
+			_aCols[_nCont][_nPDLi]  := dDataBase
 			_aCols[_nCont][_nPPrg]  := _cPedi
 			_aCols[_nCont][_nPItP]  := _cItem
 			_aCols[_nCont][_nPHrE]  := _cHora
@@ -829,10 +684,14 @@ Static Function AtuGrid()
 			_aCols[_nCont][_nPME03] := Space(TamSX3("Z1_MENS03")[1])
 			_aCols[_nCont][_nPPLAC] := Space(TamSX3("Z1_PLACA")[1])
 			_aCols[_nCont][_nPOBSE] := Space(TamSX3("Z1_OBSER")[1])
-			_aCols[_nCont][_nPUNID] := _aBrwPro[_oBrwPro:nAt][Ascan(_aFldPro,{|x| x[1] == "C6_UM"})]
+			_aCols[_nCont][_nPUNID] := _cUM
 			If _nPYTP > 0
-				_aCols[_nCont][_nPYTP]  := _cTipo
+				_aCols[_nCont][_nPYTP]  := _cYTip
 			Endif
+			_aCols[_nCont][_nPYPAL] := _cCDPa
+			_aCols[_nCont][_nPYDIM] := _dDtIm
+			_aCols[_nCont][_nPYITP] := _cItPa
+			_aCols[_nCont][_nPYORI] := If(!Empty(_cOrig),_cOrig,If(!Empty(_cCDPa) .And. !Empty(_dDtIm) .And. !Empty(_cItPa),'GEOSALES',''))
 
 			_lGo := AtuGat(_aCols,_nCont,_cCli,_cLj,_cProd,_nQtde,_nVlUn,_cTipo)
 
@@ -2020,7 +1879,6 @@ Return(_lRet)
 
 
 
-
 User Function GMZ223B(_cCampo)
 	// GATILHO REF. DATA DE ENTREGA NO PEDIDO DE VENDAS
 	// DATA : 25/09/13
@@ -2105,9 +1963,9 @@ User Function GMZ223B(_cCampo)
 					Loop
 				Endif
 
-//				If _cFrete == "C"
-//				Else
-//				Endif
+				//				If _cFrete == "C"
+				//				Else
+				//				Endif
 
 				If SC4->C4_DATA == _dDtEnt
 					If _cFrete == "C"
@@ -2176,7 +2034,6 @@ User Function GMZ223B(_cCampo)
 	RestArea(_aAliOri)
 
 Return(_cRetorno)
-
 
 
 
@@ -2382,7 +2239,8 @@ Static Function But_Right()
 
 	If _cOK = '0'
 
-		_oTMenu3B := TMenuItem():New(_oDlg,'Excluir Pedido',,,,{||ExcMZ223()},,'NOCONNECT',,,,,,,.T.)
+//		_oTMenu3B := TMenuItem():New(_oDlg,'Excluir Pedido',,,,{||ExcMZ223()},,'NOCONNECT',,,,,,,.T.)
+		_oTMenu3B := TMenuItem():New(_oDlg,'Excluir Pedido',,,,{|| LjMsgRun('Excluindo Pedido, aguarde...','Programação x Pedido',{||ExcMZ223()})},,'NOCONNECT',,,,,,,.T.)
 		_oMenu01:Add(_oTMenu3B)
 
 	Endif
@@ -2415,7 +2273,6 @@ Static Function PedMZ223(_cPed)
 	RestArea(_aAliSC5)
 
 Return(Nil)
-
 
 
 
@@ -2496,197 +2353,8 @@ Static Function ExcMZ223()
 Return(_lRet)
 
 
-
-
-Static Function ChkCli(_cOpc,_cCli,_cLj)
-
-	SA1->(dbSetOrder(1))
-	SA1->(dbSeek(xFilial("SA1") + _cCli + _cLj))
-
-	If SA1->A1_RISCO == "D" .Or. SA1->A1_RISCO == "E"
-
-		ShowHelpDlg("MZ0223", {'Cliente com risco "D" ou "E".'},2,{'Contate o Financeiro para ajuste do grau de risco do Cliente.'},2)
-
-		_cOpc := "8" //Cliente com Risco D ou E
-
-		Return(_cOpc)
-	Endif
-
-	_cCond := Space(03)
-
-	ZA6->(dbSetOrder(1))
-	If ZA6->(dbSeek(xFilial("ZA6") + SA1->A1_COD + SA1->A1_LOJA + "L"))
-		_cCond     := ZA6->ZA6_PRAZO
-	EndIf
-
-	If SA1->A1_YLIB == "N" .OR. SA1->A1_MSBLQL == "1"
-
-		//		If SA1->A1_MSBLQL = "1"
-		//			ShowHelpDlg("MZ0223", {'Cadastro do cliente bloqueado!'},2,{'Solicite ao Responsavel liberar o cadastro do cliente antes de colocar pedidos para o mesmo.'},2)
-		//		Else
-		//			ShowHelpDlg("MZ0223", {'Cliente não está liberado(Campo Liberado no cadastro de cliente como N )!'},2,{'Solicite ao Responsavel liberar o cliente antes de colocar pedidos para o mesmo.'},2)
-		//		EndIf
-		_cOpc := "6" //Cliente Bloqueado
-
-		Return(_cOpc)
-	Endif
-
-
-	ZA6->(dbSetOrder(1))
-	If ZA6->(!dbSeek(xFilial("ZA6") + SA1->A1_COD + SA1->A1_LOJA + "L"))
-		//		ShowHelpDlg("MZ0223", {'Cliente solicitado está Sem Limite de Credito!'},2,{'Solicite atualização do cadastro de Cliente.'},2)
-
-		_cOpc := "7" //Cliente sem Limite de crédito
-		Return(_cOpc)
-	EndIf
-
-	If _cCond != "100"
-		_lBloq := .F.
-		If SA1->A1_RISCO != "S"
-
-			_dData    := Date()
-			_lFSemana := .F.
-			If Dow(_dData) == 7      // SABADO
-				_dData    := _dData - 2
-				_lFSemana := .T.
-			ElseIf Dow(_dData) == 1  // DOMINGO
-				_dData    := _dData - 3
-				_lFSemana := .T.
-			ElseIf Dow(_dData) == 2  // SEGUNDA
-				//				_dData    := _dData - 4
-				_dData    := _dData - 3	// Marcus Vinicius - 26/07/2016 - Alterado para validar os títulos vencidos na sexta-feira.
-				_lFSemana := .T.
-			Else
-				_dData    := _dData -1
-			Endif
-
-			_lBloq := .F.
-
-			//If cEmpAnt == "01" .And. cFilAnt == "04"	Comentado por Alison - 18/04/18
-			If cEmpAnt + cFilAnt $ "0104|0222"
-				_cQ:= " SELECT E1_CLIENTE,E1_LOJA,E1_NOMCLI,E1_VENCREA, SUM(E1_SALDO) AS SALDO FROM SE1200 A "
-				If !Empty(SA1->A1_GRPVEN)
-					_cQ+= " INNER JOIN "+RetSqlName("SA1")+" A1 ON A1_COD = E1_CLIENTE AND A1_LOJA = E1_LOJA "
-				Endif
-				_cQ+= " WHERE A.D_E_L_E_T_ = '' AND E1_VENCREA <= '"+Dtos(_dData)+"' AND E1_SALDO > 0 "
-				_cQ+= " AND E1_YOBSLIB = '' AND E1_TIPO NOT IN ('NCC','RA','NP','PR')"
-				If !Empty(SA1->A1_GRPVEN)
-					_cQ+= " AND A1.D_E_L_E_T_ = '' AND A1_GRPVEN = '"+SA1->A1_GRPVEN+"' "
-				Else
-					_cQ+= " AND E1_CLIENTE = '"+SA1->A1_COD+"' "
-				Endif
-				_cQ+= " GROUP BY E1_CLIENTE,E1_LOJA,E1_NOMCLI,E1_VENCREA "
-				_cQ+= " ORDER BY E1_CLIENTE,E1_LOJA,E1_NOMCLI,E1_VENCREA DESC"
-
-				TCQUERY _cQ NEW ALIAS "ZZ"
-
-				TCSETFIELD("ZZ","E1_VENCREA","D")
-
-				ZZ->(dbGotop())
-
-				While ZZ->(!Eof()) .And. !_lBloq
-
-					If ZZ->E1_VENCREA == _dData
-						If !_lFSemana
-							If Left(Time(),2) >= "11"
-								_lBloq := .T.
-							Endif
-						Else
-							_lBloq := .T.
-						Endif
-					Else
-						_lBloq := .T.
-					Endif
-
-					ZZ->(dbSkip())
-				EndDo
-
-				ZZ->(dbCloseArea())
-			Endif
-
-			_cQ:= " SELECT E1_CLIENTE,E1_LOJA,E1_NOMCLI,E1_VENCREA, SUM(E1_SALDO) AS SALDO FROM "+RetSqlName("SE1")+" A "
-			If !Empty(SA1->A1_GRPVEN)
-				_cQ+= " INNER JOIN "+RetSqlName("SA1")+" A1 ON A1_COD = E1_CLIENTE AND A1_LOJA = E1_LOJA "
-			Endif
-			_cQ+= " WHERE A.D_E_L_E_T_ = '' AND E1_VENCREA <= '"+Dtos(_dData)+"' AND E1_SALDO > 0 "
-			_cQ+= " AND E1_YOBSLIB = '' AND E1_TIPO NOT IN ('NCC','RA','NP','PR')"
-			If !Empty(SA1->A1_GRPVEN)
-				_cQ+= " AND A1.D_E_L_E_T_ = '' AND A1_GRPVEN = '"+SA1->A1_GRPVEN+"' "
-			Else
-				_cQ+= " AND E1_CLIENTE = '"+SA1->A1_COD+"' "
-			Endif
-			_cQ+= " GROUP BY E1_CLIENTE,E1_LOJA,E1_NOMCLI,E1_VENCREA "
-			_cQ+= " ORDER BY E1_CLIENTE,E1_LOJA,E1_NOMCLI,E1_VENCREA DESC"
-
-			TCQUERY _cQ NEW ALIAS "ZZ"
-
-			TCSETFIELD("ZZ","E1_VENCREA","D")
-
-			ZZ->(dbGotop())
-
-			While ZZ->(!Eof()) .And. !_lBloq
-
-				If ZZ->E1_VENCREA == _dData
-					If !_lFSemana
-						If Left(Time(),2) >= "11"
-							_lBloq := .T.
-						Endif
-					Else
-						_lBloq := .T.
-					Endif
-				Else
-					_lBloq := .T.
-				Endif
-
-				ZZ->(dbSkip())
-			EndDo
-
-			ZZ->(dbCloseArea())
-
-			If !_lBloq
-				_cQ := " SELECT Z1_CLIENTE,Z1_LOJA,SUM(Z1_QUANT * Z1_PCOREF) AS TOTAL "
-				_cQ += " FROM "+RetSqlName("SZ1")+" A WHERE A.D_E_L_E_T_ = '' AND Z1_CLIENTE = '"+SA1->A1_COD+"' "
-				_cQ += " AND Z1_LOJA = '"+SA1->A1_LOJA+"' AND Z1_DTCANC = '' "
-				_cQ += " GROUP BY Z1_CLIENTE,Z1_LOJA "
-				_cQ += " ORDER BY Z1_CLIENTE,Z1_LOJA "
-
-				TCQUERY _cQ NEW ALIAS "ZZ1"
-
-				_nPedido := ZZ1->TOTAL
-
-				ZZ1->(dbCloseArea())
-
-				//				_nSdoTit := ZA6->ZA6_SDOTIT	+ _nPedido + (_nQtde *_nVlUn)
-				_nSdoTit := ZA6->ZA6_SDOTIT	+ _nPedido
-				_nDif    := ZA6->ZA6_VALOR  - _nSdoTit
-
-				If _nDif < 0
-					_nDif := _nDif * -1
-
-					_nPerc   := (_nDif / ZA6->ZA6_VALOR) * 100
-
-					If _nPerc > GETMV("MZ_PERLIM")
-						//						ShowHelpDlg("MZ0223", {'3 - Limite de Crédito Excedido em '+ STR(GETMV("MZ_PERLIM"),2)+' %.'},2,{'Solicite atualização do cadastro de Cliente.'},2)
-						_cOpc := "7" //Cliente sem Limite de crédito ou Excedido
-						Return(_cOpc)
-					Endif
-				Endif
-			Endif
-		Endif
-
-		If _lBloq
-			//			ShowHelpDlg("MZ0223", {'Cliente Com Titulo Vencido.'},2,{'Verificar com o Departamento Financeiro.'},2)
-
-			_cOpc := "5" //Cliente com título Vencido
-			Return(_cOpc)
-		Endif
-	Endif
-
-Return(_cOpc)
-
-
 //Popula o Grid
-Static Function MVSZ223C(_cOpc)
+Static Function MVSZ223C()
 
 	Local _aAreaAtu		:= GetArea()
 	Local _cYBLQSCI		:= GetMV('MV_YBLQSCI')
@@ -2736,6 +2404,7 @@ Static Function MVSZ223C(_cOpc)
 
 	TcQuery _cSQL New Alias "TSC6"
 
+	TcSetField("TSC6","C5_YDTIMPR","D")
 	TcSetField("TSC6","C5_EMISSAO","D")
 	TcSetField("TSC6","C6_ENTREG","D")
 	TcSetField("TSC6","A1_YBLQSCI","D")
@@ -2825,6 +2494,7 @@ Static Function MVSZ223C(_cOpc)
 
 	TcQuery _cSQL New Alias "TSZ1"
 
+	TcSetField("TSZ1","Z1_YDTIMPR","D")
 	TcSetField("TSZ1","Z1_EMISSAO"	,"D")
 	TcSetField("TSZ1","Z1_DTENT"	,"D")
 	TcSetField("TSZ1","Z1_DTCANC"	,"D")
@@ -2883,9 +2553,9 @@ Static Function MVSZ223C(_cOpc)
 
 	RestArea(_aAreaAtu)
 
-	If _cOpc <> "A"
-		MsgInfo("Status Atualizado as " + Time())
-	Endif
+//	If _cOpc <> "A"
+//		MsgInfo("Status Atualizado as " + Time())
+//	Endif
 
 Return(Nil)
 
