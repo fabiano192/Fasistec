@@ -84,7 +84,7 @@ User Function MZ0223()
 	_nTimeOut	:= GetNewPar('MZ_TIME223',30000)  // 1minuto - tempo em milesegundos
 	_oTimer001	:= ""
 
-//	_oTimer001	:= TTimer():New(_nTimeOut,{ || MVSZ223C("A") },_oDlg)
+	//	_oTimer001	:= TTimer():New(_nTimeOut,{ || MVSZ223C("A") },_oDlg)
 	_oTimer001	:= TTimer():New(_nTimeOut,{ || LjMsgRun('Atualizando... (TimeOut: '+Alltrim(Str(_nTimeOut/1000))+' segundos)','Programação x Pedido',{||MVSZ223C()}) },_oDlg)
 
 	_oTimer001:Activate()
@@ -99,11 +99,11 @@ User Function MZ0223()
 
 	LjMsgRun("Gerando dados para montagem da tela...","Programação x Pedido",{||MVSZ223C()})
 
-//	Set Key VK_F5 TO LjMsgRun("Atualizando dados, aguarde...","Programação x Pedido",{||MVSZ223C("B")})
+	//	Set Key VK_F5 TO LjMsgRun("Atualizando dados, aguarde...","Programação x Pedido",{||MVSZ223C("B")})
 
 	ACTIVATE MSDIALOG _oDlg CENTERED
 
-//	Set Key VK_F5 TO
+	//	Set Key VK_F5 TO
 
 Return(Nil)
 
@@ -187,11 +187,12 @@ Static Function BoxPro(_aPos)
 	_oBrwPro		:= TCBrowse():New( _nLini,_nColi,_nColf - _nColi,_nLinf - _nLini,,_aHeadPro,_aColSzPro,_oDlg,,,,,{||},,,,,,,.F.,,.T.,,.F.,,.T.,.T.)
 
 	_aBrwPro := {}
+	AADD(_aBrwPro,Array(Len(_aFldPro)))
 	For Fa := 1 To Len(_aFldPro)
 		If _aFldPro[Fa][1] = 'C6_OK'
-			AAdd(_aBrwPro,"4")
+			_aBrwPro[1][Fa] := "4"
 		Else
-			AAdd(_aBrwPro,Criavar(_aFldPro[Fa][1]))
+			_aBrwPro[1][Fa] := Criavar(_aFldPro[Fa][1])
 		Endif
 	Next Fa
 
@@ -282,11 +283,12 @@ Static Function BoxPed(_aPos)
 	_oBrwPed 		:= TCBrowse():New( _nLini,_nColi,_nColf - _nColi,_nLinf - _nLini,,_aHeadPed,_aColSzPed,_oDlg,,,,,{||},,,,,,,.F.,,.T.,,.F.,,.T.,.T.)
 
 	_aBrwPed := {}
+	AADD(_aBrwPed,Array(Len(_aFldPed)))
 	For Fe := 1 To Len(_aFldPed)
 		If _aFldPed[Fe][1] = 'Z1_OK'
-			AAdd(_aBrwPed,_oRed)
+			_aBrwPed[1][Fe] := _oRed
 		Else
-			AAdd(_aBrwPed,Criavar(_aFldPed[Fe][1]))
+			_aBrwPed[1][Fe] := Criavar(_aFldPed[Fe][1])
 		Endif
 	Next Fe
 
@@ -2239,7 +2241,7 @@ Static Function But_Right()
 
 	If _cOK = '0'
 
-//		_oTMenu3B := TMenuItem():New(_oDlg,'Excluir Pedido',,,,{||ExcMZ223()},,'NOCONNECT',,,,,,,.T.)
+		//		_oTMenu3B := TMenuItem():New(_oDlg,'Excluir Pedido',,,,{||ExcMZ223()},,'NOCONNECT',,,,,,,.T.)
 		_oTMenu3B := TMenuItem():New(_oDlg,'Excluir Pedido',,,,{|| LjMsgRun('Excluindo Pedido, aguarde...','Programação x Pedido',{||ExcMZ223()})},,'NOCONNECT',,,,,,,.T.)
 		_oMenu01:Add(_oTMenu3B)
 
@@ -2375,7 +2377,6 @@ Static Function MVSZ223C()
 		_dData    := _dData -1
 	Endif
 
-
 	If Select("TSC6'") > 0
 		TSC6->(DbCloseArea())
 	Endif
@@ -2404,74 +2405,78 @@ Static Function MVSZ223C()
 
 	TcQuery _cSQL New Alias "TSC6"
 
-	TcSetField("TSC6","C5_YDTIMPR","D")
-	TcSetField("TSC6","C5_EMISSAO","D")
-	TcSetField("TSC6","C6_ENTREG","D")
-	TcSetField("TSC6","A1_YBLQSCI","D")
-	TcSetField("TSC6","A1_YBLQSIN","D")
+	Count to _nTSC6
 
-	TSC6->(dbGoTop())
+	If _nTSC6 > 0
+		TcSetField("TSC6","C5_YDTIMPR","D")
+		TcSetField("TSC6","C5_EMISSAO","D")
+		TcSetField("TSC6","C6_ENTREG","D")
+		TcSetField("TSC6","A1_YBLQSCI","D")
+		TcSetField("TSC6","A1_YBLQSIN","D")
 
-	_cCliLoja := ''
+		TSC6->(dbGoTop())
 
-	_aBrwPro		:= {}
+		_cCliLoja := ''
 
-	While TSC6->(!EOF())
+		_aBrwPro		:= {}
 
-		AADD(_aBrwPro,Array(Len(_aFldPro)))
-		_nLen := Len(_aBrwPro)
+		While TSC6->(!EOF())
 
-		For Fd := 1 To Len(_aFldPro)
-			If Fd = 1
-				_cLeg := ''
-				If TSC6->C6_YPEDGER == 'S'
-					_cLeg := "0" //					_cLeg := _oClose
-				ElseIf _cCliLoja <> TSC6->C6_CLI+TSC6->C6_LOJA
+			AADD(_aBrwPro,Array(Len(_aFldPro)))
+			_nLen := Len(_aBrwPro)
 
-					_cCliLoja := TSC6->C6_CLI+TSC6->C6_LOJA
+			For Fd := 1 To Len(_aFldPro)
+				If Fd = 1
+					_cLeg := ''
+					If TSC6->C6_YPEDGER == 'S'
+						_cLeg := "0" //					_cLeg := _oClose
+					ElseIf _cCliLoja <> TSC6->C6_CLI+TSC6->C6_LOJA
 
-					If (ddatabase - TSC6->A1_YBLQSCI) > _cYBLQSCI .and. (ddatabase - TSC6->A1_YBLQSIN) > _cYBLQSIN
-						_cLeg := "1" //					_cLeg := _oBlack
-					ElseIf (ddatabase - TSC6->A1_YBLQSCI) > _cYBLQSCI
-						_cLeg := "2" //					_cLeg := _oYellow
-					ElseIf (ddatabase - TSC6->A1_YBLQSCI) > _cYBLQSIN
-						_cLeg := "3" //					_cLeg := _oBlue
+						_cCliLoja := TSC6->C6_CLI+TSC6->C6_LOJA
+
+						If (ddatabase - TSC6->A1_YBLQSCI) > _cYBLQSCI .and. (ddatabase - TSC6->A1_YBLQSIN) > _cYBLQSIN
+							_cLeg := "1" //					_cLeg := _oBlack
+						ElseIf (ddatabase - TSC6->A1_YBLQSCI) > _cYBLQSCI
+							_cLeg := "2" //					_cLeg := _oYellow
+						ElseIf (ddatabase - TSC6->A1_YBLQSCI) > _cYBLQSIN
+							_cLeg := "3" //					_cLeg := _oBlue
+						Else
+							_cLeg := "4" //					_cLeg := _oChekOK
+						Endif
+
+						If _cLeg == "4"
+							_cLeg := MvsChkCli(_cLeg,TSC6->C6_CLI,TSC6->C6_LOJA)
+						Endif
+
+						_cLegCliProc := _cLeg
+
 					Else
-						_cLeg := "4" //					_cLeg := _oChekOK
-					Endif
+						_cLeg := _cLegCliProc
+					EndIf
 
-					If _cLeg == "4"
-						_cLeg := MvsChkCli(_cLeg,TSC6->C6_CLI,TSC6->C6_LOJA)
-					Endif
-
-					_cLegCliProc := _cLeg
-
+					_aBrwPro[_nLen][Fd] := _cLeg
 				Else
-					_cLeg := _cLegCliProc
-				EndIf
-
-				_aBrwPro[_nLen][Fd] := _cLeg
-			Else
-				_xContent := &('TSC6->'+_aFldPro[Fd][1])
-				If _aFldPro[Fd][1] = 'C5_YTIPOPD'
-					If Empty(_xContent)
-						_xContent := 'N'
+					_xContent := &('TSC6->'+_aFldPro[Fd][1])
+					If _aFldPro[Fd][1] = 'C5_YTIPOPD'
+						If Empty(_xContent)
+							_xContent := 'N'
+						Endif
 					Endif
+					//				_aBrwPro[_nLen][Fd] := &('TSC6->'+_aFldPro[Fd][1])
+					_aBrwPro[_nLen][Fd] := _xContent
+
 				Endif
-				//				_aBrwPro[_nLen][Fd] := &('TSC6->'+_aFldPro[Fd][1])
-				_aBrwPro[_nLen][Fd] := _xContent
+			Next Fd
 
-			Endif
-		Next Fd
+			TSC6->(DbSkip())
+		EndDo
 
-		TSC6->(DbSkip())
-	EndDo
-
+	Endif
 	TSC6->(DbCloseArea())
 
 	_oBrwPro:SetArray(_aBrwPro)
 
-	If Len(_oBrwPro:aArray) <> 0
+	If Len(_oBrwPro:aArray) > 0
 		_oBrwPro:bLine := {|| GetArray(_oBrwPro,_aBrwPro,_aFldPro)}
 	Endif
 
@@ -2494,55 +2499,59 @@ Static Function MVSZ223C()
 
 	TcQuery _cSQL New Alias "TSZ1"
 
-	TcSetField("TSZ1","Z1_YDTIMPR","D")
-	TcSetField("TSZ1","Z1_EMISSAO"	,"D")
-	TcSetField("TSZ1","Z1_DTENT"	,"D")
-	TcSetField("TSZ1","Z1_DTCANC"	,"D")
-	TcSetField("TSZ1","A1_YBLQSCI"	,"D")
-	TcSetField("TSZ1","A1_YBLQSIN"	,"D")
+	Count to _nTSZ1
 
-	TSZ1->(dbGoTop())
+	If _nTSZ1 > 0
+		TcSetField("TSZ1","Z1_YDTIMPR","D")
+		TcSetField("TSZ1","Z1_EMISSAO"	,"D")
+		TcSetField("TSZ1","Z1_DTENT"	,"D")
+		TcSetField("TSZ1","Z1_DTCANC"	,"D")
+		TcSetField("TSZ1","A1_YBLQSCI"	,"D")
+		TcSetField("TSZ1","A1_YBLQSIN"	,"D")
 
-	_aBrwPed		:= {}
+		TSZ1->(dbGoTop())
 
-	While TSZ1->(!EOF())
+		_aBrwPed		:= {}
 
-		AADD(_aBrwPed,Array(Len(_aFldPed)))
-		_nLen := Len(_aBrwPed)
-		For Fg := 1 To Len(_aFldPed)
-			If Fg = 1
-				_cLeg := ''
-				If TSZ1->Z1_LIBER == 'S' .And. Empty(Z1_DTCANC)
-					_cLeg := _oGreen
-				ElseIf TSZ1->Z1_LIBER == 'B' .and. ((ddatabase - TSZ1->A1_YBLQSCI) > _cYBLQSCI  .and. (ddatabase - TSZ1->A1_YBLQSIN) > _cYBLQSIN)
-					_cLeg := _oBlack
-				ElseIf TSZ1->Z1_LIBER == 'B' .and. ((ddatabase - TSZ1->A1_YBLQSIN) > _cYBLQSIN)
-					_cLeg := _oBlue
-				ElseIf TSZ1->Z1_LIBER == 'B' .and. ((ddatabase - TSZ1->A1_YBLQSCI) > _cYBLQSCI)
-					_cLeg := _oYellow
-				ElseIf !Empty(TSZ1->Z1_DTCANC) .AND. ALLTRIM(TSZ1->Z1_USERLGA) =='MIZ019'
-					//					_cLeg := _oCancel
-					_cLeg := _oBrow
-				ElseIf !(TSZ1->Z1_FILIAL $ _cRastroOC) .AND. !Empty(TSZ1->Z1_DTCANC)
-					_cLeg := _oBrow
-				ElseIf TSZ1->Z1_LIBER == 'B'
-					_cLeg := _oRed
+		While TSZ1->(!EOF())
+
+			AADD(_aBrwPed,Array(Len(_aFldPed)))
+			_nLen := Len(_aBrwPed)
+			For Fg := 1 To Len(_aFldPed)
+				If Fg = 1
+					_cLeg := ''
+					If TSZ1->Z1_LIBER == 'S' .And. Empty(Z1_DTCANC)
+						_cLeg := _oGreen
+					ElseIf TSZ1->Z1_LIBER == 'B' .and. ((ddatabase - TSZ1->A1_YBLQSCI) > _cYBLQSCI  .and. (ddatabase - TSZ1->A1_YBLQSIN) > _cYBLQSIN)
+						_cLeg := _oBlack
+					ElseIf TSZ1->Z1_LIBER == 'B' .and. ((ddatabase - TSZ1->A1_YBLQSIN) > _cYBLQSIN)
+						_cLeg := _oBlue
+					ElseIf TSZ1->Z1_LIBER == 'B' .and. ((ddatabase - TSZ1->A1_YBLQSCI) > _cYBLQSCI)
+						_cLeg := _oYellow
+					ElseIf !Empty(TSZ1->Z1_DTCANC) .AND. ALLTRIM(TSZ1->Z1_USERLGA) =='MIZ019'
+						//					_cLeg := _oCancel
+						_cLeg := _oBrow
+					ElseIf !(TSZ1->Z1_FILIAL $ _cRastroOC) .AND. !Empty(TSZ1->Z1_DTCANC)
+						_cLeg := _oBrow
+					ElseIf TSZ1->Z1_LIBER == 'B'
+						_cLeg := _oRed
+					Endif
+
+					_aBrwPed[_nLen][Fg] := _cLeg
+				Else
+					_aBrwPed[_nLen][Fg] := &('TSZ1->'+_aFldPed[Fg][1])
 				Endif
+			Next Fg
 
-				_aBrwPed[_nLen][Fg] := _cLeg
-			Else
-				_aBrwPed[_nLen][Fg] := &('TSZ1->'+_aFldPed[Fg][1])
-			Endif
-		Next Fg
+			TSZ1->(DbSkip())
+		EndDo
 
-		TSZ1->(DbSkip())
-	EndDo
-
+	Endif
 	TSZ1->(DbCloseArea())
 
 	_oBrwPed:SetArray(_aBrwPed)
 
-	If Len(_oBrwPed:aArray) <> 0
+	If Len(_oBrwPed:aArray) > 0
 		_oBrwPed:bLine := {|| GetArray(_oBrwPed,_aBrwPed,_aFldPed)}
 	Endif
 
@@ -2553,9 +2562,9 @@ Static Function MVSZ223C()
 
 	RestArea(_aAreaAtu)
 
-//	If _cOpc <> "A"
-//		MsgInfo("Status Atualizado as " + Time())
-//	Endif
+	//	If _cOpc <> "A"
+	//		MsgInfo("Status Atualizado as " + Time())
+	//	Endif
 
 Return(Nil)
 
