@@ -680,8 +680,8 @@ Static Function MZ204COM()
 	Local _cDoc		:= ""
 	Local _cF,A,_cA
 
-//	Local _oProtCTE	:= Nil
-//	Local _oCte		:= Nil
+	//	Local _oProtCTE	:= Nil
+	//	Local _oCte		:= Nil
 
 	If cEmpAnt == "02"
 		If !cEmpAnt+cFilAnt $ SuperGetMV("MV_YCTEXML",,"")
@@ -733,7 +733,7 @@ Static Function MZ204COM()
 		Endif
 
 
-/*		// Incluso validação para considerar as duas versões do xml - Alison
+		/*		// Incluso validação para considerar as duas versões do xml - Alison
 		_oVers2	:= type("_oCte:_CteProc")
 		_oVers3	:= type("_oCte:_enviCte")
 
@@ -864,16 +864,17 @@ Static Function MZ204COM()
 				_cNFForn 	:= Substr(_cKeyFor,26,9)
 				//				_cSerForn 	:= Substr(_cKeyFor,23,3)
 				_cSerForn 	:= ''
+				_cSerChve 	:= Substr(_cKeyFor,23,3)
 
-				If Substr(_cKeyFor,23,2) == '00'       // Adicionado para extrair série da chave quando série conter 00 no inicio - Raphael Moura - Chamado 45969
-					_cSerForn:= Substr(_cKeyFor,23,3)
-				Else
-					For B := 23 To 25
-						If Substr(_cKeyFor,B,1) != '0' .Or. !Empty(_cSerForn)
-							_cSerForn += Substr(_cKeyFor,B,1)
-						Endif
-					Next B
-				Endif
+				//				If Substr(_cKeyFor,23,2) == '00'       // Adicionado para extrair série da chave quando série conter 00 no inicio - Raphael Moura - Chamado 45969
+				//					_cSerForn:= Substr(_cKeyFor,23,3)
+				//				Else
+				For B := 23 To 25
+					If Substr(_cKeyFor,B,1) != '0' .Or. !Empty(_cSerForn)
+						_cSerForn += Substr(_cKeyFor,B,1)
+					Endif
+				Next B
+				//				Endif
 
 				If Empty(_cSerForn)
 					_cSerForn := '0'
@@ -895,6 +896,18 @@ Static Function MZ204COM()
 					SF1->(dbSetOrder(1))
 					If SF1->(msSeek(xFilial("SF1")+_cNFForn+_cSerForn+SA2->A2_COD+SA2->A2_LOJA))
 						AAdd(_aItCTR,{{"PRIMARYKEY",SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA}} )
+					Endif
+				Endif
+
+				If Empty(_aItCTR)
+					SF1->(dbOrderNickName("INDSF12"))
+					If SF1->(DbSeek(xFilial("SF1")+ _cNFForn + _cSerChve + "S" ))
+						AAdd(_aItCTR,{{"PRIMARYKEY",SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA}} )
+					Else
+						SF1->(dbSetOrder(1))
+						If SF1->(msSeek(xFilial("SF1")+_cNFForn+_cSerChve+SA2->A2_COD+SA2->A2_LOJA))
+							AAdd(_aItCTR,{{"PRIMARYKEY",SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA}} )
+						Endif
 					Endif
 				Endif
 
