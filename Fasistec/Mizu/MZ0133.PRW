@@ -35,7 +35,7 @@ User Function MZ0133()   // U_MZ0133()
 	Private cProdAte	:= cProdDe
 	Private cVendDe	:= space(TAMSX3("A1_VEND")[1])
 	Private cVendAte	:= cVendDe
-	Private _cGrpPrDe	:= _cGrpPrAte	:= space(6)//TAMSX3("A1_VEND")[1])
+	Private _cGrpPrDe	:= _cGrpPrAte	:= space(TAMSX3("ZI_YGRPPRC")[1])
 	Private _cMesoDe	:= _cMesoAte	:= space(TAMSX3("A1_YMESCR")[1])
 	Private _cMicrDe	:= _cMicrAte	:= space(TAMSX3("A1_YMICRE")[1])
 	Private aItensRad	:= {"Valor","Percentual","Alinhamento"}
@@ -195,12 +195,12 @@ User Function MZ0133()   // U_MZ0133()
 	oSay15		:= TSay():New(aPosObj16[1,1],aPosObj16[1,2],{|| "Grupo Preço De: "},oDlg,,,,,,.T.,,,aPosObj16[1,4]-aPosObj16[1,2],((aPosObj16[1,3]-aPosObj16[1,1])*0.45))
 	oGet15    	:= TGet():New(aPosObj16[1,1]+((aPosObj16[1,3]-aPosObj16[1,1])*0.45),aPosObj16[1,2],{|u| If(PCount() > 0, _cGrpPrDe := u, _cGrpPrDe) },;
 	oDlg,aPosObj16[1,4]-aPosObj16[1,2],(aPosObj16[1,3]-aPosObj16[1,1])*0.45,"@!",;
-	{|| filtro(_cGrpPrDe,"A1_VEND",1)},0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,"SA3",_cGrpPrDe,,,,)
+	{|| filtro(_cGrpPrDe,"ZI_YGRPPRC",1)},0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,"9Z",_cGrpPrDe,,,,)
 
 	oSay16		:= TSay():New(aPosObj16[2,1],aPosObj16[2,2],{|| "Grupo Preço Até: "},oDlg,,,,,,.T.,,,aPosObj16[2,4]-aPosObj16[2,2],((aPosObj16[2,3]-aPosObj16[2,1])*0.45))
 	oGet16    	:= TGet():New(aPosObj16[2,1]+((aPosObj16[2,3]-aPosObj16[2,1])*0.45),aPosObj16[2,2],{|u| If(PCount() > 0, _cGrpPrAte := u, _cGrpPrAte) },;
 	oDlg,aPosObj16[2,4]-aPosObj16[2,2],(aPosObj16[2,3]-aPosObj16[2,1])*0.45,"@!",;
-	{|| filtro(_cGrpPrAte,"A1_VEND",2)},0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,"SA3",_cGrpPrAte,,,,)
+	{|| filtro(_cGrpPrAte,"ZI_YGRPPRC",2)},0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,"9Z",_cGrpPrAte,,,,)
 
 
 	oSay17		:= TSay():New(aPosObj17[1,1],aPosObj17[1,2],{|| "Meso Região De: "},oDlg,,,,,,.T.,,,aPosObj17[1,4]-aPosObj17[1,2],((aPosObj17[1,3]-aPosObj17[1,1])*0.45))
@@ -251,7 +251,7 @@ User Function MZ0133()   // U_MZ0133()
 	oSayGer	:= TSay():New(aPosObj5[2,1],aPosObj5[2,2]-25,{|| "Gerência: "},oDlg,,,,,,.T.,,,50,8)
 	oGetGer	:= TGet():New(aPosObj5[2,1]+8,aPosObj5[2,2]-25,{|u| If(PCount() > 0, nGer := u, nGer) },oDlg,50,8,'@E 999,999.99',;
 	,,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,,cValtoChar(nGer),,,,)
-//	oButton	:= TButton():New(aPosObj6[1,1]+(aPosObj6[1,3]-aPosObj6[1,1])*0.28,aPosObj6[1,2],"Reajustar",oDlg,{|| reajustar()},100,10,,,,.T.)
+	//	oButton	:= TButton():New(aPosObj6[1,1]+(aPosObj6[1,3]-aPosObj6[1,1])*0.28,aPosObj6[1,2],"Reajustar",oDlg,{|| reajustar()},100,10,,,,.T.)
 	oTFont := TFont():New('Courier new',,-14,,.T.,,,,,.T.)
 	oButton	:= TButton():New(aPosObj5[2,1]+8,aPosObj4[2,2]+42,"Reajustar",oDlg,{|| reajustar()},50,10,,oTFont,,.T.)
 	/*/                                                /*/
@@ -355,7 +355,7 @@ Static Function filtro(cExp,cCampo,nTipo)
 		endcase
 
 	next
-	cSQL += "ORDER BY ZH_CLIENTE "
+	cSQL += "ORDER BY ZH_CLIENTE,ZH_LOJA "
 
 	TCQUERY cSQL New Alias (cTableQry)
 
@@ -369,14 +369,16 @@ Static Function filtro(cExp,cCampo,nTipo)
 
 	If cEmpAnt + cFilAnt $ '0210|0211|0214'
 		for a:=1 to Len(aFiltro) // A T E N C A O  ESSA ROTINA É PARA FAZER COPIA DO ARRAY, POIS SE FIZER aObraFiltro := p_aFiltro, altera o aFiltro.
-			AAdd(aObraFiltro,{aFiltro[a][1],;
-			aFiltro[a][2],;
-			aFiltro[a][3]})
+			If !aFiltro[a][1] $ 'ZI_YGRPPRC'
+				AAdd(aObraFiltro,{aFiltro[a][1],;
+				aFiltro[a][2],;
+				aFiltro[a][3]})
+			Endif
 		next
 
 		for a:=1 to Len(aObraFiltro)
 
-			if      aObraFiltro[a][1] == "ZH_CLIENTE"
+			if aObraFiltro[a][1] == "ZH_CLIENTE"
 				aObraFiltro[a][1] := "ZA2_CLIENT"
 				cNomeCampo := "ZA2_CLIENT"
 			elseif  aObraFiltro[a][1] == "ZH_LOJA"
@@ -398,7 +400,6 @@ Static Function filtro(cExp,cCampo,nTipo)
 				aObraFiltro[a][1] := "ZA2_FILIAL"
 				cNomeCampo := "ZA2_FILIAL"
 			endif
-			//
 
 			do case
 				case empty(aObraFiltro[a][2]) .and. !empty(aObraFiltro[a][3])
@@ -409,12 +410,15 @@ Static Function filtro(cExp,cCampo,nTipo)
 
 				case !empty(aObraFiltro[a][2]) .and. !empty(aObraFiltro[a][3])
 				cSQL_Obra += " AND "+aObraFiltro[a][1]+" BETWEEN '"+aObraFiltro[a][2]+"' AND '"+aObraFiltro[a][3]+"' "
-
 			endcase
 		next
-		if	!empty(cSQL_Obra)
+
+		if	!Empty(cSQL_Obra)
 			_cQ_Obra := " SELECT DISTINCT ZA2_CLIENT, ZA2_LOJA, ZA2_NOMCLI, ZA2_NOME, ZA2_MUNENT, ZA2_ESTENT  FROM "+ RetSqlName("ZA2") + " Z	"
+
+			//Incluído Inner Join, para filtro dos campos de Meso e Micro Região
 			_cQ_Obra += " INNER JOIN "+RetSqlName("SA1")+" SA1 ON A1_COD = ZA2_CLIENT AND A1_LOJA = ZA2_LOJA AND SA1.D_E_L_E_T_ = '' "
+
 			_cQ_Obra += " WHERE Z.D_E_L_E_T_ = '' AND (Z.ZA2_LIBER = 'L' OR Z.ZA2_LIBER = ' ') AND Z.ZA2_FILIAL = '"+xFilial("ZA2")+"' " //Rodrigo - 07/02/17 - Mostrar apenas da filial corrente
 			_cQ_Obra += cSQL_Obra   // Filtros escolhido pelo usuario -
 			_cQ_Obra += " ORDER BY ZA2_CLIENT, ZA2_LOJA, ZA2_NOMCLI "
@@ -549,8 +553,8 @@ Static function calcObjetos()
 	AAdd(aObjects3,{100,180,.T.,.T.})
 	AAdd(aObjects3,{100,100,.T.,.T.})
 	AAdd(aObjects3,{100,100,.T.,.T.})
-//	AAdd(aObjects3,{100,80,.T.,.T.})
-//	AAdd(aObjects3,{100,100,.T.,.T.})
+	//	AAdd(aObjects3,{100,80,.T.,.T.})
+	//	AAdd(aObjects3,{100,100,.T.,.T.})
 	aInfo3 := { aPosObj2[2,2],aPosObj2[2,1],aPosObj2[2,4],aPosObj2[2,3],5,5}
 
 	aPosObj3 := MsObjSize(aInfo3,aObjects3,.T.,.F.)
@@ -579,10 +583,10 @@ Static function calcObjetos()
 	//dividindo a quarta linha do grupo da esquerda baixo da tela 	          //
 	//que conterá o botão para confirmar o reajuste                          //
 	///////////////////////////////////////////////////////////////////////////
-//	AAdd(aObjects6,{100,100,.T.,.T.})
-//	aInfo6 := { aPosObj3[4,2],aPosObj3[4,1],aPosObj3[4,4],aPosObj3[4,3],1,1}
+	//	AAdd(aObjects6,{100,100,.T.,.T.})
+	//	aInfo6 := { aPosObj3[4,2],aPosObj3[4,1],aPosObj3[4,4],aPosObj3[4,3],1,1}
 
-//	aPosObj6 := MsObjSize(aInfo6,aObjects6,.T.,.F.)
+	//	aPosObj6 := MsObjSize(aInfo6,aObjects6,.T.,.F.)
 	///////////////////////////////////////////////////////////////////////////
 	//Posicionamento dos objetos na tela                                     //
 	//dividindo a parte da esquerda de cima em 7 partes, que representam     //
@@ -795,6 +799,14 @@ Static function buscaItens()
 			cSQL += " AND ZI_PRODUTO <= '"+cProdAte+"' "
 		endcase
 
+		If !Empty(_cGrpPrDe) .and. !Empty(_cGrpPrAte)
+			cSQL += " AND ZI_YGRPPRC BETWEEN '"+_cGrpPrDe+"' AND '"+_cGrpPrAte+"' "
+		ElseIf !Empty(_cGrpPrDe) .and. Empty(_cGrpPrAte)
+			cSQL += " AND ZI_YGRPPRC >= '"+_cGrpPrDe+"' "
+		ElseIf Empty(_cGrpPrDe) .and. !Empty(_cGrpPrAte)
+			cSQL += " AND ZI_YGRPPRC <= '"+_cGrpPrAte+"' "
+		Endif
+
 		cSQL += " ORDER BY  ZI_DTVIGEN,ZI_LIBER "
 
 		TCQUERY cSQL New Alias (cTableQry)
@@ -830,7 +842,7 @@ Efetua a confirmação do reajuste e a chamada do metodo que irá realizar o reajus
 @version P11
 
 alisalison	/*/
-Static function reajustar()
+Static function Reajustar()
 
 	Private _cMsg01    := ''
 	Private _lFim      := .F.
@@ -847,6 +859,7 @@ Static function MZ133_A()
 	Local cMsg
 	Local aOp			:= {"Sim","Nao"}
 	Local cSQL			:= " "
+	Local _cSQL2		:= " "
 	Local lBloqueado    := .F.
 	Private cRESP_ATUAL_OBRAS := "S"
 
@@ -868,52 +881,95 @@ Static function MZ133_A()
 		endif
 	ENDIF
 
-	if  mv_par01 = 1 .or. mv_par01 = 3 // Respondeu alterar Preco ou ambos
+	If  mv_par01 = 1 .or. mv_par01 = 3 // Respondeu alterar Preco ou ambos
 
-		for a:=1 to Len(aFiltro)
-			do case
-				case empty(aFiltro[a][2]) .and. !empty(aFiltro[a][3])
-				cSQL += " AND "+aFiltro[a][1]+" <= '"+aFiltro[a][3]+"' "
+		For a:=1 to Len(aFiltro)
+			If Left(aFiltro[a][1],2) = 'ZI'
+				If empty(aFiltro[a][2]) .and. !empty(aFiltro[a][3])
+					_cSQL2 += " AND "+aFiltro[a][1]+" <= '"+aFiltro[a][3]+"' "
+				ElseIf empty(aFiltro[a][3]) .and. !empty(aFiltro[a][2])
+					_cSQL2 += " AND "+aFiltro[a][1]+" >= '"+aFiltro[a][2]+"' "
+				ElseIf !empty(aFiltro[a][2]) .and. !empty(aFiltro[a][3])
+					_cSQL2 += " AND UPPER("+aFiltro[a][1]+") BETWEEN '"+aFiltro[a][2]+"' AND '"+aFiltro[a][3]+"' "
+				Endif
+			Else
+				do case
+					case empty(aFiltro[a][2]) .and. !empty(aFiltro[a][3])
+					cSQL += " AND "+aFiltro[a][1]+" <= '"+aFiltro[a][3]+"' "
 
-				case empty(aFiltro[a][3]) .and. !empty(aFiltro[a][2])
-				cSQL += " AND "+aFiltro[a][1]+" >= '"+aFiltro[a][2]+"' "
+					case empty(aFiltro[a][3]) .and. !empty(aFiltro[a][2])
+					cSQL += " AND "+aFiltro[a][1]+" >= '"+aFiltro[a][2]+"' "
 
-				case !empty(aFiltro[a][2]) .and. !empty(aFiltro[a][3])
-				cSQL += " AND UPPER("+aFiltro[a][1]+") BETWEEN '"+aFiltro[a][2]+"' AND '"+aFiltro[a][3]+"' "
+					case !empty(aFiltro[a][2]) .and. !empty(aFiltro[a][3])
+					cSQL += " AND UPPER("+aFiltro[a][1]+") BETWEEN '"+aFiltro[a][2]+"' AND '"+aFiltro[a][3]+"' "
 
-			endcase
-		next
+				endcase
+			Endif
+		Next
+
+		_cQ:= " DELETE "+RetSqlName("ZAH")+" FROM "+RetSqlName("ZAH")+" A "
+		_cQ+= " INNER JOIN "+RetSqlName("SA1")+" B ON ZAH_YCLIEN=A1_COD AND ZAH_YLOJA=A1_LOJA "
+		_cQ+= " INNER JOIN "+RetSqlName("SZH")+" C ON ZAH_FILIAL = ZH_FILIAL AND ZAH_YCLIEN = ZH_CLIENTE AND ZAH_YLOJA = ZH_LOJA "
+		If !Empty(_cSQL2)
+			_cQ += " INNER JOIN "+RetSqlName("SZI")+" SZI ON ZI_CLIENTE = ZAH_YCLIEN AND ZI_LOJA = ZAH_YLOJA AND ZAH_YPRODU = ZI_PRODUTO"
+			_cQ += " AND ZI_FILIAL = '"+xFilial("SZI")+"' AND SZI.D_E_L_E_T_ = ''  AND ZI_LIBER = '' "
+		Endif
+		_cQ+= " WHERE A.D_E_L_E_T_ = '' AND B.D_E_L_E_T_ = '' AND C.D_E_L_E_T_ = '' AND ZAH_TIPO = '02' AND ZAH_DATALI = '' "
+		_cQ+= " AND ZAH_FILIAL = '"+xFilial("ZAH")+"' "
+		If !Empty(cSQL)
+			_cQ+= cSQL
+		Endif
+		If !Empty(_cSQL2)
+			_cQ+= _cSQL2
+		Endif
+
+		TCSQLEXEC(_cQ)
+
+
+
+		_cQ:= " DELETE "+RetSqlName("SCR")+" FROM "+RetSqlName("SCR")+"  A INNER JOIN "+RetSqlName("SA1")+" B ON CR_YCLIENT=A1_COD AND CR_YLOJA=A1_LOJA "
+		_cQ+= " INNER JOIN "+RetSqlName("SZH")+" C ON CR_FILIAL = ZH_FILIAL AND CR_YCLIENT = ZH_CLIENTE AND CR_YLOJA = ZH_LOJA "
+		If !Empty(_cSQL2)
+			_cQ += " INNER JOIN "+RetSqlName("SZI")+" SZI ON ZI_CLIENTE = CR_YCLIENT AND ZI_LOJA = CR_YLOJA AND CR_YPRODUT = ZI_PRODUTO"
+			_cQ += " AND ZI_FILIAL = '"+xFilial("SZI")+"' AND SZI.D_E_L_E_T_ = '' AND ZI_LIBER = '' "
+		Endif
+		_cQ+= " WHERE A.D_E_L_E_T_ = '' AND B.D_E_L_E_T_ = '' AND C.D_E_L_E_T_ = '' AND CR_TIPO = '02' AND CR_DATALIB = '' "
+		_cQ+= " AND CR_FILIAL = '"+xFilial("SCR")+"' "
+		If !Empty(cSQL)
+			_cQ+= cSQL
+		Endif
+		If !Empty(_cSQL2)
+			_cQ+= _cSQL2
+		Endif
+
+		TCSQLEXEC(_cQ)
+
 
 		_cQ:= " DELETE "+RetSqlName("SZI")+" FROM "+RetSqlName("SZI")+" A INNER JOIN "+RetSqlName("SA1")+" B ON ZI_CLIENTE = A1_COD AND ZI_LOJA = A1_LOJA "
 		_cQ+= " INNER JOIN "+RetSqlName("SZH")+" C ON ZI_FILIAL = ZH_FILIAL AND ZI_CLIENTE = ZH_CLIENTE AND ZI_LOJA = ZH_LOJA "
 		_cQ+= " WHERE A.D_E_L_E_T_ = '' AND ZI_LIBER = '' AND B.D_E_L_E_T_ = '' AND C.D_E_L_E_T_ = '' "
 		_cQ+= " AND ZI_FILIAL = '"+xFilial("SZI")+"' "
-		_cQ+= cSQL
+		If !Empty(cSQL)
+			_cQ+= cSQL
+		Endif
+		If !Empty(_cSQL2)
+			_cQ+= _cSQL2
+		Endif
 
 		TCSQLEXEC(_cQ)
 
-		_cQ:= " DELETE "+RetSqlName("SCR")+" FROM "+RetSqlName("SCR")+"  A INNER JOIN "+RetSqlName("SA1")+" B ON CR_YCLIENT=A1_COD AND CR_YLOJA=A1_LOJA "
-		_cQ+= " INNER JOIN "+RetSqlName("SZH")+" C ON CR_FILIAL = ZH_FILIAL AND CR_YCLIENT = ZH_CLIENTE AND CR_YLOJA = ZH_LOJA "
-		_cQ+= " WHERE A.D_E_L_E_T_ = '' AND B.D_E_L_E_T_ = '' AND C.D_E_L_E_T_ = '' AND CR_TIPO = '02' AND CR_DATALIB = '' "
-		_cQ+= " AND CR_FILIAL = '"+xFilial("SCR")+"' "
-		_cQ+= cSQL
 
-		TCSQLEXEC(_cQ)
-
-		_cQ:= " DELETE "+RetSqlName("ZAH")+" FROM "+RetSqlName("ZAH")+"  A INNER JOIN "+RetSqlName("SA1")+" B ON ZAH_YCLIEN=A1_COD AND ZAH_YLOJA=A1_LOJA "
-		_cQ+= " INNER JOIN "+RetSqlName("SZH")+" C ON ZAH_FILIAL = ZH_FILIAL AND ZAH_YCLIEN = ZH_CLIENTE AND ZAH_YLOJA = ZH_LOJA "
-		_cQ+= " WHERE A.D_E_L_E_T_ = '' AND B.D_E_L_E_T_ = '' AND C.D_E_L_E_T_ = '' AND ZAH_TIPO = '02' AND ZAH_DATALI = '' "
-		_cQ+= " AND ZAH_FILIAL = '"+xFilial("ZAH")+"' "
-		_cQ+= cSQL
-
-		TCSQLEXEC(_cQ)
 
 		_cQ:= " SELECT * FROM "+RetSqlName("SZI")+" A INNER JOIN "+RetSqlName("SA1")+" B ON ZI_CLIENTE=A1_COD AND ZI_LOJA=A1_LOJA "
 		_cQ+= " INNER JOIN "+RetSqlName("SZH")+" C ON ZI_FILIAL = ZH_FILIAL AND ZI_CLIENTE = ZH_CLIENTE AND ZI_LOJA = ZH_LOJA "
-		_cQ+= " AND ZI_LIBER <> 'B' AND ZI_FILIAL = '"+xFilial("SZI")+"' "  // INCLUIDO POR ALEXANDRO 10/07/17
+		_cQ+= " WHERE ZI_LIBER <> 'B' AND ZI_FILIAL = '"+xFilial("SZI")+"' "  // INCLUIDO POR ALEXANDRO 10/07/17
 		_cQ+= " AND A.D_E_L_E_T_ = '' AND B.D_E_L_E_T_ = '' AND C.D_E_L_E_T_ = '' "// INCLUIDO POR ALEXANDRO 10/07/17
-
-		_cQ+= cSQL   // Filtros escolhido pelo usuario -
+		If !Empty(cSQL)
+			_cQ+= cSQL
+		Endif
+		If !Empty(_cSQL2)
+			_cQ+= _cSQL2
+		Endif
 
 		_cQ+= " ORDER BY ZI_CLIENTE,ZI_LOJA,ZI_PRODUTO "
 
@@ -990,6 +1046,7 @@ Static Function MIZ826E()  // Calcula o novo preco --- LER A TEMPORARIA ZZ
 	SZI->ZI_FILIAL  := ZZ->ZI_FILIAL
 	SZI->ZI_CLIENTE := ZZ->ZI_CLIENTE
 	SZI->ZI_LOJA    := ZZ->ZI_LOJA
+	SZI->ZI_YGRPPRC := ZZ->ZI_YGRPPRC
 	SZI->ZI_PRODUTO := ZZ->ZI_PRODUTO
 	SZI->ZI_DESC    := ZZ->ZI_DESC
 	//------------------------------------------------------------------------------------------------------//
@@ -1247,6 +1304,7 @@ return
 */
 
 Static function AjustarPrecoObra(p_aFiltro)
+
 	Local _lEncont          := .F.
 	Local cSQL_Obra			:= " "
 	Local _cQ_Obra          := " "
@@ -1263,7 +1321,7 @@ Static function AjustarPrecoObra(p_aFiltro)
 
 	for a:=1 to Len(aObraFiltro)
 
-		if       aObraFiltro[a][1] == "ZH_CLIENTE"
+		if aObraFiltro[a][1] == "ZH_CLIENTE"
 			aObraFiltro[a][1] := "ZA2_CLIENT"
 			cNomeCampo := "ZA2_CLIENT"
 		elseif  aObraFiltro[a][1] == "ZH_LOJA"
@@ -1312,8 +1370,6 @@ Static function AjustarPrecoObra(p_aFiltro)
 	TCSETFIELD("ZZ2","ZI_DTBLOQ","D")
 
 	ZZ2->(dbGotop())
-
-
 
 	WHILE ZZ2->(!Eof())  // Temporaria  para ler Registros selecionados da tabela de OBRAS - 18/05/2015 Juailson Semar
 
