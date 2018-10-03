@@ -28,10 +28,10 @@ User Function MZ0238(aDadosFiltro)
 	Private cBanco		:= "021"//GetNewPar("MZ_YBANCO","237")
 	Private _cBarra     := ""
 
-	Private cAgencia	:= Padr('160',TAMSX3('A6_AGENCIA')[1])//GetNewPar("MZ_YAGENCI","02144")
+	Private cAgencia	:= Padr('0160',TAMSX3('A6_AGENCIA')[1])//GetNewPar("MZ_YAGENCI","02144")
 
 	//	Private aConta		:=  {{"01"  ,"0045001"},{"02"  ,"2895589"}}
-	Private aConta		:=  {{"02"  ,"2895589"}}
+	Private aConta		:=  {{"02"  ,"28955896"}}
 
 	ValidPerg()
 	Pergunte (cPerg,.F.)
@@ -181,7 +181,7 @@ Static Function MontaRel(aMarked)
 	DbSetOrder(1)
 
 	nPosCta   := aScan(aConta,{|x| x[1] == SM0->M0_CODIGO})
-	cContaKey := PadR(aConta[nPosCta,2],TAMSX3('A6_NUMCON')[1])
+	cContaKey := Alltrim(PadR(aConta[nPosCta,2],TAMSX3('A6_NUMCON')[1]))
 
 	SA6->(MsSeek(xFilial("SA6")+cBanco+cAgencia+cContaKey))
 
@@ -229,17 +229,19 @@ Static Function MontaRel(aMarked)
 
 		nBaseMod	:= 7
 		nBaseMod	:= IIf(_cCart=='09',7,9)
-		cNossoNum	:= Left(SE1->E1_NUMBCO,11)
-		cDVNN 		:= SubStr(SE1->E1_NUMBCO,12,1)
+		cNossoNum	:= Left(SE1->E1_NUMBCO,08)
+		cDVNN 		:= SubStr(SE1->E1_NUMBCO,09,02)
 
-		//cDVNN := Digito_BR(cNossoNum)
 		If Empty(cNossoNum)
 
 			aNum := {"0","1","2","3","4","5","6","7","8","9"}
 			aLet := {" ","A","B","C","D","E","F","G","H","I"}
 
 			//Digito_BR(cNossoNum)
-			cNossoNum	:= u_NossoNumero(cBanco)//Left(cAgencia,4)+Padr(SE1->E1_NUM,6,"0")+Subs(aNum[Ascan(aLet,SE1->E1_PARCELA)],1)
+			cNossoNum	:= U_NossoNumero(cBanco)
+
+			//cNossoNum	:= Digito_BR(cNossoNum)
+
 			se1->(RecLock("SE1"))
 			SE1->E1_NUMBCO := cNossoNum
 			SE1->(MsUnLock())
@@ -249,12 +251,11 @@ Static Function MontaRel(aMarked)
 
 		ElseIf Empty(cDVNN)
 
-			wNumero 		:= Rtrim(cNossoNum)
+			wNumero 	:= Rtrim(cNossoNum)
 			cNossoNum	:= u_Digito_BR() //DIGITO DO BANCO BANESTES
 			cDVNN 		:= SubStr(cNossoNum,12,1)
 			cNossoNum	:= Left(cNossoNum,11)
 
-			//GRAVA DÍGITO NOS BOLETOS QUE NÃO TIVEREM
 			RecLock("SE1")
 			SE1->E1_NUMBCO := cNossoNum+cDVNN
 			SE1->(MsUnLock())
@@ -265,7 +266,7 @@ Static Function MontaRel(aMarked)
 		SA6->A6_NREDUZ    	            	                    ,; // [2]Nome do Banco
 		AllTrim(SA6->A6_AGENCIA),;//Substr(AllTrim(SA6->A6_AGENCIA),1,Len(AllTrim(SA6->A6_AGENCIA))-1),; // [3]Agência
 		fConta(AllTrim(SA6->A6_NUMCON)) ,;  // [4]Conta Corrente
-		AllTrim(SA6->A6_DVCTA),;////Substr(AllTrim(SA6->A6_NUMCON),Len(AllTrim(SA6->A6_NUMCON)),1)    ,; // [5]Dígito da conta corrente
+		Substr(AllTrim(SA6->A6_NUMCON),Len(AllTrim(SA6->A6_NUMCON)),1)    ,; // [5]Dígito da conta corrente
 		_cCart												    ,; // [6]Codigo da Carteira
 		SA6->A6_TXCOBSI									    ,;//  [7]Multa Atrazo COBRANCA SIMPLES
 		nTaxa                                                  ,;
@@ -291,6 +292,7 @@ Static Function MontaRel(aMarked)
 
 		_nVlrAbat   := SomaAbat(SE1->E1_PREFIXO,SE1->E1_NUM,SE1->E1_PARCELA,"R",1,,SE1->E1_CLIENTE,SE1->E1_LOJA)
 		CB_RN_NN    := Ret_cBarra(Subs(aDadosBanco[1],1,3)+"9",aDadosBanco[3],aDadosBanco[4],"0",AllTrim(SE1->E1_NUM),(SE1->E1_SALDO-_nVlrAbat),SE1->E1_VENCTO)
+
 		aDadosTit   := {AllTrim(SE1->E1_NUM)+'/'+AllTrim(SE1->E1_PARCELA)	,;  // [1] Número do título
 		DToC(SE1->E1_EMISSAO)                              					,;  // [2] Data da emissão do título
 		DtoC(Date())                                  					,;  // [3] Data da emissão do boleto
@@ -692,29 +694,27 @@ Static Function Ret_cBarra(cBanco,cAgencia,cConta,cDacCC,cNroDoc,nValor,dVencto)
 
 	Local bldocnufinal := strzero(val(cNroDoc),8)
 	Local blvalorfinal := strzero(int(nValor*100),10)
-	Local dvnn         := 0
 	Local dvcb         := 0
 	Local dv           := 0
 	Local NN           := ''
 	Local RN           := ''
 	Local CB           := ''
 	Local s            := ''
-	Local _cfator      := strzero(dVencto - ctod("07/10/97"),4)
-	Local cAnoNN       := '11'
+	Local _cBsASBACE   := cNossoNum+PadL(cConta,11,"0")+"4"+"021"
+	Local _cD1ASBACE   := AllTrim(Str(Modulo10(_cBsASBACE)))
+	Local _cD2ASBACE   := AllTrim(Str(Modulo11(_cBsASBACE+_cD1ASBACE,7)))
+	Local _cASBACE     := _cBsASBACE+_cD1ASBACE+_cD2ASBACE
+	Local _cFator      := strzero(dVencto - ctod("07/10/97"),4)
 	Local cCpoLivre    := AllTrim(cAgencia)+_cCart+LEFT(cNossoNum,11)+cConta+'0'
 
-	//-------- Definicao do NOSSO NUMERO / MODULO11 NA BASE 7 (BANESTES)
-	s    :=  _cCart + cNossoNum
-	//dvnn := modulo11 na base 7 // carteira + sequencial de 11 digitos
-	dvnn := modulo11(s,7)
-
 	//	-------- Definicao do CODIGO DE BARRAS
-	//s    := cBanco + _cfator + StrZero(Int(nValor * 100),14-Len(_cfator)) + cCpoLivre  // ALTERADO POR ALEXANDRO
+	//s    := cBanco + _cFator + StrZero(Int(nValor * 100),14-Len(_cFator)) + cCpoLivre  // ALTERADO POR ALEXANDRO
 
-	s    := cBanco + _cfator + StrZero((nValor * 100),14-Len(_cfator)) + cCpoLivre
+//	s    := cBanco + _cFator + StrZero((nValor * 100),14-Len(_cFator)) + cCpoLivre
+	s    := cBanco + _cFator + StrZero((nValor * 100),10) + _cASBACE
 
 	dvcb := modulo11(s,9)
-	//CB   := SubStr(s,1,4)+ AllTrim(Str(dvcb)) + SubStr(s,5,44)
+
 	_cBarra :=  Subs(S,1,4)+ AllTrim(Str(dvcb)) + Substr(s,5,43)
 
 	//-------- Definicao da LINHA DIGITAVEL (Representacao Numerica)
@@ -726,20 +726,21 @@ Static Function Ret_cBarra(cBanco,cAgencia,cConta,cDacCC,cNroDoc,nValor,dVencto)
 	//	  B  = Codigo da moeda, sempre 9
 	//    C = As 5(cinco) primeiras posicoes do CAMPO LIVRE
 	//	  X = DAC que amarra o campo, calculado pelo Modulo 10 da String do campo
-	s    := cBanco + Left(cCpoLivre,5)
+//	s    := cBanco + Left(cCpoLivre,5)
+	s    := cBanco + Left(_cASBACE,5)
 	dv   := modulo10(s)
 	RN   := SubStr(s, 1, 5) + '.' + SubStr(s, 6, 4) + AllTrim(Str(dv)) + '  '
 
 
 	// 	CAMPO 2:
 	//	 D = Posicoes 6 a 15 do Campo Livre
-	s    := SubStr(cCpoLivre, 6, 10)
+	s    := SubStr(_cASBACE, 6, 10)
 	dv   := modulo10(s)
 	RN   := RN + SubStr(s, 1, 5) + '.' + SubStr(s, 6, 5) + AllTrim(Str(dv)) + '  '
 
 	// 	CAMPO 3:
 	//	 E = Posicoes de 16 a 25 do Campo Livre
-	s    := SubStr(cCpoLivre, 16, 10)
+	s    := SubStr(_cASBACE, 16, 10)
 	dv   := modulo10(s)
 	RN   := RN + SubStr(s, 1, 5) + '.' + SubStr(s, 6, 5) + AllTrim(Str(dv)) + '  '
 
@@ -750,8 +751,7 @@ Static Function Ret_cBarra(cBanco,cAgencia,cConta,cDacCC,cNroDoc,nValor,dVencto)
 	// 	CAMPO 5:
 	//	      UUUU = Fator de Vencimento
 	//	VVVVVVVVVV = Valor do Titulo
-	//RN   := RN + _cfator + StrZero(Int(nValor * 100),14-Len(_cfator))  // ALTERADO POR ALEXANDRO
-	RN   := RN + _cfator + StrZero((nValor * 100),14-Len(_cfator))
+	RN   := RN + _cFator + StrZero((nValor * 100),10)
 
 Return({CB,RN,NN})
 
@@ -841,7 +841,9 @@ Static Function fConta(wConta)
 			wRet+=SubStr(wConta,nx,1)
 		Endif
 	Next
-//	wRet:=SubStr(wRet,1,Len(wRet)-1) //Retira o Digito VerIficador
+
+	wRet:=SubStr(wRet,1,Len(wRet)-1) //Retira o Digito VerIficador
+
 Return( StrZero(Val(wRet),7) )
 
 
@@ -973,7 +975,6 @@ Static FUNCTION Digito_BR(WNUMERO)
 			CF13:= VAL(SUBS(_num,NCDV,1))*2
 			NCDV := NCDV+1
 			LOOP
-
 		ENDCASE
 
 	ENDDO
@@ -982,7 +983,7 @@ Static FUNCTION Digito_BR(WNUMERO)
 	RESTO := 11 - A
 
 	If RESTO == 10
-		DV := 'P'
+		DV := '0'
 	ElseIf RESTO == 11
 		DV := '0'
 	Else
