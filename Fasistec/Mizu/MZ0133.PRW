@@ -1,7 +1,6 @@
-#Include 'Protheus.ch'
+#include "TOTVS.CH"
 #INCLUDE "FWBROWSE.CH"
 #Include "TOPCONN.CH"
-#include "TOTVS.CH"
 
 #DEFINE 	CRLF	chr(13)+chr(10)
 
@@ -475,12 +474,29 @@ Static function mudouTipo()
 
 	endcase
 
+//	oGetCif:oGet:Picture	:= cMasc
+//	nCif := 1
+//	oGetCif:CtrlRefresh()
+//	nCif := 0
+//	oGetCif:CtrlRefresh()
+//
+//	oGetGer:oGet:Picture	:= cMasc
+//	nGer := 1
+//	oGetGer:CtrlRefresh()
+//	nGer := 0
+//	oGetGer:CtrlRefresh()
+
 	for i:=1 to Len(aVars)
+		&(aVars[i]):oGet:Picture	:= cMasc
+		&(aVars2[i]) := 1
+		&(aVars[i]):CtrlRefresh()
 		&(aVars2[i]) := 0
+		&(aVars[i]):CtrlRefresh()
+
+
 
 		//Juailson-Semar - Ajustar posicao por conta do novo campo Cif Descarga = 23/01/15
-		//Local aVars 	:= {"oGetCif","oGetCifD","oGetFob","oGetUni","oGetGer"}
-		if i == 2
+/*		if i == 2
 			cCol := "-26"
 		elseif i == 3
 			cCol :=  "+135"
@@ -492,16 +508,15 @@ Static function mudouTipo()
 			cCol := "+0"
 		endif
 
-		//	   cCol := "+0"
-		//
 		nPos 	:= if(i%2==0,2,1)
 		cBloc	:= "{|u| If(PCount() > 0, "+aVars2[i]+" := u, "+aVars2[i]+") }"
+
 		&(aVars[i]) := TGet():New(&(aCoords[i])[nPos,1]+8,&(aCoords[i])[nPos,2]+&cCol,&cBloc;
-		,oDlg,50,8,cMasc,,,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,,cValtoChar(&(aVars2[i])),,,,)
-		&(aVars[i]):Refresh()
+		,oDlg,50,8,cMasc,,,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,,cValtoChar(&(aVars2[i])),,,,)*/
+
 	next
 
-	oDlg:CtrlRefresh()
+	oDlg:Refresh()
 
 return
 
