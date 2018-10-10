@@ -18,21 +18,21 @@ NOVA VERSAO - MOSTRANDO PRECOS DE OBRA E ATUALIZANDO POR Preco Tabela, Preco Obr
 /*/
 User Function MZ0133()   // U_MZ0133()
 
-	Local 	c_PICTURE := ""
+	Local 	c_PICTURE	:= ""
 
-	Private cCliDe 	:= space(TAMSX3("ZI_CLIENTE")[1])
+	Private cCliDe 		:= space(TAMSX3("ZI_CLIENTE")[1])
 	Private cCliAte 	:= cCliDe
-	Private cLojaDe	:= space(TAMSX3("ZI_LOJA")[1])
+	Private cLojaDe		:= space(TAMSX3("ZI_LOJA")[1])
 	Private cLojaAte	:= cLojaDe
-	Private cMunDe	:= space(TAMSX3("A1_MUN")[1])
-	Private cMunAte	:= cMunDe
-	Private cEstDe	:= space(TAMSX3("A1_EST")[1])
-	Private cEstAte	:= cEstDe
-	Private cFilDe	:= space(TAMSX3("A1_FILIAL")[1])
-	Private cFilAte	:= cFilDe
-	Private cProdDe	:= space(TAMSX3("ZI_PRODUTO")[1])
+	Private cMunDe		:= space(TAMSX3("A1_MUN")[1])
+	Private cMunAte		:= cMunDe
+	Private cEstDe		:= space(TAMSX3("A1_EST")[1])
+	Private cEstAte		:= cEstDe
+	Private cFilDe		:= cFilAnt//space(TAMSX3("A1_FILIAL")[1])
+	Private cFilAte		:= cFilDe
+	Private cProdDe		:= space(TAMSX3("ZI_PRODUTO")[1])
 	Private cProdAte	:= cProdDe
-	Private cVendDe	:= space(TAMSX3("A1_VEND")[1])
+	Private cVendDe		:= space(TAMSX3("A1_VEND")[1])
 	Private cVendAte	:= cVendDe
 	Private _cGrpPrDe	:= _cGrpPrAte	:= space(TAMSX3("ZI_YGRPPRC")[1])
 	Private _cMesoDe	:= _cMesoAte	:= space(TAMSX3("A1_YMESCR")[1])
@@ -43,7 +43,7 @@ User Function MZ0133()   // U_MZ0133()
 	Private _aCampos 	:= {"ZI_LIBER","ZI_DTBLOQ","ZI_PRODUTO","ZI_DESC","ZI_DESCON","ZI_PRECO",/*"ZI_DESCCID",*/"ZI_PRECOD","ZI_PRECOF","ZI_PGER","ZI_PRCUNIT","ZI_DESCONF","ZI_DTREAJ","ZI_DTVIGEN","ZI_USRINC"}
 	Private _aZA2Campos := {"ZA2_LIBER","ZA2_DTBLOQ","ZA2_PRODUT","ZA2_DESPRO "," ","ZA2_PRC01",/*"ZI_DESCCID",*/"ZA2_PRC01D","ZA2_PRC01F","ZA2_PRCGER","ZA2_PRUNIT"," "," ","ZA2_DTVIG ","ZA2_USRINC"}
 	Private aTam		:= {}
-	Private aPosObj	:= {},aPosObj2 	:= {},aPosObj3	:= {}
+	Private aPosObj		:= {},aPosObj2 	:= {},aPosObj3	:= {}
 	Private aPosObj4	:= {},aPosObj5	:= {},aPosObj6	:= {}
 	Private aPosObj7 	:= {},aPosObj8	:= {},aPosObj9	:= {}
 	Private aPosObj10	:= {},aPosObj11	:= {},aPosObj12	:= {}
@@ -55,7 +55,7 @@ User Function MZ0133()   // U_MZ0133()
 	Private nUni		:= 0
 	Private nGer		:= 0
 	Private nTipo		:= 1
-	Private nAcres	:= 1
+	Private nAcres		:= 1
 	Private aHeader1	:= {}
 	Private aHeader2	:= {}
 	Private aFiltro  	:= {}
@@ -63,15 +63,15 @@ User Function MZ0133()   // U_MZ0133()
 	Private cTableIt	:= "SZI"
 	Private cTableQry	:= "ZRJ"
 	Private oBrw,oDlg
-	Private aDados	:= {}
-	Private aItens	:= {{"","","","","","","","","","","","","","","",""}}
+	Private aDados		:= {}
+	Private aItens		:= {{"","","","","","","","","","","","","","","",""}}
 	Private oGetCif,oGetCifD,oGetFob,oGetUni,oGetGer,oRad2
 	Private lAcresc,lPerc,lAlinha
 	Private oMenu01
-	Private cCadastro  := "Clientes"
+	Private cCadastro	:= "Clientes"
 	Private aRotina
-	Private _cGrAprov := ""
-	Private cPerg2 := "MZ0133SM"
+	Private _cGrAprov	:= ""
+	Private cPerg2		:= "MZ0133SM"
 
 	_cGrAprov:= GETMV("MZ_GRAPROV")
 
@@ -118,45 +118,6 @@ User Function MZ0133()   // U_MZ0133()
 	oGroup5	:= TGroup():New(aPosObj3[1,1],aPosObj3[1,2],aPosObj3[1,3],aPosObj3[1,4],"Tipo",oDlg,,,.T.)
 	oGroup6	:= TGroup():New(aPosObj13[2,1],aPosObj13[2,2],aPosObj13[2,3],aPosObj13[2,4],"Itens da Tabela de Preço",oDlg,,,.T.)
 
-	oSay1	:= TSay():New(aPosObj8[2,1],aPosObj8[2,2],{|| "Do Cliente: "},oDlg,,,,,,.T.,,,aPosObj8[2,4]-aPosObj8[2,2],((aPosObj8[2,3]-aPosObj8[2,1])*0.45))
-	oGet1   := TGet():New(aPosObj8[2,1]+((aPosObj8[2,3]-aPosObj8[2,1])*0.45),aPosObj8[2,2],{|u| If(PCount() > 0, cCliDe := u, cCliDe) },;
-	oDlg,aPosObj8[2,4]-aPosObj8[2,2],(aPosObj8[2,3]-aPosObj8[2,1])*0.45,"@!",{|| filtro(cCliDe,"ZH_CLIENTE",1)},0,,,.F.,,.T.,;
-	,.F.,,.F.,.F.,,.F.,.F.,"CLI",cCliDe,,,,)
-
-	oSay2	:= TSay():New(aPosObj8[3,1],aPosObj8[3,2],{|| "Loja De: "},oDlg,,,,,,.T.,,,aPosObj8[3,4]-aPosObj8[3,2],((aPosObj8[3,3]-aPosObj8[3,1])*0.45))
-	oGet2   := TGet():New(aPosObj8[3,1]+((aPosObj8[3,3]-aPosObj8[3,1])*0.45),aPosObj8[3,2],{|u| If(PCount() > 0, cLojaDe := u, cLojaDe) },;
-	oDlg,aPosObj8[3,4]-aPosObj8[3,2],(aPosObj8[3,3]-aPosObj8[3,1])*0.45,"@!",{|| filtro(cLojaDe,"ZH_LOJA",1)},0,,,.F.,,.T.,;
-	,.F.,,.F.,.F.,,.F.,.F.,"",cLojaDe,,,,)
-
-	oSay3	:= TSay():New(aPosObj9[2,1],aPosObj9[2,2],{|| "Ate o Cliente: "},oDlg,,,,,,.T.,,,aPosObj9[2,4]-aPosObj9[2,2],((aPosObj9[2,3]-aPosObj9[2,1])*0.45))
-	oGet3   := TGet():New(aPosObj9[2,1]+((aPosObj9[2,3]-aPosObj9[2,1])*0.45),aPosObj9[2,2],{|u| If(PCount() > 0, cCliAte := u, cCliAte) },;
-	oDlg,aPosObj9[2,4]-aPosObj9[2,2],(aPosObj9[2,3]-aPosObj9[2,1])*0.45,"@!",{|| filtro(cCliAte,"ZH_CLIENTE",2)},0,,,.F.,,.T.,;
-	,.F.,,.F.,.F.,,.F.,.F.,"CLI",cCliAte,,,,)
-
-	oSay4		:= TSay():New(aPosObj9[3,1],aPosObj9[3,2],{|| "Loja Até: "},oDlg,,,,,,.T.,,,aPosObj9[3,4]-aPosObj9[3,2],((aPosObj9[3,3]-aPosObj9[3,1])*0.45))
-	oGet4    	:= TGet():New(aPosObj9[3,1]+((aPosObj9[3,3]-aPosObj9[3,1])*0.45),aPosObj9[3,2],{|u| If(PCount() > 0, cLojaAte := u, cLojaAte) },;
-	oDlg,aPosObj9[3,4]-aPosObj9[3,2],(aPosObj9[3,3]-aPosObj9[3,1])*0.45,"@!",{|| filtro(cLojaAte,"ZH_LOJA",2)},0,,,.F.,,.T.,;
-	,.F.,,.F.,.F.,,.F.,.F.,"",cLojaAte,,,,)
-
-	oSay5		:= TSay():New(aPosObj10[1,1],aPosObj10[1,2],{|| "Município De: "},oDlg,,,,,,.T.,,,aPosObj10[1,4]-aPosObj10[1,2],((aPosObj10[1,3]-aPosObj10[1,1])*0.45))
-	oGet5    	:= TGet():New(aPosObj10[1,1]+((aPosObj10[1,3]-aPosObj10[1,1])*0.45),aPosObj10[1,2],{|u| If(PCount() > 0, cMunDe := u, cMunDe) },;
-	oDlg,aPosObj10[1,4]-aPosObj10[1,2],(aPosObj10[1,3]-aPosObj10[1,1])*0.45,"@!",{|| filtro(cMunDe,"A1_MUN",1)},0,,,.F.,,.T.,;
-	,.F.,,.F.,.F.,,.F.,.F.,"CC2SX1",cMunDe,,,,)
-
-	oSay6		:= TSay():New(aPosObj11[1,1],aPosObj11[1,2],{|| "Município Até: "},oDlg,,,,,,.T.,,,aPosObj11[1,4]-aPosObj11[1,2],((aPosObj11[1,3]-aPosObj11[1,1])*0.45))
-	oGet6    	:= TGet():New(aPosObj11[1,1]+((aPosObj11[1,3]-aPosObj11[1,1])*0.45),aPosObj11[1,2],{|u| If(PCount() > 0, cMunAte := u, cMunAte) },;
-	oDlg,aPosObj11[1,4]-aPosObj11[1,2],(aPosObj11[1,3]-aPosObj11[1,1])*0.45,"@!",{|| filtro(cMunAte,"A1_MUN",2)},0,,,.F.,,.T.,;
-	,.F.,,.F.,.F.,,.F.,.F.,"CC2SX1",cMunAte,,,,)
-
-	oSay7		:= TSay():New(aPosObj10[2,1],aPosObj10[2,2],{|| "Estado de: "},oDlg,,,,,,.T.,,,aPosObj10[2,4]-aPosObj10[2,2],((aPosObj10[2,3]-aPosObj10[2,1])*0.45))
-	oGet7    	:= TGet():New(aPosObj10[2,1]+((aPosObj10[2,3]-aPosObj10[2,1])*0.45),aPosObj10[2,2],{|u| If(PCount() > 0, cEstDe := u, cEstDe) },;
-	oDlg,aPosObj10[2,4]-aPosObj10[2,2],(aPosObj10[2,3]-aPosObj10[2,1])*0.45,"@!",{|| filtro(cEstDe,"A1_EST",1)},0,,,.F.,,.T.,;
-	,.F.,,.F.,.F.,,.F.,.F.,"12",cEstDe,,,,)
-
-	oSay8		:= TSay():New(aPosObj11[2,1],aPosObj11[2,2],{|| "Estado Até: "},oDlg,,,,,,.T.,,,aPosObj11[2,4]-aPosObj11[2,2],((aPosObj11[2,3]-aPosObj11[2,1])*0.45))
-	oGet8    	:= TGet():New(aPosObj11[2,1]+((aPosObj11[2,3]-aPosObj11[2,1])*0.45),aPosObj11[2,2],{|u| If(PCount() > 0, cEstAte := u, cEstAte) },;
-	oDlg,aPosObj11[2,4]-aPosObj11[2,2],(aPosObj11[2,3]-aPosObj11[2,1])*0.45,"@!",{|| filtro(cEstAte,"A1_EST",2)},0,,,.F.,,.T.,;
-	,.F.,,.F.,.F.,,.F.,.F.,"12",cEstAte,,,,)
 
 	oSay9		:= TSay():New(aPosObj8[1,1],aPosObj8[1,2],{|| "Filial De: "},oDlg,,,,,,.T.,,,aPosObj8[1,4]-aPosObj8[1,2],((aPosObj8[1,3]-aPosObj8[1,1])*0.45))
 	oGet9    	:= TGet():New(aPosObj8[1,1]+((aPosObj8[1,3]-aPosObj8[1,1])*0.45),aPosObj8[1,2],{|u| If(PCount() > 0, cFilDe := u, cFilDe) },;
@@ -170,58 +131,104 @@ User Function MZ0133()   // U_MZ0133()
 	,.F.,,.F.,.F.,,.F.,.F.,"SM0",cFilAte,,,,)
 	oGet10:Disable()
 
-	oSay11		:= TSay():New(aPosObj12[1,1],aPosObj12[1,2],{|| "Produto De: "},oDlg,,,,,,.T.,,,aPosObj12[1,4]-aPosObj12[1,2],((aPosObj12[1,3]-aPosObj12[1,1])*0.45))
-	oGet11    	:= TGet():New(aPosObj12[1,1]+((aPosObj12[1,3]-aPosObj12[1,1])*0.45),aPosObj12[1,2],{|u| If(PCount() > 0, cProdDe := u, cProdDe) },;
-	oDlg,aPosObj12[1,4]-aPosObj12[1,2],(aPosObj12[1,3]-aPosObj12[1,1])*0.45,"@!",{|| filtro(cProdDe,"ZI_PRODUTO",1)},0,,,.F.,,.T.,;
-	,.F.,,.F.,.F.,,.F.,.F.,"SB1",cProdDe,,,,)
 
-	oSay12		:= TSay():New(aPosObj12[2,1],aPosObj12[2,2],{|| "Produto Até: "},oDlg,,,,,,.T.,,,aPosObj12[2,4]-aPosObj12[2,2],((aPosObj12[2,3]-aPosObj12[2,1])*0.45))
-	oGet12    	:= TGet():New(aPosObj12[2,1]+((aPosObj12[2,3]-aPosObj12[2,1])*0.45),aPosObj12[2,2],{|u| If(PCount() > 0, cProdAte := u, cProdAte) },;
-	oDlg,aPosObj12[2,4]-aPosObj12[2,2],(aPosObj12[2,3]-aPosObj12[2,1])*0.45,"@!",{|| filtro(cProdAte,"ZI_PRODUTO",2)},0,,,.F.,,.T.,;
-	,.F.,,.F.,.F.,,.F.,.F.,"SB1",cProdAte,,,,)
-
-	oSay13		:= TSay():New(aPosObj15[1,1],aPosObj15[1,2],{|| "Vendedor De: "},oDlg,,,,,,.T.,,,aPosObj15[1,4]-aPosObj15[1,2],((aPosObj15[1,3]-aPosObj15[1,1])*0.45))
-	oGet13    	:= TGet():New(aPosObj15[1,1]+((aPosObj15[1,3]-aPosObj15[1,1])*0.45),aPosObj15[1,2],{|u| If(PCount() > 0, cVendDe := u, cVendDe) },;
-	oDlg,aPosObj15[1,4]-aPosObj15[1,2],(aPosObj15[1,3]-aPosObj15[1,1])*0.45,"@!",;
+	oSay13		:= TSay():New(aPosObj8[2,1],aPosObj8[2,2],{|| "Vendedor De: "},oDlg,,,,,,.T.,,,aPosObj8[2,4]-aPosObj8[2,2],((aPosObj8[2,3]-aPosObj8[2,1])*0.45))
+	oGet13    	:= TGet():New(aPosObj8[2,1]+((aPosObj8[2,3]-aPosObj8[2,1])*0.45),aPosObj8[2,2],{|u| If(PCount() > 0, cVendDe := u, cVendDe) },;
+	oDlg,aPosObj8[2,4]-aPosObj8[2,2],(aPosObj8[2,3]-aPosObj8[2,1])*0.45,"@!",;
 	{|| filtro(cVendDe,"A1_VEND",1)},0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,"SA3",cVendDe,,,,)
 
-	oSay14		:= TSay():New(aPosObj15[2,1],aPosObj15[2,2],{|| "Vendedor Até: "},oDlg,,,,,,.T.,,,aPosObj15[2,4]-aPosObj15[2,2],((aPosObj15[2,3]-aPosObj15[2,1])*0.45))
-	oGet14    	:= TGet():New(aPosObj15[2,1]+((aPosObj15[2,3]-aPosObj15[2,1])*0.45),aPosObj15[2,2],{|u| If(PCount() > 0, cVendAte := u, cVendAte) },;
-	oDlg,aPosObj15[2,4]-aPosObj15[2,2],(aPosObj15[2,3]-aPosObj15[2,1])*0.45,"@!",;
+	oSay14		:= TSay():New(aPosObj8[3,1],aPosObj8[3,2],{|| "Vendedor Até: "},oDlg,,,,,,.T.,,,aPosObj8[3,4]-aPosObj8[3,2],((aPosObj8[3,3]-aPosObj8[3,1])*0.45))
+	oGet14    	:= TGet():New(aPosObj8[3,1]+((aPosObj8[3,3]-aPosObj8[3,1])*0.45),aPosObj8[3,2],{|u| If(PCount() > 0, cVendAte := u, cVendAte) },;
+	oDlg,aPosObj8[3,4]-aPosObj8[3,2],(aPosObj8[3,3]-aPosObj8[3,1])*0.45,"@!",;
 	{|| filtro(cVendAte,"A1_VEND",2)},0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,"SA3",cVendAte,,,,)
 
 
-	oSay15		:= TSay():New(aPosObj16[1,1],aPosObj16[1,2],{|| "Grupo Preço De: "},oDlg,,,,,,.T.,,,aPosObj16[1,4]-aPosObj16[1,2],((aPosObj16[1,3]-aPosObj16[1,1])*0.45))
-	oGet15    	:= TGet():New(aPosObj16[1,1]+((aPosObj16[1,3]-aPosObj16[1,1])*0.45),aPosObj16[1,2],{|u| If(PCount() > 0, _cGrpPrDe := u, _cGrpPrDe) },;
-	oDlg,aPosObj16[1,4]-aPosObj16[1,2],(aPosObj16[1,3]-aPosObj16[1,1])*0.45,"@!",;
-	{|| filtro(_cGrpPrDe,"ZI_YGRPPRC",1)},0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,"9Z",_cGrpPrDe,,,,)
+	oSay7		:= TSay():New(aPosObj9[2,1],aPosObj9[2,2],{|| "Estado de: "},oDlg,,,,,,.T.,,,aPosObj9[2,4]-aPosObj9[2,2],((aPosObj9[2,3]-aPosObj9[2,1])*0.45))
+	oGet7    	:= TGet():New(aPosObj9[2,1]+((aPosObj9[2,3]-aPosObj9[2,1])*0.45),aPosObj9[2,2],{|u| If(PCount() > 0, cEstDe := u, cEstDe) },;
+	oDlg,aPosObj9[2,4]-aPosObj9[2,2],(aPosObj9[2,3]-aPosObj9[2,1])*0.45,"@!",{|| filtro(cEstDe,"A1_EST",1)},0,,,.F.,,.T.,;
+	,.F.,,.F.,.F.,,.F.,.F.,"12",cEstDe,,,,)
 
-	oSay16		:= TSay():New(aPosObj16[2,1],aPosObj16[2,2],{|| "Grupo Preço Até: "},oDlg,,,,,,.T.,,,aPosObj16[2,4]-aPosObj16[2,2],((aPosObj16[2,3]-aPosObj16[2,1])*0.45))
-	oGet16    	:= TGet():New(aPosObj16[2,1]+((aPosObj16[2,3]-aPosObj16[2,1])*0.45),aPosObj16[2,2],{|u| If(PCount() > 0, _cGrpPrAte := u, _cGrpPrAte) },;
-	oDlg,aPosObj16[2,4]-aPosObj16[2,2],(aPosObj16[2,3]-aPosObj16[2,1])*0.45,"@!",;
-	{|| filtro(_cGrpPrAte,"ZI_YGRPPRC",2)},0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,"9Z",_cGrpPrAte,,,,)
+	oSay8		:= TSay():New(aPosObj9[3,1],aPosObj9[3,2],{|| "Estado Até: "},oDlg,,,,,,.T.,,,aPosObj9[3,4]-aPosObj9[3,2],((aPosObj9[3,3]-aPosObj9[3,1])*0.45))
+	oGet8    	:= TGet():New(aPosObj9[3,1]+((aPosObj9[3,3]-aPosObj9[2,1])*0.45),aPosObj9[3,2],{|u| If(PCount() > 0, cEstAte := u, cEstAte) },;
+	oDlg,aPosObj9[3,4]-aPosObj9[3,2],(aPosObj9[3,3]-aPosObj9[2,1])*0.45,"@!",{|| filtro(cEstAte,"A1_EST",2)},0,,,.F.,,.T.,;
+	,.F.,,.F.,.F.,,.F.,.F.,"12",cEstAte,,,,)
 
 
-	oSay17		:= TSay():New(aPosObj17[1,1],aPosObj17[1,2],{|| "Meso Região De: "},oDlg,,,,,,.T.,,,aPosObj17[1,4]-aPosObj17[1,2],((aPosObj17[1,3]-aPosObj17[1,1])*0.45))
-	oGet17    	:= TGet():New(aPosObj17[1,1]+((aPosObj17[1,3]-aPosObj17[1,1])*0.45),aPosObj17[1,2],{|u| If(PCount() > 0, _cMesoDe := u, _cMesoDe) },;
-	oDlg,aPosObj17[1,4]-aPosObj17[1,2],(aPosObj17[1,3]-aPosObj17[1,1])*0.45,"@!",;
+	oSay19		:= TSay():New(aPosObj11[1,1],aPosObj11[1,2],{|| "Micro Região De: "},oDlg,,,,,,.T.,,,aPosObj11[1,4]-aPosObj11[1,2],((aPosObj11[1,3]-aPosObj11[1,1])*0.45))
+	oGet19    	:= TGet():New(aPosObj11[1,1]+((aPosObj11[1,3]-aPosObj11[1,1])*0.45),aPosObj11[1,2],{|u| If(PCount() > 0, _cMicrDe := u, _cMicrDe) },;
+	oDlg,aPosObj11[1,4]-aPosObj11[1,2],(aPosObj11[1,3]-aPosObj11[1,1])*0.45,"@!",;
+	{|| filtro(_cMicrDe,"A1_YMICRE ",1)},0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,"C2",_cMicrDe,,,,)
+
+	oSay20		:= TSay():New(aPosObj11[2,1],aPosObj11[2,2],{|| "Micro Região Até: "},oDlg,,,,,,.T.,,,aPosObj11[2,4]-aPosObj11[2,2],((aPosObj11[2,3]-aPosObj11[2,1])*0.45))
+	oGet20    	:= TGet():New(aPosObj11[2,1]+((aPosObj11[2,3]-aPosObj11[2,1])*0.45),aPosObj11[2,2],{|u| If(PCount() > 0, _cMicrAte := u, _cMicrAte) },;
+	oDlg,aPosObj11[2,4]-aPosObj11[2,2],(aPosObj11[2,3]-aPosObj11[2,1])*0.45,"@!",;
+	{|| filtro(_cMicrAte,"A1_YMICRE ",2)},0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,"C2",_cMicrAte,,,,)
+
+	oSay17		:= TSay():New(aPosObj10[1,1],aPosObj10[1,2],{|| "Meso Região De: "},oDlg,,,,,,.T.,,,aPosObj10[1,4]-aPosObj10[1,2],((aPosObj10[1,3]-aPosObj10[1,1])*0.45))
+	oGet17    	:= TGet():New(aPosObj10[1,1]+((aPosObj10[1,3]-aPosObj10[1,1])*0.45),aPosObj10[1,2],{|u| If(PCount() > 0, _cMesoDe := u, _cMesoDe) },;
+	oDlg,aPosObj10[1,4]-aPosObj10[1,2],(aPosObj10[1,3]-aPosObj10[1,1])*0.45,"@!",;
 	{|| filtro(_cMesoDe,"A1_YMESCR",1)},0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,"C1",_cMesoDe,,,,)
 
-	oSay18		:= TSay():New(aPosObj17[2,1],aPosObj17[2,2],{|| "Meso Região Até: "},oDlg,,,,,,.T.,,,aPosObj17[2,4]-aPosObj17[2,2],((aPosObj17[2,3]-aPosObj17[2,1])*0.45))
-	oGet18    	:= TGet():New(aPosObj17[2,1]+((aPosObj17[2,3]-aPosObj17[2,1])*0.45),aPosObj17[2,2],{|u| If(PCount() > 0, _cMesoAte := u, _cMesoAte) },;
-	oDlg,aPosObj17[2,4]-aPosObj17[2,2],(aPosObj17[2,3]-aPosObj17[2,1])*0.45,"@!",;
+	oSay18		:= TSay():New(aPosObj10[2,1],aPosObj10[2,2],{|| "Meso Região Até: "},oDlg,,,,,,.T.,,,aPosObj10[2,4]-aPosObj10[2,2],((aPosObj10[2,3]-aPosObj10[2,1])*0.45))
+	oGet18    	:= TGet():New(aPosObj10[2,1]+((aPosObj10[2,3]-aPosObj10[2,1])*0.45),aPosObj10[2,2],{|u| If(PCount() > 0, _cMesoAte := u, _cMesoAte) },;
+	oDlg,aPosObj10[2,4]-aPosObj10[2,2],(aPosObj10[2,3]-aPosObj10[2,1])*0.45,"@!",;
 	{|| filtro(_cMesoAte,"A1_YMESCR",2)},0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,"C1",_cMesoAte,,,,)
 
 
-	oSay19		:= TSay():New(aPosObj18[1,1],aPosObj18[1,2],{|| "Micro Região De: "},oDlg,,,,,,.T.,,,aPosObj18[1,4]-aPosObj18[1,2],((aPosObj18[1,3]-aPosObj18[1,1])*0.45))
-	oGet19    	:= TGet():New(aPosObj18[1,1]+((aPosObj18[1,3]-aPosObj18[1,1])*0.45),aPosObj18[1,2],{|u| If(PCount() > 0, _cMicrDe := u, _cMicrDe) },;
-	oDlg,aPosObj18[1,4]-aPosObj18[1,2],(aPosObj18[1,3]-aPosObj18[1,1])*0.45,"@!",;
-	{|| filtro(_cMicrDe,"A1_YMICRE ",1)},0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,"C2",_cMicrDe,,,,)
 
-	oSay20		:= TSay():New(aPosObj18[2,1],aPosObj18[2,2],{|| "Micro Região Até: "},oDlg,,,,,,.T.,,,aPosObj18[2,4]-aPosObj18[2,2],((aPosObj18[2,3]-aPosObj18[2,1])*0.45))
-	oGet20    	:= TGet():New(aPosObj18[2,1]+((aPosObj18[2,3]-aPosObj18[2,1])*0.45),aPosObj18[2,2],{|u| If(PCount() > 0, _cMicrAte := u, _cMicrAte) },;
-	oDlg,aPosObj18[2,4]-aPosObj18[2,2],(aPosObj18[2,3]-aPosObj18[2,1])*0.45,"@!",;
-	{|| filtro(_cMicrAte,"A1_YMICRE ",2)},0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,"C2",_cMicrAte,,,,)
+	oSay5		:= TSay():New(aPosObj12[1,1],aPosObj12[1,2],{|| "Município De: "},oDlg,,,,,,.T.,,,aPosObj12[1,4]-aPosObj12[1,2],((aPosObj12[1,3]-aPosObj12[1,1])*0.45))
+	oGet5    	:= TGet():New(aPosObj12[1,1]+((aPosObj12[1,3]-aPosObj12[1,1])*0.45),aPosObj12[1,2],{|u| If(PCount() > 0, cMunDe := u, cMunDe) },;
+	oDlg,aPosObj12[1,4]-aPosObj12[1,2],(aPosObj12[1,3]-aPosObj12[1,1])*0.45,"@!",{|| filtro(cMunDe,"A1_MUN",1)},0,,,.F.,,.T.,;
+	,.F.,,.F.,.F.,,.F.,.F.,"CC2SX1",cMunDe,,,,)
+
+	oSay6		:= TSay():New(aPosObj12[2,1],aPosObj12[2,2],{|| "Município Até: "},oDlg,,,,,,.T.,,,aPosObj12[2,4]-aPosObj12[2,2],((aPosObj12[2,3]-aPosObj12[2,1])*0.45))
+	oGet6    	:= TGet():New(aPosObj12[2,1]+((aPosObj12[2,3]-aPosObj12[2,1])*0.45),aPosObj12[2,2],{|u| If(PCount() > 0, cMunAte := u, cMunAte) },;
+	oDlg,aPosObj12[2,4]-aPosObj12[2,2],(aPosObj12[2,3]-aPosObj12[2,1])*0.45,"@!",{|| filtro(cMunAte,"A1_MUN",2)},0,,,.F.,,.T.,;
+	,.F.,,.F.,.F.,,.F.,.F.,"CC2SX1",cMunAte,,,,)
+
+
+	oSay1	:= TSay():New(aPosObj15[1,1],aPosObj15[1,2],{|| "Do Cliente: "},oDlg,,,,,,.T.,,,aPosObj15[1,4]-aPosObj15[1,2],((aPosObj15[1,3]-aPosObj15[1,1])*0.45))
+	oGet1   := TGet():New(aPosObj15[1,1]+((aPosObj15[1,3]-aPosObj15[1,1])*0.45),aPosObj15[1,2],{|u| If(PCount() > 0, cCliDe := u, cCliDe) },;
+	oDlg,aPosObj15[1,4]-aPosObj15[1,2],(aPosObj15[1,3]-aPosObj15[1,1])*0.45,"@!",{|| filtro(cCliDe,"ZH_CLIENTE",1)},0,,,.F.,,.T.,;
+	,.F.,,.F.,.F.,,.F.,.F.,"CLI",cCliDe,,,,)
+
+	oSay2	:= TSay():New(aPosObj15[2,1],aPosObj15[2,2],{|| "Loja De: "},oDlg,,,,,,.T.,,,aPosObj15[2,4]-aPosObj15[2,2],((aPosObj15[2,3]-aPosObj15[2,1])*0.45))
+	oGet2   := TGet():New(aPosObj15[2,1]+((aPosObj15[2,3]-aPosObj15[2,1])*0.45),aPosObj15[2,2],{|u| If(PCount() > 0, cLojaDe := u, cLojaDe) },;
+	oDlg,aPosObj15[2,4]-aPosObj15[2,2],(aPosObj15[2,3]-aPosObj15[2,1])*0.45,"@!",{|| filtro(cLojaDe,"ZH_LOJA",1)},0,,,.F.,,.T.,;
+	,.F.,,.F.,.F.,,.F.,.F.,"",cLojaDe,,,,)
+
+	oSay3	:= TSay():New(aPosObj16[1,1],aPosObj16[1,2],{|| "Ate o Cliente: "},oDlg,,,,,,.T.,,,aPosObj16[1,4]-aPosObj16[1,2],((aPosObj16[1,3]-aPosObj16[1,1])*0.45))
+	oGet3   := TGet():New(aPosObj16[1,1]+((aPosObj16[1,3]-aPosObj16[1,1])*0.45),aPosObj16[1,2],{|u| If(PCount() > 0, cCliAte := u, cCliAte) },;
+	oDlg,aPosObj16[1,4]-aPosObj16[1,2],(aPosObj16[1,3]-aPosObj16[1,1])*0.45,"@!",{|| filtro(cCliAte,"ZH_CLIENTE",2)},0,,,.F.,,.T.,;
+	,.F.,,.F.,.F.,,.F.,.F.,"CLI",cCliAte,,,,)
+
+	oSay4		:= TSay():New(aPosObj16[2,1],aPosObj16[2,2],{|| "Loja Até: "},oDlg,,,,,,.T.,,,aPosObj16[2,4]-aPosObj16[2,2],((aPosObj16[2,3]-aPosObj16[2,1])*0.45))
+	oGet4    	:= TGet():New(aPosObj16[2,1]+((aPosObj16[2,3]-aPosObj16[2,1])*0.45),aPosObj16[2,2],{|u| If(PCount() > 0, cLojaAte := u, cLojaAte) },;
+	oDlg,aPosObj16[2,4]-aPosObj16[2,2],(aPosObj16[2,3]-aPosObj16[2,1])*0.45,"@!",{|| filtro(cLojaAte,"ZH_LOJA",2)},0,,,.F.,,.T.,;
+	,.F.,,.F.,.F.,,.F.,.F.,"",cLojaAte,,,,)
+
+
+	oSay15		:= TSay():New(aPosObj17[1,1],aPosObj17[1,2],{|| "Grupo Preço De: "},oDlg,,,,,,.T.,,,aPosObj17[1,4]-aPosObj17[1,2],((aPosObj17[1,3]-aPosObj17[1,1])*0.45))
+	oGet15    	:= TGet():New(aPosObj17[1,1]+((aPosObj17[1,3]-aPosObj17[1,1])*0.45),aPosObj17[1,2],{|u| If(PCount() > 0, _cGrpPrDe := u, _cGrpPrDe) },;
+	oDlg,aPosObj17[1,4]-aPosObj17[1,2],(aPosObj17[1,3]-aPosObj17[1,1])*0.45,"@!",;
+	{|| filtro(_cGrpPrDe,"ZI_YGRPPRC",1)},0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,"9Z",_cGrpPrDe,,,,)
+
+	oSay16		:= TSay():New(aPosObj17[2,1],aPosObj17[2,2],{|| "Grupo Preço Até: "},oDlg,,,,,,.T.,,,aPosObj17[2,4]-aPosObj17[2,2],((aPosObj17[2,3]-aPosObj17[2,1])*0.45))
+	oGet16    	:= TGet():New(aPosObj17[2,1]+((aPosObj17[2,3]-aPosObj17[2,1])*0.45),aPosObj17[2,2],{|u| If(PCount() > 0, _cGrpPrAte := u, _cGrpPrAte) },;
+	oDlg,aPosObj17[2,4]-aPosObj17[2,2],(aPosObj17[2,3]-aPosObj17[2,1])*0.45,"@!",;
+	{|| filtro(_cGrpPrAte,"ZI_YGRPPRC",2)},0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,"9Z",_cGrpPrAte,,,,)
+
+
+	oSay11		:= TSay():New(aPosObj18[1,1],aPosObj18[1,2],{|| "Produto De: "},oDlg,,,,,,.T.,,,aPosObj18[1,4]-aPosObj18[1,2],((aPosObj18[1,3]-aPosObj18[1,1])*0.45))
+	oGet11    	:= TGet():New(aPosObj18[1,1]+((aPosObj18[1,3]-aPosObj18[1,1])*0.45),aPosObj18[1,2],{|u| If(PCount() > 0, cProdDe := u, cProdDe) },;
+	oDlg,aPosObj18[1,4]-aPosObj18[1,2],(aPosObj18[1,3]-aPosObj18[1,1])*0.45,"@!",{|| filtro(cProdDe,"ZI_PRODUTO",1)},0,,,.F.,,.T.,;
+	,.F.,,.F.,.F.,,.F.,.F.,"SB1",cProdDe,,,,)
+
+	oSay12		:= TSay():New(aPosObj18[2,1],aPosObj18[2,2],{|| "Produto Até: "},oDlg,,,,,,.T.,,,aPosObj18[2,4]-aPosObj18[2,2],((aPosObj18[2,3]-aPosObj18[2,1])*0.45))
+	oGet12    	:= TGet():New(aPosObj18[2,1]+((aPosObj18[2,3]-aPosObj18[2,1])*0.45),aPosObj18[2,2],{|u| If(PCount() > 0, cProdAte := u, cProdAte) },;
+	oDlg,aPosObj18[2,4]-aPosObj18[2,2],(aPosObj18[2,3]-aPosObj18[2,1])*0.45,"@!",{|| filtro(cProdAte,"ZI_PRODUTO",2)},0,,,.F.,,.T.,;
+	,.F.,,.F.,.F.,,.F.,.F.,"SB1",cProdAte,,,,)
+
 
 	//////////////////////////////////////////////////////
 	//Componentes Gráficos do grupo de valores          //
@@ -367,11 +374,14 @@ Static Function filtro(cExp,cCampo,nTipo)
 	(cTableQry)->(DbCloseArea())
 
 	If cEmpAnt + cFilAnt $ '0210|0211|0214'
+		_lGrPrc := .F.
 		for a:=1 to Len(aFiltro) // A T E N C A O  ESSA ROTINA É PARA FAZER COPIA DO ARRAY, POIS SE FIZER aObraFiltro := p_aFiltro, altera o aFiltro.
 			If !aFiltro[a][1] $ 'ZI_YGRPPRC'
 				AAdd(aObraFiltro,{aFiltro[a][1],;
 				aFiltro[a][2],;
 				aFiltro[a][3]})
+			Else
+				_lGrPrc := .T.
 			Endif
 		next
 
@@ -417,7 +427,17 @@ Static Function filtro(cExp,cCampo,nTipo)
 
 			//Incluído Inner Join, para filtro dos campos de Meso e Micro Região
 			_cQ_Obra += " INNER JOIN "+RetSqlName("SA1")+" SA1 ON A1_COD = ZA2_CLIENT AND A1_LOJA = ZA2_LOJA AND SA1.D_E_L_E_T_ = '' "
-
+			If _lGrPrc
+				_cQ_Obra += " INNER JOIN "+RetSqlName("SZI")+" SZI ON ZI_CLIENTE = ZA2_CLIENT AND ZI_LOJA = ZA2_LOJA AND ZA2_PRODUT = ZI_PRODUTO "
+				_cQ_Obra += " AND ZI_FILIAL = '"+xFilial("SZI")+"' AND SZI.D_E_L_E_T_ = '' AND ZI_LIBER = 'L' "
+				If !Empty(_cGrpPrDe) .and. !Empty(_cGrpPrAte)
+					_cQ_Obra += " AND ZI_YGRPPRC BETWEEN '"+_cGrpPrDe+"' AND '"+_cGrpPrAte+"' "
+				ElseIf !Empty(_cGrpPrDe) .and. Empty(_cGrpPrAte)
+					_cQ_Obra += " AND ZI_YGRPPRC >= '"+_cGrpPrDe+"' "
+				ElseIf Empty(_cGrpPrDe) .and. !Empty(_cGrpPrAte)
+					_cQ_Obra += " AND ZI_YGRPPRC <= '"+_cGrpPrAte+"' "
+				Endif
+			Endif
 			_cQ_Obra += " WHERE Z.D_E_L_E_T_ = '' AND (Z.ZA2_LIBER = 'L' OR Z.ZA2_LIBER = ' ') AND Z.ZA2_FILIAL = '"+xFilial("ZA2")+"' " //Rodrigo - 07/02/17 - Mostrar apenas da filial corrente
 			_cQ_Obra += cSQL_Obra   // Filtros escolhido pelo usuario -
 			_cQ_Obra += " ORDER BY ZA2_CLIENT, ZA2_LOJA, ZA2_NOMCLI "
@@ -474,17 +494,17 @@ Static function mudouTipo()
 
 	endcase
 
-//	oGetCif:oGet:Picture	:= cMasc
-//	nCif := 1
-//	oGetCif:CtrlRefresh()
-//	nCif := 0
-//	oGetCif:CtrlRefresh()
-//
-//	oGetGer:oGet:Picture	:= cMasc
-//	nGer := 1
-//	oGetGer:CtrlRefresh()
-//	nGer := 0
-//	oGetGer:CtrlRefresh()
+	//	oGetCif:oGet:Picture	:= cMasc
+	//	nCif := 1
+	//	oGetCif:CtrlRefresh()
+	//	nCif := 0
+	//	oGetCif:CtrlRefresh()
+	//
+	//	oGetGer:oGet:Picture	:= cMasc
+	//	nGer := 1
+	//	oGetGer:CtrlRefresh()
+	//	nGer := 0
+	//	oGetGer:CtrlRefresh()
 
 	for i:=1 to Len(aVars)
 		&(aVars[i]):oGet:Picture	:= cMasc
@@ -496,16 +516,16 @@ Static function mudouTipo()
 
 
 		//Juailson-Semar - Ajustar posicao por conta do novo campo Cif Descarga = 23/01/15
-/*		if i == 2
-			cCol := "-26"
+		/*		if i == 2
+		cCol := "-26"
 		elseif i == 3
-			cCol :=  "+135"
+		cCol :=  "+135"
 		elseif i == 4
-			cCol := "-93"  //alltrim(cMunDe)
+		cCol := "-93"  //alltrim(cMunDe)
 		elseif i == 5
-			cCol := "+67"
+		cCol := "+67"
 		else
-			cCol := "+0"
+		cCol := "+0"
 		endif
 
 		nPos 	:= if(i%2==0,2,1)
@@ -625,7 +645,7 @@ Static function calcObjetos()
 	//que conterá os valores: filial(de),cliente(de),loja(de)                //
 	///////////////////////////////////////////////////////////////////////////
 	AAdd(aObjects8,{100,100,.T.,.T.})
-	AAdd(aObjects8,{200,100,.T.,.T.})
+	AAdd(aObjects8,{100,100,.T.,.T.})
 	AAdd(aObjects8,{100,100,.T.,.T.})
 	aInfo8 := { aPosObj7[1,2],aPosObj7[1,1],aPosObj7[1,4],aPosObj7[1,3],5,1 }
 
@@ -636,7 +656,7 @@ Static function calcObjetos()
 	//que conterá os valores: filial(ate),cliente(ate),loja(ate)             //
 	///////////////////////////////////////////////////////////////////////////
 	AAdd(aObjects9,{100,100,.T.,.T.})
-	AAdd(aObjects9,{200,100,.T.,.T.})
+	AAdd(aObjects9,{100,100,.T.,.T.})
 	AAdd(aObjects9,{100,100,.T.,.T.})
 	aInfo9 := { aPosObj7[2,2],aPosObj7[2,1],aPosObj7[2,4],aPosObj7[2,3],5,1 }
 
@@ -646,7 +666,7 @@ Static function calcObjetos()
 	//dividindo a terceira linha do grupo da esquerda cima da tela           //
 	//que conterá os valores: municipio(de) e estado(de)                     //
 	///////////////////////////////////////////////////////////////////////////
-	AAdd(aObjects10,{300,100,.T.,.T.})
+	AAdd(aObjects10,{100,100,.T.,.T.})
 	AAdd(aObjects10,{100,100,.T.,.T.})
 	aInfo10 := { aPosObj7[3,2],aPosObj7[3,1],aPosObj7[3,4],aPosObj7[3,3],5,1 }
 
@@ -656,7 +676,7 @@ Static function calcObjetos()
 	//dividindo a quarta linha do grupo da esquerda cima da tela             //
 	//que conterá os valores: municipio(ate) e estado(ate)                   //
 	///////////////////////////////////////////////////////////////////////////
-	AAdd(aObjects11,{300,100,.T.,.T.})
+	AAdd(aObjects11,{100,100,.T.,.T.})
 	AAdd(aObjects11,{100,100,.T.,.T.})
 	aInfo11 := { aPosObj7[4,2],aPosObj7[4,1],aPosObj7[4,4],aPosObj7[4,3],5,1 }
 
@@ -676,11 +696,12 @@ Static function calcObjetos()
 	//dividindo a sexta linha do grupo da esquerda cima da tela              //
 	//que conterá os valores: vendedor(de) e vendedor(ate)                   //
 	///////////////////////////////////////////////////////////////////////////
-	AAdd(aObjects15,{100,100,.T.,.T.})
+	AAdd(aObjects15,{300,100,.T.,.T.})
 	AAdd(aObjects15,{100,100,.T.,.T.})
 	aInfo15 := { aPosObj7[6,2],aPosObj7[6,1],aPosObj7[6,4],aPosObj7[6,3],5,1 }
 
 	aPosObj15 := MsObjSize(aInfo15,aObjects15,.T.,.T.)
+
 
 
 	///////////////////////////////////////////////////////////////////////////
@@ -688,7 +709,7 @@ Static function calcObjetos()
 	//dividindo a sexta linha do grupo da esquerda cima da tela              //
 	//que conterá os valores: Grupo Preço (de) e Grupo Preço (Ate)           //
 	///////////////////////////////////////////////////////////////////////////
-	AAdd(aObjects16,{100,100,.T.,.T.})
+	AAdd(aObjects16,{300,100,.T.,.T.})
 	AAdd(aObjects16,{100,100,.T.,.T.})
 	aInfo16 := { aPosObj7[7,2],aPosObj7[7,1],aPosObj7[7,4],aPosObj7[7,3],5,1 }
 
