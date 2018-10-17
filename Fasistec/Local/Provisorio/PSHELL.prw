@@ -76,7 +76,7 @@ Static Function T2PSExcel()
 	Local lStatus	:= .F.
 
 
-	cPsScript := "Powershell -noexit $excel = New-Object -ComObject excel.application" + CRLF
+//	cPsScript := "Powershell -noexit $excel = New-Object -ComObject excel.application" + CRLF
 	cPsScript += "$excel.Application.Visible = $true " + CRLF
 	cPsScript += "$excel.DisplayAlerts = $false " + CRLF
 

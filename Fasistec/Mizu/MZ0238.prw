@@ -224,11 +224,13 @@ Static Function MontaRel(aMarked)
 
 		_cCart		:= SEE->EE_CODCOBE
 		If EMPTY(_cCart)
-			_cCart		:= '09'
+			//		_cCart		:= '09'
+			_cCart		:= '11'
 		Endif
 
 		nBaseMod	:= 7
-		nBaseMod	:= IIf(_cCart=='09',7,9)
+		//	nBaseMod	:= IIf(_cCart=='09',7,9)
+		nBaseMod	:= IIf(_cCart=='11',7,9)
 		cNossoNum	:= Left(SE1->E1_NUMBCO,08)
 		cDVNN 		:= SubStr(SE1->E1_NUMBCO,09,02)
 
@@ -291,7 +293,7 @@ Static Function MontaRel(aMarked)
 		Endif
 
 		_nVlrAbat   := SomaAbat(SE1->E1_PREFIXO,SE1->E1_NUM,SE1->E1_PARCELA,"R",1,,SE1->E1_CLIENTE,SE1->E1_LOJA)
-		CB_RN_NN    := Ret_cBarra(Subs(aDadosBanco[1],1,3)+"9",aDadosBanco[3],aDadosBanco[4],"0",AllTrim(SE1->E1_NUM),(SE1->E1_SALDO-_nVlrAbat),SE1->E1_VENCTO)
+		CB_RN_NN    := Ret_cBarra(Subs(aDadosBanco[1],1,3)+"9",aDadosBanco[3],aDadosBanco[4],aDadosBanco[5],"0",AllTrim(SE1->E1_NUM),(SE1->E1_SALDO-_nVlrAbat),SE1->E1_VENCTO)
 
 		aDadosTit   := {AllTrim(SE1->E1_NUM)+'/'+AllTrim(SE1->E1_PARCELA)	,;  // [1] Número do título
 		DToC(SE1->E1_EMISSAO)                              					,;  // [2] Data da emissão do título
@@ -387,9 +389,9 @@ Static Function Impress(oPrint,aDadosEmp,aDadosTit,aDadosBanco,aDatSacado,aBolTe
 	oPrint:Line (0405+nLinha,100,0405+nLinha,1150)//linha 4
 	oPrint:Line (0490+nLinha,100,0490+nLinha,1150)//linha 5
 
-	oPrint:Say  (0080+nLinha,0780,OemToAnsi("Recibo do Sacado"),oFont16)
+	oPrint:Say  (0080+nLinha,0780,OemToAnsi("Recibo do Pagador"),oFont16)
 	oPrint:Say  (0155+nLinha,0100,OemToAnsi("Vencimento"),oFont8)
-	oPrint:Say  (0155+nLinha,0310,OemToAnsi("Agencia / Codigo Cedente"),oFont8)
+	oPrint:Say  (0155+nLinha,0310,OemToAnsi("Agencia / Codigo Beneficiário"),oFont8)
 	oPrint:Say  (0155+nLinha,0710,OemToAnsi("Espécie"),oFont8)
 	oPrint:Say  (0155+nLinha,0960,OemToAnsi("Quantidade"),oFont8)
 	oPrint:Say  (0240+nLinha,0100,OemToAnsi("(=) Valor do Documento"),oFont8)
@@ -398,15 +400,16 @@ Static Function Impress(oPrint,aDadosEmp,aDadosTit,aDadosBanco,aDatSacado,aBolTe
 	oPrint:Say  (0325+nLinha,0100,OemToAnsi("(=) Valor Cobrado"),oFont8)
 	oPrint:Say  (0325+nLinha,0460,OemToAnsi("Nosso Numero"),oFont8)
 	oPrint:Say  (0325+nLinha,0810,OemToAnsi("N° do Documento"),oFont8)
-	oPrint:Say  (0410+nLinha,0100,OemToAnsi("Sacado"),oFont8)
+	oPrint:Say  (0410+nLinha,0100,OemToAnsi("Pagador"),oFont8)
 	oPrint:Say  (0500+nLinha,0450,OemToAnsi("Autenticação mecânica"),oFont8)
 
 	//	oPrint:Say  (0080+nLinha,100,aDadosBanco[2],oFont16n )	                                   //[2]Nome do Banco
 	oPrint:SayBitmap(00025+nLinha,130,"banestes.jpg",0315,0120)
 	//	oPrint:Say  (0080+nLinha,100,aDadosBanco[2],oFont16n )	                                   //[2]Nome do Banco
-	oPrint:Say  (0080+nLinha,560,aDadosBanco[1],oFont14n )	                                   //[1]Numero do Banco
+	//oPrint:Say  (0080+nLinha,560,aDadosBanco[1],oFont14n )	                                   //[1]Numero do Banco
+	oPrint:Say  (0080+nLinha,560,"021-3",oFont14n )	                                   //[1]Numero do Banco
 	oPrint:Say  (0190+nLinha,0130,aDadosTit[4],oFont10)                                  //Vencimento
-	oPrint:Say  (0190+nLinha,0330,aDadosBanco[3]+"-"+aDadosBanco[9]+"/"+aDadosBanco[4]+"-"+aDadosBanco[5],oFont10)//Agencia/Cod.Cedente
+	oPrint:Say  (0190+nLinha,0330,aDadosBanco[3]+"-"+aDadosBanco[9]+"/"+aDadosBanco[4]+"-"+aDadosBanco[5],oFont10)//Agencia/Cod.Beneficiário
 	oPrint:Say  (0190+nLinha,0800,"R$",	oFont10)                                               //aDadosTit[8] Tipo do Titulo
 	oPrint:Say  (0190+nLinha,1050,"0,00",	oFont10)                                           //aDadosTit[8] Tipo do Titulo
 	oPrint:Say  (0275+nLinha,0300,AllTrim(Transform(aDadosTit[5],"@E 999,999,999.99")),oFont10)//Valor do documento
@@ -446,27 +449,28 @@ Static Function Impress(oPrint,aDadosEmp,aDadosTit,aDadosBanco,aDatSacado,aBolTe
 
 	oPrint:Say  (0080+nLinha,1930,OemToAnsi("Recibo de Entrega"),oFont16)
 	oPrint:Say  (0155+nLinha,1250,OemToAnsi("Vencimento"),oFont8)
-	oPrint:Say  (0155+nLinha,1460,OemToAnsi("Agencia / Codigo Cedente"),oFont8)
+	oPrint:Say  (0155+nLinha,1460,OemToAnsi("Agencia / Codigo Beneficiário"),oFont8)
 	oPrint:Say  (0155+nLinha,1860,OemToAnsi("Espécie"),oFont8)
 	oPrint:Say  (0155+nLinha,2110,OemToAnsi("Quantidade"),oFont8)
 	oPrint:Say  (0240+nLinha,1250,OemToAnsi("(=) Valor do Documento"),oFont8)
 	oPrint:Say  (0240+nLinha,1610,OemToAnsi("Nosso Numero"),oFont8)
-	oPrint:Say  (0325+nLinha,1250,OemToAnsi("Cedente"),oFont8)
-	oPrint:Say  (0405+nLinha,1250,OemToAnsi("Sacado"),oFont8)
+	oPrint:Say  (0325+nLinha,1250,OemToAnsi("Beneficiário"),oFont8)
+	oPrint:Say  (0405+nLinha,1250,OemToAnsi("Pagador"),oFont8)
 	oPrint:Say  (0405+nLinha,1960,OemToAnsi("Data de Entrega"),oFont8)
 	oPrint:Say  (0500+nLinha,1250,OemToAnsi("Assinatura do Recebedor"),oFont8)
 
 	//	oPrint:Say  (0080+nLinha,1250,aDadosBanco[2],oFont16n )	                                    //[2]Nome do Banco
 	oPrint:SayBitmap(00025+nLinha,1280,"banestes.jpg",0315,0120)
-	oPrint:Say  (0080+nLinha,1710,aDadosBanco[1],oFont14n )	                                    //[1]Numero do Banco
+	//oPrint:Say  (0080+nLinha,1710,aDadosBanco[1],oFont14n )	                                    //[1]Numero do Banco
+	oPrint:Say  (0080+nLinha,1710,"021-3",oFont14n )	                                    //[1]Numero do Banco
 	oPrint:Say  (0190+nLinha,1280,aDadosTit[4],oFont10)                                  //Vencimento
-	oPrint:Say  (0190+nLinha,1480,aDadosBanco[3]+"-"+aDadosBanco[9]+"/"+aDadosBanco[4]+"-"+aDadosBanco[5],oFont10)//Agencia/Cod.Cedente
+	oPrint:Say  (0190+nLinha,1480,aDadosBanco[3]+"-"+aDadosBanco[9]+"/"+aDadosBanco[4]+"-"+aDadosBanco[5],oFont10)//Agencia/Cod.Beneficiário
 	oPrint:Say  (0190+nLinha,1950,"R$",	oFont10)                                               //aDadosTit[8] Tipo do Titulo
 	oPrint:Say  (0190+nLinha,2200,"0,00",	oFont10)                                           //aDadosTit[8] Tipo do Titulo
 	oPrint:Say  (0275+nLinha,1450,AllTrim(Transform(aDadosTit[5],"@E 999,999,999.99")),oFont10)//Valor do documento
 	oPrint:Say  (0275+nLinha,2010,aDadosTit[6]+"-"+aDadosTit[11],oFont10) //Nosso NumeroSubstr(aDadosTit[6],1,3)+"/"+Substr(aDadosTit[6],4)
 
-	oPrint:Say  (0360+nLinha,1250,aDadosEmp[1],oFont10)	                                    //Cedente
+	oPrint:Say  (0360+nLinha,1250,aDadosEmp[1],oFont10)	                                    //Beneficiário
 	oPrint:Say  (0450+nLinha,1250,aDatSacado[1],oFont10)	                                    //Sacado
 
 	For i := 100 to 2300 step 50
@@ -496,8 +500,8 @@ Static Function Impress(oPrint,aDadosEmp,aDadosTit,aDadosBanco,aDatSacado,aBolTe
 
 	oPrint:Say  (0690+nLinha,100 ,"Local de Pagamento"                             ,oFont8)
 	oPrint:Say  (0690+nLinha,1910,"Vencimento"                                     ,oFont8)
-	oPrint:Say  (0760+nLinha,100 ,"Cedente"                                        ,oFont8)
-	oPrint:Say  (0760+nLinha,1910,"Agência/Código Cedente"                         ,oFont8)
+	oPrint:Say  (0760+nLinha,100 ,"Beneficiário"                                        ,oFont8)
+	oPrint:Say  (0760+nLinha,1910,"Agência/Código Beneficiário"                         ,oFont8)
 	oPrint:Say  (0830+nLinha,100 ,"Data do Documento"                              ,oFont8)
 	oPrint:Say  (0830+nLinha,505 ,"Nro.Documento"                                  ,oFont8)
 	oPrint:Say  (0830+nLinha,1005,"Espécie Doc."                                   ,oFont8)
@@ -510,8 +514,8 @@ Static Function Impress(oPrint,aDadosEmp,aDadosTit,aDadosBanco,aDatSacado,aBolTe
 	oPrint:Say  (0900+nLinha,1005,"Quantidade"                                     ,oFont8)
 	oPrint:Say  (0900+nLinha,1555,"Valor"                                          ,oFont8)
 	oPrint:Say  (0900+nLinha,1910,"Valor do Documento"                          	,oFont8)
-	oPrint:Say  (0970+nLinha,100 ,"Instruções (Todas informações deste bloqueto são de exclusiva responsabilidade do cedente)",oFont8)
-	oPrint:Say  (1320+nLinha,100 ,"Sacado"                                         ,oFont8)
+	oPrint:Say  (0970+nLinha,100 ,"Instruções (Todas informações deste bloqueto são de exclusiva responsabilidade do Beneficiário)",oFont8)
+	oPrint:Say  (1320+nLinha,100 ,"Pagador"                                         ,oFont8)
 	oPrint:Say  (0970+nLinha,1910,"(-)Desconto/Abatimento"                         ,oFont8)
 	oPrint:Say  (1040+nLinha,1910,"(-)Outras Deduções"                             ,oFont8)
 	oPrint:Say  (1110+nLinha,1910,"(+)Mora/Multa"                                  ,oFont8)
@@ -521,7 +525,8 @@ Static Function Impress(oPrint,aDadosEmp,aDadosTit,aDadosBanco,aDatSacado,aBolTe
 	oPrint:Say  (1445+nLinha,1500,"Autenticação Mecânica -"                        ,oFont8)
 	oPrint:Say  (0622+nLinha,100,aDadosBanco[2],oFont16n )	// [2]Nome do Banco
 	//	oPrint:SayBitmap(00615+nLinha,150,"banestes.jpg",0315,0120)
-	oPrint:Say  (0622+nLinha,567,aDadosBanco[1],oFont14n )	// [1]Numero do Banco
+	//oPrint:Say  (0622+nLinha,567,aDadosBanco[1],oFont14n )	// [1]Numero do Banco
+	oPrint:Say  (0622+nLinha,567,"021-3",oFont14n )	// [1]Numero do Banco
 	oPrint:Say  (0622+nLinha,820,CB_RN_NN[2],oFont14n)		//Linha Digitavel do Codigo de Barras
 	oPrint:Say  (0720+nLinha,100 ,"PREFERENCIALMENTE EM QUALQUER AGENCIA BANESTES"        ,oFont10)
 	oPrint:Say  (0720+nLinha,2010,aDadosTit[4] ,oFont10)
@@ -631,37 +636,59 @@ Return(D)
 /*/
 Static Function Modulo11(cData,nBase)
 
+	Local _nResto := 0
+	Local _lMod11	  := .T.
+
+	If nBase == 7
+		While _lMod11
+
+			_nResto := CalcMod11(cData,nBase)
+
+			If _nResto = 0
+				Digito := 0
+				_lMod11 := .F.
+			ElseIf _nResto = 1
+				_cD1ASBACE	:= AllTrim(Str(If(Val(_cD1ASBACE)+1=10,0,Val(_cD1ASBACE)+1)))
+				cData		:= _cBsASBACE+_cD1ASBACE
+			ElseIf _nResto > 1
+				Digito := 11 - _nResto
+				_lMod11 := .F.
+			Endif
+		EndDo
+	ElseIf nBase == 9
+
+		_nResto := CalcMod11(cData,nBase)
+
+		If (_nResto == 0 .Or. _nResto == 1 .Or. _nResto > 9 )
+			Digito := 1
+		Else
+			Digito := 11 - _nResto
+		Endif
+	Endif
+
+Return(Digito)
+
+
+Static Function CalcMod11(cData,nBase)
+
 	Local Tamanho, Digito, Resto, Peso := 0
 
 	Tamanho := Len(cdata)
 	Digito := 0
 	Peso := 1
 	While Tamanho > 0
-		Peso := Peso + 1
-		Digito := Digito + (Val(SubStr(cData, Tamanho, 1)) * Peso)
+		Peso += 1
+		Digito += (Val(SubStr(cData, Tamanho, 1)) * Peso)
 		If Peso = nBase
 			Peso := 1
 		End
 		Tamanho := Tamanho - 1
 	End
 	Resto  := Mod(Digito,11)
-	Digito := 11 - Resto
-	Do Case
-		Case nBase == 7 // na base 7 antes de atribuir o digito, é verIficado o resto da divisao antes de subtrai-lo de 11
-		Do Case
-			Case Resto == 10;    Digito := 'P'
-			Case Resto == 11;    Digito := 0
-			Case Resto ==  0;    Digito := 0
-			OtherWise
-			Digito := Resto
-		Endcase
-		Case nBase == 9 // na base 9 o resultado da subtração por 11 já pode ser o DV caso nao atenda a uma das condicoes abaixo
-		If (Digito == 0 .Or. Digito == 1 .Or. Digito > 9 )
-			Digito := 1
-		End
-	EndCase
 
-Return(Digito)
+	//Return({Resto,Digito})
+Return(Resto)
+
 
 
 //Retorna os strings para inpressão do Boleto
@@ -690,7 +717,7 @@ Return(Digito)
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 /*/
-Static Function Ret_cBarra(cBanco,cAgencia,cConta,cDacCC,cNroDoc,nValor,dVencto)
+Static Function Ret_cBarra(cBanco,cAgencia,cConta,_cDigCta,cDacCC,cNroDoc,nValor,dVencto)
 
 	Local bldocnufinal := strzero(val(cNroDoc),8)
 	Local blvalorfinal := strzero(int(nValor*100),10)
@@ -700,17 +727,18 @@ Static Function Ret_cBarra(cBanco,cAgencia,cConta,cDacCC,cNroDoc,nValor,dVencto)
 	Local RN           := ''
 	Local CB           := ''
 	Local s            := ''
-	Local _cBsASBACE   := cNossoNum+PadL(cConta,11,"0")+"4"+"021"
-	Local _cD1ASBACE   := AllTrim(Str(Modulo10(_cBsASBACE)))
-	Local _cD2ASBACE   := AllTrim(Str(Modulo11(_cBsASBACE+_cD1ASBACE,7)))
-	Local _cASBACE     := _cBsASBACE+_cD1ASBACE+_cD2ASBACE
-	Local _cFator      := strzero(dVencto - ctod("07/10/97"),4)
-	Local cCpoLivre    := AllTrim(cAgencia)+_cCart+LEFT(cNossoNum,11)+cConta+'0'
+
+	Private _cBsASBACE   := cNossoNum+PadL(Alltrim(cConta)+Alltrim(_cDigCta),11,"0")+"4"+"021"
+	Private _cD1ASBACE   := AllTrim(Str(Modulo10(_cBsASBACE)))
+	Private _cD2ASBACE   := AllTrim(Str(Modulo11(_cBsASBACE+_cD1ASBACE,7)))
+	Private _cASBACE     := _cBsASBACE+_cD1ASBACE+_cD2ASBACE
+	Private _cFator      := strzero(dVencto - ctod("07/10/97"),4)
+	Private cCpoLivre    := AllTrim(cAgencia)+_cCart+LEFT(cNossoNum,11)+cConta+'0'
 
 	//	-------- Definicao do CODIGO DE BARRAS
 	//s    := cBanco + _cFator + StrZero(Int(nValor * 100),14-Len(_cFator)) + cCpoLivre  // ALTERADO POR ALEXANDRO
 
-//	s    := cBanco + _cFator + StrZero((nValor * 100),14-Len(_cFator)) + cCpoLivre
+	//	s    := cBanco + _cFator + StrZero((nValor * 100),14-Len(_cFator)) + cCpoLivre
 	s    := cBanco + _cFator + StrZero((nValor * 100),10) + _cASBACE
 
 	dvcb := modulo11(s,9)
@@ -726,7 +754,7 @@ Static Function Ret_cBarra(cBanco,cAgencia,cConta,cDacCC,cNroDoc,nValor,dVencto)
 	//	  B  = Codigo da moeda, sempre 9
 	//    C = As 5(cinco) primeiras posicoes do CAMPO LIVRE
 	//	  X = DAC que amarra o campo, calculado pelo Modulo 10 da String do campo
-//	s    := cBanco + Left(cCpoLivre,5)
+	//	s    := cBanco + Left(cCpoLivre,5)
 	s    := cBanco + Left(_cASBACE,5)
 	dv   := modulo10(s)
 	RN   := SubStr(s, 1, 5) + '.' + SubStr(s, 6, 4) + AllTrim(Str(dv)) + '  '
