@@ -350,11 +350,9 @@ User Function BRI072(_cEmp,_cFil,_cAprovador,_cMod,CA097USER)
 
 			SC6->(dbSetOrder(1))
 			If SC6->(dbSeek(SCR->CR_FILIAL + Left(SCR->CR_NUM,8)))
-
-//				SC9->(Reclock("SC9",.F.))
-//				SC9->C9_YLIBER := "L"
-//				SC9->C9_BLCRED := ""
-//				SC9->(MsUnlock())
+				SC6->(Reclock("SC6",.F.))
+				SC6->C6_YBLQPRC := "N"
+				SC6->(MsUnlock())
 			Endif
 
 			_cChavSCR := SCR->CR_TIPO + SCR->CR_NUM

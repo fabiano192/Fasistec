@@ -154,16 +154,6 @@ User Function MZ0133()   // U_MZ0133()
 	,.F.,,.F.,.F.,,.F.,.F.,"12",cEstAte,,,,)
 
 
-	oSay19		:= TSay():New(aPosObj11[1,1],aPosObj11[1,2],{|| "Micro Região De: "},oDlg,,,,,,.T.,,,aPosObj11[1,4]-aPosObj11[1,2],((aPosObj11[1,3]-aPosObj11[1,1])*0.45))
-	oGet19    	:= TGet():New(aPosObj11[1,1]+((aPosObj11[1,3]-aPosObj11[1,1])*0.45),aPosObj11[1,2],{|u| If(PCount() > 0, _cMicrDe := u, _cMicrDe) },;
-	oDlg,aPosObj11[1,4]-aPosObj11[1,2],(aPosObj11[1,3]-aPosObj11[1,1])*0.45,"@!",;
-	{|| filtro(_cMicrDe,"A1_YMICRE ",1)},0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,"C2",_cMicrDe,,,,)
-
-	oSay20		:= TSay():New(aPosObj11[2,1],aPosObj11[2,2],{|| "Micro Região Até: "},oDlg,,,,,,.T.,,,aPosObj11[2,4]-aPosObj11[2,2],((aPosObj11[2,3]-aPosObj11[2,1])*0.45))
-	oGet20    	:= TGet():New(aPosObj11[2,1]+((aPosObj11[2,3]-aPosObj11[2,1])*0.45),aPosObj11[2,2],{|u| If(PCount() > 0, _cMicrAte := u, _cMicrAte) },;
-	oDlg,aPosObj11[2,4]-aPosObj11[2,2],(aPosObj11[2,3]-aPosObj11[2,1])*0.45,"@!",;
-	{|| filtro(_cMicrAte,"A1_YMICRE ",2)},0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,"C2",_cMicrAte,,,,)
-
 	oSay17		:= TSay():New(aPosObj10[1,1],aPosObj10[1,2],{|| "Meso Região De: "},oDlg,,,,,,.T.,,,aPosObj10[1,4]-aPosObj10[1,2],((aPosObj10[1,3]-aPosObj10[1,1])*0.45))
 	oGet17    	:= TGet():New(aPosObj10[1,1]+((aPosObj10[1,3]-aPosObj10[1,1])*0.45),aPosObj10[1,2],{|u| If(PCount() > 0, _cMesoDe := u, _cMesoDe) },;
 	oDlg,aPosObj10[1,4]-aPosObj10[1,2],(aPosObj10[1,3]-aPosObj10[1,1])*0.45,"@!",;
@@ -174,6 +164,16 @@ User Function MZ0133()   // U_MZ0133()
 	oDlg,aPosObj10[2,4]-aPosObj10[2,2],(aPosObj10[2,3]-aPosObj10[2,1])*0.45,"@!",;
 	{|| filtro(_cMesoAte,"A1_YMESCR",2)},0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,"C1",_cMesoAte,,,,)
 
+
+	oSay19		:= TSay():New(aPosObj11[1,1],aPosObj11[1,2],{|| "Micro Região De: "},oDlg,,,,,,.T.,,,aPosObj11[1,4]-aPosObj11[1,2],((aPosObj11[1,3]-aPosObj11[1,1])*0.45))
+	oGet19    	:= TGet():New(aPosObj11[1,1]+((aPosObj11[1,3]-aPosObj11[1,1])*0.45),aPosObj11[1,2],{|u| If(PCount() > 0, _cMicrDe := u, _cMicrDe) },;
+	oDlg,aPosObj11[1,4]-aPosObj11[1,2],(aPosObj11[1,3]-aPosObj11[1,1])*0.45,"@!",;
+	{|| filtro(_cMicrDe,"A1_YMICRE ",1)},0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,"C2",_cMicrDe,,,,)
+
+	oSay20		:= TSay():New(aPosObj11[2,1],aPosObj11[2,2],{|| "Micro Região Até: "},oDlg,,,,,,.T.,,,aPosObj11[2,4]-aPosObj11[2,2],((aPosObj11[2,3]-aPosObj11[2,1])*0.45))
+	oGet20    	:= TGet():New(aPosObj11[2,1]+((aPosObj11[2,3]-aPosObj11[2,1])*0.45),aPosObj11[2,2],{|u| If(PCount() > 0, _cMicrAte := u, _cMicrAte) },;
+	oDlg,aPosObj11[2,4]-aPosObj11[2,2],(aPosObj11[2,3]-aPosObj11[2,1])*0.45,"@!",;
+	{|| filtro(_cMicrAte,"A1_YMICRE ",2)},0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,"C2",_cMicrAte,,,,)
 
 
 	oSay5		:= TSay():New(aPosObj12[1,1],aPosObj12[1,2],{|| "Município De: "},oDlg,,,,,,.T.,,,aPosObj12[1,4]-aPosObj12[1,2],((aPosObj12[1,3]-aPosObj12[1,1])*0.45))
@@ -373,88 +373,88 @@ Static Function filtro(cExp,cCampo,nTipo)
 	end
 	(cTableQry)->(DbCloseArea())
 
-	If cEmpAnt + cFilAnt $ '0210|0211|0214'
-		_lGrPrc := .F.
-		for a:=1 to Len(aFiltro) // A T E N C A O  ESSA ROTINA É PARA FAZER COPIA DO ARRAY, POIS SE FIZER aObraFiltro := p_aFiltro, altera o aFiltro.
-			If !aFiltro[a][1] $ 'ZI_YGRPPRC'
-				AAdd(aObraFiltro,{aFiltro[a][1],;
-				aFiltro[a][2],;
-				aFiltro[a][3]})
-			Else
-				_lGrPrc := .T.
-			Endif
-		next
+	//	If cEmpAnt + cFilAnt $ '0210|0211|0214'
+	_lGrPrc := .F.
+	for a:=1 to Len(aFiltro) // A T E N C A O  ESSA ROTINA É PARA FAZER COPIA DO ARRAY, POIS SE FIZER aObraFiltro := p_aFiltro, altera o aFiltro.
+		If !aFiltro[a][1] $ 'ZI_YGRPPRC'
+			AAdd(aObraFiltro,{aFiltro[a][1],;
+			aFiltro[a][2],;
+			aFiltro[a][3]})
+		Else
+			_lGrPrc := .T.
+		Endif
+	next
 
-		for a:=1 to Len(aObraFiltro)
+	For a:=1 to Len(aObraFiltro)
 
-			if aObraFiltro[a][1] == "ZH_CLIENTE"
-				aObraFiltro[a][1] := "ZA2_CLIENT"
-				cNomeCampo := "ZA2_CLIENT"
-			elseif  aObraFiltro[a][1] == "ZH_LOJA"
-				aObraFiltro[a][1] := "ZA2_LOJA"
-				cNomeCampo := "ZA2_LOJA"
-			elseif  aObraFiltro[a][1] == "A1_MUN"
-				aObraFiltro[a][1] := "ZA2_MUNENT"
-				cNomeCampo := "ZA2_MUNENT"
-			elseif  aObraFiltro[a][1] == "A1_EST"
-				aObraFiltro[a][1] := "ZA2_ESTENT"
-				cNomeCampo := "ZA2_ESTENT"
-			elseif  aObraFiltro[a][1] == "ZI_PRODUTO"
-				aObraFiltro[a][1] := "ZA2_PRODUT"
-				cNomeCampo := "ZA2_PRODUT"
-			elseif  aObraFiltro[a][1] == "A1_VEND"
-				aObraFiltro[a][1] := "ZA2_VEND"
-				cNomeCampo := "ZA2_VEND"
-			elseif  aObraFiltro[a][1] == "A1_FILIAL"
-				aObraFiltro[a][1] := "ZA2_FILIAL"
-				cNomeCampo := "ZA2_FILIAL"
-			endif
-
-			do case
-				case empty(aObraFiltro[a][2]) .and. !empty(aObraFiltro[a][3])
-				cSQL_Obra  += " AND "+aObraFiltro[a][1]+" <= '"+aObraFiltro[a][3]+"' "
-
-				case empty(aObraFiltro[a][3]) .and. !empty(aObraFiltro[a][2])
-				cSQL_Obra += " AND "+aObraFiltro[a][1]+" >= '"+aObraFiltro[a][2]+"' "
-
-				case !empty(aObraFiltro[a][2]) .and. !empty(aObraFiltro[a][3])
-				cSQL_Obra += " AND "+aObraFiltro[a][1]+" BETWEEN '"+aObraFiltro[a][2]+"' AND '"+aObraFiltro[a][3]+"' "
-			endcase
-		next
-
-		if	!Empty(cSQL_Obra)
-			_cQ_Obra := " SELECT DISTINCT ZA2_CLIENT, ZA2_LOJA, ZA2_NOMCLI, ZA2_NOME, ZA2_MUNENT, ZA2_ESTENT  FROM "+ RetSqlName("ZA2") + " Z	"
-
-			//Incluído Inner Join, para filtro dos campos de Meso e Micro Região
-			_cQ_Obra += " INNER JOIN "+RetSqlName("SA1")+" SA1 ON A1_COD = ZA2_CLIENT AND A1_LOJA = ZA2_LOJA AND SA1.D_E_L_E_T_ = '' "
-			If _lGrPrc
-				_cQ_Obra += " INNER JOIN "+RetSqlName("SZI")+" SZI ON ZI_CLIENTE = ZA2_CLIENT AND ZI_LOJA = ZA2_LOJA AND ZA2_PRODUT = ZI_PRODUTO "
-				_cQ_Obra += " AND ZI_FILIAL = '"+xFilial("SZI")+"' AND SZI.D_E_L_E_T_ = '' AND ZI_LIBER = 'L' "
-				If !Empty(_cGrpPrDe) .and. !Empty(_cGrpPrAte)
-					_cQ_Obra += " AND ZI_YGRPPRC BETWEEN '"+_cGrpPrDe+"' AND '"+_cGrpPrAte+"' "
-				ElseIf !Empty(_cGrpPrDe) .and. Empty(_cGrpPrAte)
-					_cQ_Obra += " AND ZI_YGRPPRC >= '"+_cGrpPrDe+"' "
-				ElseIf Empty(_cGrpPrDe) .and. !Empty(_cGrpPrAte)
-					_cQ_Obra += " AND ZI_YGRPPRC <= '"+_cGrpPrAte+"' "
-				Endif
-			Endif
-			_cQ_Obra += " WHERE Z.D_E_L_E_T_ = '' AND (Z.ZA2_LIBER = 'L' OR Z.ZA2_LIBER = ' ') AND Z.ZA2_FILIAL = '"+xFilial("ZA2")+"' " //Rodrigo - 07/02/17 - Mostrar apenas da filial corrente
-			_cQ_Obra += cSQL_Obra   // Filtros escolhido pelo usuario -
-			_cQ_Obra += " ORDER BY ZA2_CLIENT, ZA2_LOJA, ZA2_NOMCLI "
-
-			TCQUERY _cQ_Obra NEW ALIAS "ZZ2"
-
-			TCSETFIELD("ZZ2","ZI_DTBLOQ","D")
-
-			ZZ2->(dbGotop())
-
-			While ZZ2->(!EOF())
-				AAdd(aDados,{ZZ2->ZA2_CLIENT,ZZ2->ZA2_LOJA,"OBRA:  " + ZZ2->ZA2_NOME + "     Cliente:  " +  ZZ2->ZA2_NOMCLI + "      Local:  " + alltrim(ZZ2->ZA2_MUNENT) +"-"+alltrim(ZZ2->ZA2_ESTENT)})
-				ZZ2->(DbSkip())
-			end
-			ZZ2->(DbCloseArea())
+		if aObraFiltro[a][1] == "ZH_CLIENTE"
+			aObraFiltro[a][1] := "ZA2_CLIENT"
+			cNomeCampo := "ZA2_CLIENT"
+		elseif  aObraFiltro[a][1] == "ZH_LOJA"
+			aObraFiltro[a][1] := "ZA2_LOJA"
+			cNomeCampo := "ZA2_LOJA"
+		elseif  aObraFiltro[a][1] == "A1_MUN"
+			aObraFiltro[a][1] := "ZA2_MUNENT"
+			cNomeCampo := "ZA2_MUNENT"
+		elseif  aObraFiltro[a][1] == "A1_EST"
+			aObraFiltro[a][1] := "ZA2_ESTENT"
+			cNomeCampo := "ZA2_ESTENT"
+		elseif  aObraFiltro[a][1] == "ZI_PRODUTO"
+			aObraFiltro[a][1] := "ZA2_PRODUT"
+			cNomeCampo := "ZA2_PRODUT"
+		elseif  aObraFiltro[a][1] == "A1_VEND"
+			aObraFiltro[a][1] := "ZA2_VEND"
+			cNomeCampo := "ZA2_VEND"
+		elseif  aObraFiltro[a][1] == "A1_FILIAL"
+			aObraFiltro[a][1] := "ZA2_FILIAL"
+			cNomeCampo := "ZA2_FILIAL"
 		endif
-	endif  //fim procura obra
+
+		do case
+			case empty(aObraFiltro[a][2]) .and. !empty(aObraFiltro[a][3])
+			cSQL_Obra  += " AND "+aObraFiltro[a][1]+" <= '"+aObraFiltro[a][3]+"' "
+
+			case empty(aObraFiltro[a][3]) .and. !empty(aObraFiltro[a][2])
+			cSQL_Obra += " AND "+aObraFiltro[a][1]+" >= '"+aObraFiltro[a][2]+"' "
+
+			case !empty(aObraFiltro[a][2]) .and. !empty(aObraFiltro[a][3])
+			cSQL_Obra += " AND "+aObraFiltro[a][1]+" BETWEEN '"+aObraFiltro[a][2]+"' AND '"+aObraFiltro[a][3]+"' "
+		endcase
+	Next
+
+	If !Empty(cSQL_Obra)
+		_cQ_Obra := " SELECT DISTINCT ZA2_CLIENT, ZA2_LOJA, ZA2_NOMCLI, ZA2_NOME, ZA2_MUNENT, ZA2_ESTENT  FROM "+ RetSqlName("ZA2") + " Z	"
+
+		//Incluído Inner Join, para filtro dos campos de Meso e Micro Região
+		_cQ_Obra += " INNER JOIN "+RetSqlName("SA1")+" SA1 ON A1_COD = ZA2_CLIENT AND A1_LOJA = ZA2_LOJA AND SA1.D_E_L_E_T_ = '' "
+		If _lGrPrc
+			_cQ_Obra += " INNER JOIN "+RetSqlName("SZI")+" SZI ON ZI_CLIENTE = ZA2_CLIENT AND ZI_LOJA = ZA2_LOJA AND ZA2_PRODUT = ZI_PRODUTO "
+			_cQ_Obra += " AND ZI_FILIAL = '"+xFilial("SZI")+"' AND SZI.D_E_L_E_T_ = '' AND ZI_LIBER = 'L' "
+			If !Empty(_cGrpPrDe) .and. !Empty(_cGrpPrAte)
+				_cQ_Obra += " AND ZI_YGRPPRC BETWEEN '"+_cGrpPrDe+"' AND '"+_cGrpPrAte+"' "
+			ElseIf !Empty(_cGrpPrDe) .and. Empty(_cGrpPrAte)
+				_cQ_Obra += " AND ZI_YGRPPRC >= '"+_cGrpPrDe+"' "
+			ElseIf Empty(_cGrpPrDe) .and. !Empty(_cGrpPrAte)
+				_cQ_Obra += " AND ZI_YGRPPRC <= '"+_cGrpPrAte+"' "
+			Endif
+		Endif
+		_cQ_Obra += " WHERE Z.D_E_L_E_T_ = '' AND (Z.ZA2_LIBER = 'L' OR Z.ZA2_LIBER = ' ') AND Z.ZA2_FILIAL = '"+xFilial("ZA2")+"' " //Rodrigo - 07/02/17 - Mostrar apenas da filial corrente
+		_cQ_Obra += cSQL_Obra   // Filtros escolhido pelo usuario -
+		_cQ_Obra += " ORDER BY ZA2_CLIENT, ZA2_LOJA, ZA2_NOMCLI "
+
+		TCQUERY _cQ_Obra NEW ALIAS "ZZ2"
+
+		TCSETFIELD("ZZ2","ZI_DTBLOQ","D")
+
+		ZZ2->(dbGotop())
+
+		While ZZ2->(!EOF())
+			AAdd(aDados,{ZZ2->ZA2_CLIENT,ZZ2->ZA2_LOJA,"OBRA:  " + ZZ2->ZA2_NOME + "     Cliente:  " +  ZZ2->ZA2_NOMCLI + "      Local:  " + alltrim(ZZ2->ZA2_MUNENT) +"-"+alltrim(ZZ2->ZA2_ESTENT)})
+			ZZ2->(DbSkip())
+		end
+		ZZ2->(DbCloseArea())
+	endif
+	//	endif  //fim procura obra
 
 	oBrw:SetArray(aDados)
 	oBrw2:SetArray(aItens)
@@ -776,93 +776,94 @@ Static function buscaItens()
 	Local cAdd		:= "{"
 	aItens := {}
 
-	If substr(aDados[nPos][3], 1, 4) == "OBRA" .And. cEmpAnt + cFilAnt $ '0210|3001|0211|0214'
-		cSQL := "SELECT * FROM "+RetSqlName("ZA2")+" ZA2 "
-		cSQL += "WHERE ZA2.D_E_L_E_T_ = '' AND ZA2_CLIENT = '"+aDados[nPos][1]+"' AND "
-		cSQL += "ZA2_NOME = '"+ substr(aDados[nPos][3], 8, TAMSX3("ZA2_NOME")[1])+ "' AND "
+	//	If substr(aDados[nPos][3], 1, 4) == "OBRA" .And. cEmpAnt + cFilAnt $ '0210|3001|0211|0214'
+	//Dados de Obra
+	cSQL := "SELECT * FROM "+RetSqlName("ZA2")+" ZA2 "
+	cSQL += "WHERE ZA2.D_E_L_E_T_ = '' AND ZA2_CLIENT = '"+aDados[nPos][1]+"' AND "
+	cSQL += "ZA2_NOME = '"+ substr(aDados[nPos][3], 8, TAMSX3("ZA2_NOME")[1])+ "' AND "
+	cSQL += "ZA2_LOJA = '"+aDados[nPos][2]+"' "
+	cSQL += "AND ZA2_FILIAL = '"+xFilial("ZA2")+"' " //Rodrigo - 07/02/17 - Mostrar apenas da filial corrente
+//	cSQL += "AND (ZA2.ZA2_LIBER = 'L' OR ZA2.ZA2_LIBER = ' ') "
+	do case
+		case !Empty(cProdDe) .and. !Empty(cProdAte)
+		cSQL += " AND ZA2_PRODUT BETWEEN '"+cProdDe+"' AND '"+cProdAte+"' "
+		case !Empty(cProdDe) .and. Empty(cProdAte)
+		cSQL += " AND ZA2_PRODUT >= '"+cProdDe+"' "
+		case Empty(cProdDe) .and. !Empty(cProdAte)
+		cSQL += " AND ZA2_PRODUT <= '"+cProdAte+"' "
 
-		cSQL += "ZA2_LOJA = '"+aDados[nPos][2]+"' "
-		cSQL += "AND ZA2_FILIAL = '"+xFilial("ZA2")+"' " //Rodrigo - 07/02/17 - Mostrar apenas da filial corrente
+	endcase
 
-		do case
-			case !Empty(cProdDe) .and. !Empty(cProdAte)
-			cSQL += " AND ZA2_PRODUT BETWEEN '"+cProdDe+"' AND '"+cProdAte+"' "
-			case !Empty(cProdDe) .and. Empty(cProdAte)
-			cSQL += " AND ZA2_PRODUT >= '"+cProdDe+"' "
-			case Empty(cProdDe) .and. !Empty(cProdAte)
-			cSQL += " AND ZA2_PRODUT <= '"+cProdAte+"' "
+	cSQL += " ORDER BY  ZA2_DTVIG, ZA2_LIBER "
 
-		endcase
+	TCQUERY cSQL New Alias (cTableQry)
 
-		cSQL += " ORDER BY  ZA2_DTVIG, ZA2_LIBER "
+	For i:=1 to Len(_aZA2Campos)
+		if empty(_aZA2Campos[i])
 
-		TCQUERY cSQL New Alias (cTableQry)
+			cAdd += " " + (if(i<>Len(_aZA2Campos),",","}"))
 
-		For i:=1 to Len(_aZA2Campos)
-			if empty(_aZA2Campos[i])
+		elseif _aZA2Campos[i] == "ZA2_DTBLOQ"  .or.  _aZA2Campos[i] == "ZA2_DTVIG"
 
-				cAdd += " " + (if(i<>Len(_aZA2Campos),",","}"))
+			cAdd += "DTOC(STOD((cTableQry)->"+ _aZA2Campos[i]  + "))" + (if(i<>Len(_aZA2Campos),",","}" ))
+		else
+			cAdd += "(cTableQry)->"+_aZA2Campos[i] + (if(i<>Len(_aZA2Campos),",","}"))
+		endif
+	next
 
-			elseif _aZA2Campos[i] == "ZA2_DTBLOQ"  .or.  _aZA2Campos[i] == "ZA2_DTVIG"
+	DbSelectArea(cTableQry)
+	(cTableQry)->(DbGoTop())
+	While (cTableQry)->(!EOF())
+		AAdd(aItens,&cAdd)
+		(cTableQry)->(DbSkip())
+	end
+	(cTableQry)->(DbCloseArea())
 
-				cAdd += "DTOC(STOD((cTableQry)->"+ _aZA2Campos[i]  + "))" + (if(i<>Len(_aZA2Campos),",","}" ))
-			else
-				cAdd += "(cTableQry)->"+_aZA2Campos[i] + (if(i<>Len(_aZA2Campos),",","}"))
-			endif
-		next
+	//	else
+	//Dados da Tabela de Preco
+	cSQL := "SELECT * FROM "+RetSqlName(cTableIt)+" SZI "
+	cSQL += "WHERE SZI.D_E_L_E_T_ = '' AND ZI_CLIENTE = '"+aDados[nPos][1]+"' AND "
+	cSQL += "ZI_LOJA = '"+aDados[nPos][2]+"' "
+	cSQL += "AND ZI_FILIAL = '"+xFilial("SZI")+"' "
 
-		DbSelectArea(cTableQry)
-		(cTableQry)->(DbGoTop())
-		While (cTableQry)->(!EOF())
-			AAdd(aItens,&cAdd)
-			(cTableQry)->(DbSkip())
-		end
-		(cTableQry)->(DbCloseArea())
+	do case
+		case !Empty(cProdDe) .and. !Empty(cProdAte)
+		cSQL += " AND ZI_PRODUTO BETWEEN '"+cProdDe+"' AND '"+cProdAte+"' "
+		case !Empty(cProdDe) .and. Empty(cProdAte)
+		cSQL += " AND ZI_PRODUTO >= '"+cProdDe+"' "
+		case Empty(cProdDe) .and. !Empty(cProdAte)
+		cSQL += " AND ZI_PRODUTO <= '"+cProdAte+"' "
+	endcase
 
-	else
+	If !Empty(_cGrpPrDe) .and. !Empty(_cGrpPrAte)
+		cSQL += " AND ZI_YGRPPRC BETWEEN '"+_cGrpPrDe+"' AND '"+_cGrpPrAte+"' "
+	ElseIf !Empty(_cGrpPrDe) .and. Empty(_cGrpPrAte)
+		cSQL += " AND ZI_YGRPPRC >= '"+_cGrpPrDe+"' "
+	ElseIf Empty(_cGrpPrDe) .and. !Empty(_cGrpPrAte)
+		cSQL += " AND ZI_YGRPPRC <= '"+_cGrpPrAte+"' "
+	Endif
 
-		cSQL := "SELECT * FROM "+RetSqlName(cTableIt)+" SZI "
-		cSQL += "WHERE SZI.D_E_L_E_T_ = '' AND ZI_CLIENTE = '"+aDados[nPos][1]+"' AND "
-		cSQL += "ZI_LOJA = '"+aDados[nPos][2]+"' "
-		cSQL += "AND ZI_FILIAL = '"+xFilial("SZI")+"' "
+	cSQL += " ORDER BY  ZI_DTVIGEN,ZI_LIBER "
 
-		do case
-			case !Empty(cProdDe) .and. !Empty(cProdAte)
-			cSQL += " AND ZI_PRODUTO BETWEEN '"+cProdDe+"' AND '"+cProdAte+"' "
-			case !Empty(cProdDe) .and. Empty(cProdAte)
-			cSQL += " AND ZI_PRODUTO >= '"+cProdDe+"' "
-			case Empty(cProdDe) .and. !Empty(cProdAte)
-			cSQL += " AND ZI_PRODUTO <= '"+cProdAte+"' "
-		endcase
+	TCQUERY cSQL New Alias (cTableQry)
 
-		If !Empty(_cGrpPrDe) .and. !Empty(_cGrpPrAte)
-			cSQL += " AND ZI_YGRPPRC BETWEEN '"+_cGrpPrDe+"' AND '"+_cGrpPrAte+"' "
-		ElseIf !Empty(_cGrpPrDe) .and. Empty(_cGrpPrAte)
-			cSQL += " AND ZI_YGRPPRC >= '"+_cGrpPrDe+"' "
-		ElseIf Empty(_cGrpPrDe) .and. !Empty(_cGrpPrAte)
-			cSQL += " AND ZI_YGRPPRC <= '"+_cGrpPrAte+"' "
-		Endif
+	cAdd		:= "{"
+	For i:=1 to Len(_aCampos)
+		if _aCampos[i] == "ZI_DTBLOQ"  .or.  _aCampos[i] == "ZI_DTVIGEN"
+			cAdd += "DTOC(STOD((cTableQry)->"+_aCampos[i]  + "))" + (if(i<>Len(_aCampos),",","}" ))
+		else
+			cAdd += "(cTableQry)->"+_aCampos[i] + (if(i<>Len(_aCampos),",","}"))
+		endif
+	next
 
-		cSQL += " ORDER BY  ZI_DTVIGEN,ZI_LIBER "
-
-		TCQUERY cSQL New Alias (cTableQry)
-
-		For i:=1 to Len(_aCampos)
-			if _aCampos[i] == "ZI_DTBLOQ"  .or.  _aCampos[i] == "ZI_DTVIGEN"
-				cAdd += "DTOC(STOD((cTableQry)->"+_aCampos[i]  + "))" + (if(i<>Len(_aCampos),",","}" ))
-			else
-				cAdd += "(cTableQry)->"+_aCampos[i] + (if(i<>Len(_aCampos),",","}"))
-			endif
-		next
-
-		DbSelectArea(cTableQry)
-		(cTableQry)->(DbGoTop())
-		While (cTableQry)->(!EOF())
-			AAdd(aItens,&cAdd)
-			(cTableQry)->(DbSkip())
-		end
-		(cTableQry)->(DbCloseArea())
-	endif
+	DbSelectArea(cTableQry)
+	(cTableQry)->(DbGoTop())
+	While (cTableQry)->(!EOF())
+		AAdd(aItens,&cAdd)
+		(cTableQry)->(DbSkip())
+	end
+	(cTableQry)->(DbCloseArea())
+	//	endif
 
 	oBrw2:SetArray(aItens)
 	oBrw2:Refresh()
@@ -1032,7 +1033,8 @@ Static function MZ133_A()
 		ZZ->(DbCloseArea())
 	endif
 
-	If cEmpAnt + cFilAnt $ '0210|3001|0211|0214' .And. (mv_par01 = 2 .or. mv_par01 = 3)
+	//	If cEmpAnt + cFilAnt $ '0210|3001|0211|0214|0213' .And. (mv_par01 = 2 .or. mv_par01 = 3)
+	If (mv_par01 = 2 .or. mv_par01 = 3)
 		AjustarPrecoObra(aFiltro)
 	endif
 
@@ -1349,10 +1351,20 @@ Static function AjustarPrecoObra(p_aFiltro)
 	Local _nCont := 0
 	Local _lBloq := .F.
 	// Montar Query
-	for a:=1 to Len(p_aFiltro) // A T E N C A O  ESSA ROTINA É PARA FAZER COPIA DO ARRAY, POIS SE FIZER aObraFiltro := p_aFiltro, altera o aFiltro.
-		AAdd(aObraFiltro,{p_aFiltro[a][1],;
-		p_aFiltro[a][2],;
-		p_aFiltro[a][3]})
+	//	for a:=1 to Len(p_aFiltro) // A T E N C A O  ESSA ROTINA É PARA FAZER COPIA DO ARRAY, POIS SE FIZER aObraFiltro := p_aFiltro, altera o aFiltro.
+	//		AAdd(aObraFiltro,{p_aFiltro[a][1],;
+	//		p_aFiltro[a][2],;
+	//		p_aFiltro[a][3]})
+	//	next
+	_lGrPrc := .F.
+	for a:=1 to Len(aFiltro) // A T E N C A O  ESSA ROTINA É PARA FAZER COPIA DO ARRAY, POIS SE FIZER aObraFiltro := p_aFiltro, altera o aFiltro.
+		If !aFiltro[a][1] $ 'ZI_YGRPPRC'
+			AAdd(aObraFiltro,{aFiltro[a][1],;
+			aFiltro[a][2],;
+			aFiltro[a][3]})
+		Else
+			_lGrPrc := .T.
+		Endif
 	next
 
 	for a:=1 to Len(aObraFiltro)
@@ -1395,10 +1407,21 @@ Static function AjustarPrecoObra(p_aFiltro)
 	next
 
 	_cQ_Obra:= " SELECT * FROM " + RetSqlName("ZA2") + " Z	"
+	//Incluído Inner Join, para filtro dos campos de Meso e Micro Região
+	_cQ_Obra += " INNER JOIN "+RetSqlName("SA1")+" SA1 ON A1_COD = ZA2_CLIENT AND A1_LOJA = ZA2_LOJA AND SA1.D_E_L_E_T_ = '' "
+	If _lGrPrc
+		_cQ_Obra += " INNER JOIN "+RetSqlName("SZI")+" SZI ON ZI_CLIENTE = ZA2_CLIENT AND ZI_LOJA = ZA2_LOJA AND ZA2_PRODUT = ZI_PRODUTO "
+		_cQ_Obra += " AND ZI_FILIAL = '"+xFilial("SZI")+"' AND SZI.D_E_L_E_T_ = '' AND ZI_LIBER = 'L' "
+		If !Empty(_cGrpPrDe) .and. !Empty(_cGrpPrAte)
+			_cQ_Obra += " AND ZI_YGRPPRC BETWEEN '"+_cGrpPrDe+"' AND '"+_cGrpPrAte+"' "
+		ElseIf !Empty(_cGrpPrDe) .and. Empty(_cGrpPrAte)
+			_cQ_Obra += " AND ZI_YGRPPRC >= '"+_cGrpPrDe+"' "
+		ElseIf Empty(_cGrpPrDe) .and. !Empty(_cGrpPrAte)
+			_cQ_Obra += " AND ZI_YGRPPRC <= '"+_cGrpPrAte+"' "
+		Endif
+	Endif
 	_cQ_Obra+= " WHERE Z.D_E_L_E_T_ = '' AND Z.ZA2_LIBER = 'L' "
-
 	_cQ_Obra+= cSQL_Obra   // Filtros escolhido pelo usuario -
-
 	_cQ_Obra+= " ORDER BY ZA2_CLIENT, ZA2_LOJA, ZA2_PRODUT "
 
 	TCQUERY _cQ_Obra NEW ALIAS "ZZ2"

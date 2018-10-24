@@ -1,7 +1,7 @@
 #INCLUDE 'TOTVS.CH'
 
 /*/{Protheus.doc} BRI114
-//Bloueio do Pedido de Vendas
+//Bloqueio do Pedido de Vendas
 @author Fabiano
 @since 17/10/2018
 

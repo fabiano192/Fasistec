@@ -47,8 +47,11 @@ User function Mta410
 		Endif
 		// INCLUIDO POR ALEXANDRO EM 05/11/12
 
-		//Valida se o preço foi alterado para menor que a Tabela de Preço.
-		U_BRI114(_nVez)
+
+		If u__fValAcols(_nVez,"C6_YBLQPRC")=="S"
+			//Gera Processo de Liberação do Pedido
+			U_BRI114(_nVez)
+		Endif
 
 
 

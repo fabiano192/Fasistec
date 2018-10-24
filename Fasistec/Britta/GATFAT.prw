@@ -185,10 +185,67 @@ User Function GFAT007()
 	If SC6->(MsSeek(xFilial("SC6")+_cPed+_cItem))
 		If SC6->C6_QTDENT > 0
 			_lRet := .F.
-			ShowHelpDlg("GFAT007", {'Item do Pedido já foi Faturado.', ,'Alteração não permitida!'},3,{'Não se aplica.'},1)
+			ShowHelpDlg("GFAT007", {'Item do Pedido já foi Faturado.','','Alteração não permitida!'},3,{'Não se aplica.'},1)
 		Endif
 	Endif
 
 	RestArea(_aAliori)
 
 Return(_lRet)
+
+
+//Função para validar se o campo Gera OC poderá ser editado.
+User Function GFAT008(_cField)
+
+	Local _aAliOri	:= GetArea()
+	Local _nPos		:= aScan(aHeader,{|x| UPPER(Alltrim(x[2])) = _cField})
+	Local _nPosBl	:= aScan(aHeader,{|x| UPPER(Alltrim(x[2])) = 'C6_YBLQPRC'})
+	Local _lRet		:= .T.
+	Local _cBlq		:= aCols[n][_nPosBl]
+
+	If _cBlq = 'S'
+		_lRet := .F.
+		If _cField = 'C6_PDGEROC'
+			ShowHelpDlg("GFAT008", {'Item do Pedido Bloqueado.','','Geração de OC não permitida!'},3,{'Não se aplica.'},1)
+			aCols[n][_nPos] := Space(TAMSX3('C6_PDGEROC')[1])
+		Else
+			ShowHelpDlg("GFAT008", {'Item do Pedido Bloqueado.','','Liberação do Pedido não permitida!'},3,{'Não se aplica.'},1)
+			aCols[n][_nPos] := 0
+		Endif
+	Endif
+
+	RestArea(_aAliori)
+
+Return(_lRet)
+
+
+
+//Gatilho para validar o bloqueio do Pedido
+User Function GFAT009()
+
+	Local _aAliOri	:= GetArea()
+//	Local _nPosIt	:= aScan(aHeader,{|x| UPPER(Alltrim(x[2])) = 'C6_ITEM'})
+	Local _nPosOC	:= aScan(aHeader,{|x| UPPER(Alltrim(x[2])) = 'C6_PDGEROC'})
+	Local _nPosPr	:= aScan(aHeader,{|x| UPPER(Alltrim(x[2])) = 'C6_PRODUTO'})
+	Local _nPosPc	:= aScan(aHeader,{|x| UPPER(Alltrim(x[2])) = 'C6_PRCVEN'})
+	Local _nPosBl	:= aScan(aHeader,{|x| UPPER(Alltrim(x[2])) = 'C6_YBLQPRC'})
+	Local _nPosLi	:= aScan(aHeader,{|x| UPPER(Alltrim(x[2])) = 'C6_QTDLIB'})
+
+	Local _cBlq		:= aCols[n][_nPosBl]
+	Local _cProd	:= aCols[n][_nPosPr]
+	Local _nPrcV	:= aCols[n][_nPosPc]
+
+	SZ2->(dbsetOrder(4))
+	If SZ2->(msSeek(xFilial("SZ2")+M->C5_CLIENTE+M->C5_LOJACLI+_cProd))
+		If _nPrcV < SZ2->Z2_PRECO
+			aCols[n][_nPosOC]	:= Space(TAMSX3('C6_PDGEROC')[1])
+			aCols[n][_nPosLi]	:= 0
+			_cBlq				:= 'S'
+		Else
+			_cBlq				:= 'N'
+		Endif
+	Endif
+
+	RestArea(_aAliori)
+
+Return(_cBlq)
