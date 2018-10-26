@@ -388,147 +388,37 @@ User Function BRI072(_cEmp,_cFil,_cAprovador,_cMod,CA097USER)
 		dbSelectArea("SCR")
 		dbSetOrder(1)
 
-		/*
-		_cDocSCR := SCR->CR_NUM
-		_cCliente:= SCR->CR_YCLIENT
-		_cLoja   := SCR->CR_YLOJA
-		_cProduto:= SCR->CR_YPRODUT
-		_cTpDoc  := SCR->CR_TIPO
-		_cObra   := SCR->CR_YOBRA
-
-		nReg     := SCR->(Recno())
-		SCR->(dbClearFilter())
-		SCR->(dbGoTo(nReg))
-
-		SCR->(dbSetOrder(1))
-		If SCR->(dbseek(xFilial("SCR")+ _cTpDoc + _cDocSCR))
-
-		If Empty(_cObra)
-		SZI->(dbSetOrder(1))
-		If SZI->(dbSeek(SCR->CR_FILIAL+ SCR->CR_YCLIENT + SCR->CR_YLOJA + SCR->CR_YPRODUT + "L"))
-		SZI->(RecLock("SZI",.F.))
-		SZI->ZI_LIBER := "B"
-		SZI->ZI_DTBLOQ := Date()
-		SZI->(MsUnLock())
-		Endif
-
-		SZI->(dbSetOrder(1))
-		If SZI->(dbSeek(SCR->CR_FILIAL + SCR->CR_YCLIENT + SCR->CR_YLOJA + SCR->CR_YPRODUT + Space(01)))
-		SZI->(RecLock("SZI",.F.))
-		SZI->ZI_LIBER  := "L"
-		SZI->ZI_DTVIGEN:= Date()
-		SZI->ZI_USRLIB := Substr(cUsuario,7,15)
-		SZI->(MsUnLock())
-		_aErro := {{"01","Liberado com Sucesso"}}
-		Else
-		_aErro := {{"07","Documento Ja Liberado Anteriormente"}}
-		Endif
-		Else
-		ZA2->(dbSetOrder(2))
-		If ZA2->(dbSeek(xFilial("ZA2")+ SCR->CR_YCLIENT + SCR->CR_YLOJA + SCR->CR_YPRODUT + SCR->CR_YOBRA + "L"))
-		ZA2->(RecLock("ZA2",.F.))
-		ZA2->ZA2_LIBER := "B"
-		ZA2->ZA2_DTBLOQ := Date()
-		ZA2->(MsUnLock())
-		Endif
-
-		ZA2->(dbSetOrder(2))
-		If ZA2->(dbSeek(xFilial("ZA2")+ SCR->CR_YCLIENT + SCR->CR_YLOJA + SCR->CR_YPRODUT + SCR->CR_YOBRA + Space(01)))
-		ZA2->(RecLock("ZA2",.F.))
-		ZA2->ZA2_LIBER  := "L"
-		ZA2->ZA2_DTVIG  := Date()
-		ZA2->(MsUnLock())
-		_aErro := {{"01","Liberado com Sucesso"}}
-		Else
-		_aErro := {{"07","Documento Ja Liberado Anteriormente"}}
-		Endif
-		Endif
-
-		_cChavSCR := SCR->CR_TIPO + SCR->CR_NUM
-
-		ZAH->(dbSetOrder(1))
-		If ZAH->(dbSeek(xFilial("ZAH")+ SCR->CR_TIPO + SCR->CR_NUM  ))
-		_cChavZAH := ZAH->ZAH_TIPO + ZAH->ZAH_NUM
-		_cCrTipo  := SCR->CR_TIPO
-		_cDocSCR  := SCR->CR_NUM
-
-		_cFilZAH  := SCR->CR_FILIAL
-		//If cEmpAnt == "02"
-		_cCq := "DELETE "+RetSqlName("ZAH")+ " WHERE ZAH_FILIAL = '"+_cFilZAH+"' AND ZAH_NUM = '"+_cDocSCR+"' AND ZAH_TIPO = '"+_cCrTipo+"' "
-		//Else
-		//	_cCq := "DELETE "+RetSqlName("ZAH")+ " WHERE ZAH_NUM = '"+_cDocSCR+"' AND ZAH_TIPO = '"+_cCrTipo+"' "
-		//Endif
-
-		TcSqlExec(_cCq)
-		Endif
-
-		While SCR->(!Eof()) .And. _cChavSCR == SCR->CR_TIPO + SCR->CR_NUM
-
-		SCR->(Reclock("SCR",.F.))
-		SCR->CR_STATUS	:= "03"
-		SCR->CR_DATALIB	:= Date()
-		SCR->CR_USERLIB	:= SAK->AK_USER
-		SCR->CR_LIBAPRO	:= SAK->AK_COD
-		SCR->CR_APROV	:= _cAprovador
-		SCR->CR_VALLIB	:= SCR->CR_TOTAL
-		SCR->CR_TIPOLIM	:= SAK->AK_TIPO
-		SCR->(MsUnlock())
-
-		SCR->(dbSkip())
-		EndDo
-		Endif
-
-		dbSelectArea("SCR")
-		dbSetOrder(1)
-		*/
 	ElseIf SCR->CR_TIPO == "03"
 		_cDocSCR := SCR->CR_NUM
-		_cFornece:= SCR->CR_YFORNEC
-		_cLojaFor:= SCR->CR_YLOJFOR
-		_cEstado := SCR->CR_YESTADO
 		_cTpDoc  := SCR->CR_TIPO
-		_cMun    := SCR->CR_YMUN
 
 		nReg     := SCR->(Recno())
+
 		SCR->(dbClearFilter())
 		SCR->(dbGoTo(nReg))
 
 		SCR->(dbSetOrder(1))
 		If SCR->(dbseek(xFilial("SCR")+ _cTpDoc + _cDocSCR))
 
-			SZG->(dbSetOrder(1))
-			If SZG->(dbSeek(SCR->CR_FILIAL + SCR->CR_YESTADO  + SCR->CR_YMUN + SCR->CR_YFORNEC + SCR->CR_YLOJFOR + "L"))
-				SZG->(RecLock("SZG",.F.))
-				SZG->ZG_LIBER := "B"
-				SZG->ZG_DTBLOQ := Date()
-				SZG->(MsUnlock())
-			Endif
+			_nTam	 := Len(Space(TAMSX3("ZF1_FILIAL")[1])+Space(TAMSX3("ZF1_CLIENT")[1])+Space(TAMSX3("ZF1_LOJA")[1])+Space(TAMSX3("ZF1_PRODUT")[1]))
 
-			SZG->(dbSetOrder(1))
-			If SZG->(dbSeek(SCR->CR_FILIAL + SCR->CR_YESTADO  + SCR->CR_YMUN + SCR->CR_YFORNEC + SCR->CR_YLOJFOR + Space(01)))
-				SZG->(RecLock("SZG",.F.))
-				SZG->ZG_LIBER  := "L"
-				SZG->ZG_DTVIG  := Date()
-				SZG->(MsUnLock())
-				_aErro := {{"01","Liberado com Sucesso"}}
-			Else
-				_aErro := {{"07","Documento Ja Liberado Anteriormente"}}
+			ZF1->(dbsetOrder(1))
+			If ZF1->(MsSeek(PadR(_cDocSCR,_nTam)+"P"))
+				ZF1->(Reclock("ZF1",.F.))
+				ZF1->ZF1_STATUS := "L"
+				ZF1->(MsUnlock())
 			Endif
 
 			_cChavSCR := SCR->CR_TIPO + SCR->CR_NUM
 
 			ZAH->(dbSetOrder(1))
-			If ZAH->(dbSeek(xFilial("ZAH")+ SCR->CR_TIPO + SCR->CR_NUM  ))
+			If ZAH->(dbSeek(xFilial("ZAH")+ SCR->CR_TIPO + SCR->CR_NUM))
 				_cChavZAH := ZAH->ZAH_TIPO + ZAH->ZAH_NUM
 				_cCrTipo  := SCR->CR_TIPO
 				_cDocSCR  := SCR->CR_NUM
 				_cFilZAH  := SCR->CR_FILIAL
 
-				//If cEmpAnt == "02"
 				_cCq := "DELETE "+RetSqlName("ZAH")+ " WHERE ZAH_FILIAL = '"+_cFilZAH+"' AND ZAH_NUM = '"+_cDocSCR+"' AND ZAH_TIPO = '"+_cCrTipo+"' "
-				//Else
-				//	_cCq := "DELETE "+RetSqlName("ZAH")+ " WHERE ZAH_NUM = '"+_cDocSCR+"' AND ZAH_TIPO = '"+_cCrTipo+"' "
-				//Endif
 
 				TcSqlExec(_cCq)
 			Endif

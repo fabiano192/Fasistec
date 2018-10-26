@@ -75,7 +75,7 @@ User Function BRI114(_nLin)
 					EndIf
 
 					SCR->(Reclock("SCR",.T.))
-					SCR->CR_FILIAL	:= xFilial("SC9")
+					SCR->CR_FILIAL	:= xFilial("SCR")
 					SCR->CR_NUM		:= _cPedido + _cItem
 					SCR->CR_TIPO	:= _cCodBlq
 					SCR->CR_NIVEL	:= SAL->AL_NIVEL
@@ -87,6 +87,8 @@ User Function BRI114(_nLin)
 					SCR->CR_TXMOEDA := 1
 					SCR->CR_OBS     := Alltrim(SM0->M0_NOME) +" - PRECO PEDIDO DE VENDA"
 					SCR->CR_TOTAL	:= _nPrcV
+//					SCR->CR_YCLIENT	:= M->C5_CLIENTE
+//					SCR->CR_YLOJA	:= M->C5_LOJACLI
 					SCR->(MsUnlock())
 
 					ZAH->(RecLock("ZAH",.T.))

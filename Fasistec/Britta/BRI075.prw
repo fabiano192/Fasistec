@@ -696,10 +696,8 @@ Static Function BRI75_D(_cMod,_lOutEmp,_nCont)
 			EmpOpenFile("ZA2","ZA2",1,.T.,_cEmpresa,@cModo)
 			EmpOpenFile("ZA4","ZA4",1,.T.,_cEmpresa,@cModo)
 		ElseIf _cTipoZAH == "03"
-			cModo := "C"
-			EmpOpenFile("ZA5","ZA5",1,.T.,_cEmpresa,@cModo)
 			cModo := "E"
-			EmpOpenFile("SZG","SZG",1,.T.,_cEmpresa,@cModo)
+			EmpOpenFile("ZF1","ZF1",1,.T.,_cEmpresa,@cModo)
 		ElseIf _cTipoZAH == "04"
 			cModo := "E"
 			EmpOpenFile("AIA","AIA",1,.T.,_cEmpresa,@cModo)
@@ -1198,136 +1196,89 @@ Static Function BRI75_D(_cMod,_lOutEmp,_nCont)
 			aWBrowse2[_nCont,2]  := .F.
 			oWBrowse2:Refresh()
 		Endif
-	ElseIf SCR->CR_TIPO == "03" // TABELA DE PRECO FRETE
-		Private _cGrAprov:= ""
-		Private   Acols	 := {}
-		Private _nOpcX   := 2
-		Private VISUAL   := (_nOpcX == 2)
-		Private aHeader  := {}
-		Private _nOpcao  := _nOpcX
+	ElseIf SCR->CR_TIPO == "03" // TABELA DE PRECO
+
+		Private Acols	:={}
+		Private _nOpcX	:= 2
+
+		Private VISUAL := (_nOpcX == 2)
+
+		Private aHeader := {}
+		Private _nOpcao := _nOpcX
 
 		_nOpcE := _nOpcX
 		_nOpcG := _nOpcX
 
-		If nOpcx == 2  // CONSULTA
-			_aCampos := {"ZA5_MUN","ZG_FORN","ZG_LOJA","ZA5_DIST","ZG_VALOR","ZA5_VLMAXG","ZG_FRETE","ZA5_VLMAXE","ZG_FAGRTRA","ZA5_VLMAXA","ZG_FRETED","ZG_FAGRTRD"}
-		Else           // LIBERA
-			_aCampos := {"ZA5_MUN","ZG_FORN","ZG_LOJA","ZA5_DIST","ZG_VALOR","ZG_FRETE","ZG_FAGRTRA","ZG_FRETED", "ZG_FAGRTRD"}
-		Endif
+		_aCampos := {"ZF1_DTEMIS","ZF1_PRODUT","ZF1_PRCANT","ZF1_PRCATU","ZF1_USUARI"}
 
 		For AX:= 1 TO Len(_aCampos)
-			dbSelectArea("Sx3")
-			dbSetOrder(2)
-			If dbSeek(_aCampos[AX])
-				AADD(aHeader,{ TRIM(x3_titulo), x3_campo, x3_picture,;
-				x3_tamanho, x3_decimal,"AllwaysTrue()",;
-				x3_usado, x3_tipo, x3_arquivo, x3_context } )
+			SX3->(dbSetOrder(2))
+			If SX3->(MsSeek(_aCampos[AX]))
+
+				_cTit := TRIM(SX3->X3_TITULO)
+
+				AADD(aHeader,{ _cTit, SX3->X3_CAMPO, SX3->X3_PICTURE,;
+				SX3->X3_TAMANHO, SX3->X3_DECIMAL,SX3->X3_VALID,;
+				SX3->X3_USADO, SX3->X3_TIPO, SX3->X3_ARQUIVO, SX3->X3_CONTEXT } )
 			Endif
 		Next Ax
 
-		Private _NPITEM   := aScan( aHeader, { |x| Alltrim(x[2])=="ZA5_ITEM"  } )
-		Private _NPEST    := aScan( aHeader, { |x| Alltrim(x[2])=="ZA5_ESTADO"} )
-		Private _NPMUN    := aScan( aHeader, { |x| Alltrim(x[2])=="ZA5_MUN"   } )
-		Private _NPDIST   := aScan( aHeader, { |x| Alltrim(x[2])=="ZA5_DIST"  } )
-		Private _NPVALOR  := aScan( aHeader, { |x| Alltrim(x[2])=="ZG_VALOR"  } )
-		Private _NPFORN   := aScan( aHeader, { |x| Alltrim(x[2])=="ZG_FORN"   } )
-		Private _NPLOJA   := aScan( aHeader, { |x| Alltrim(x[2])=="ZG_LOJA"   } )
-		Private _NPFRETE  := aScan( aHeader, { |x| Alltrim(x[2])=="ZG_FRETE"  } )
-		Private _NPFAGRTRA:= aScan( aHeader, { |x| Alltrim(x[2])=="ZG_FAGRTRA"} )
-		//Frete Descarga -Juailson-Semar 13/02/15
-		Private _NPFRETED := aScan( aHeader, { |x| Alltrim(x[2])=="ZG_FRETED"  } )
-		Private _NPFAGRTRD:= aScan( aHeader, { |x| Alltrim(x[2])=="ZG_FAGRTRD"} )
-		//
-		Private _NPVLMAXG := aScan( aHeader, { |x| Alltrim(x[2])=="ZA5_VLMAXG"} )
-		Private _NPVLMAXE := aScan( aHeader, { |x| Alltrim(x[2])=="ZA5_VLMAXE"} )
-		Private _NPVLMAXA := aScan( aHeader, { |x| Alltrim(x[2])=="ZA5_VLMAXA"} )
+		Private _nPDTEMI := aScan( aHeader, { |x| Alltrim(x[2])== "ZF1_DTEMIS"  } )
+		Private _nPPRODU := aScan( aHeader, { |x| Alltrim(x[2])== "ZF1_PRODUT"  } )
+		Private _nPPRCAN := aScan( aHeader, { |x| Alltrim(x[2])== "ZF1_PRCANT"  } )
+		Private _nPPRCAT := aScan( aHeader, { |x| Alltrim(x[2])== "ZF1_PRCATU"  } )
+		Private _nPUSUAR := aScan( aHeader, { |x| Alltrim(x[2])== "ZF1_USUARI"  } )
 
-		aCols:={}
-		_cEstado  := SCR->CR_YESTADO
-		_cMun     := SCR->CR_YMUN
+		aCols     := {}
+//		_cChave  := Substr(SCR->CR_NUM,1,TAMSX3("C6_NUM")[1])
+		_cChave  := Alltrim(SCR->CR_NUM)
+		_nTam	 := Len(Space(TAMSX3("ZF1_FILIAL")[1])+Space(TAMSX3("ZF1_CLIENT")[1])+Space(TAMSX3("ZF1_LOJA")[1])+Space(TAMSX3("ZF1_PRODUT")[1]))
 
-		SZ4->(dbSetOrder(1))
-		SZ4->(dbSeek(SCR->CR_FILIAL + SCR->CR_YESTADO  + SCR->CR_YMUN))
-		_cDist    := Alltrim(Str(SZ4->Z4_DIST))
+		ZF1->(dbsetOrder(1))
+		If ZF1->(MsSeek(PadR(_cChave,_nTam)+"P"))
 
-		SZG->(dbSetOrder(1))
-		If SZG->(dbSeek(SCR->CR_FILIAL + SCR->CR_YESTADO  + SCR->CR_YMUN + SCR->CR_YFORNEC  + SCR->CR_YLOJFOR +Space(01)))
+			_cCliente	:= ZF1->ZF1_CLIENT
+			_cLoja		:= ZF1->ZF1_LOJA
+			_cNomCli	:= ZF1->ZF1_NOME
 
-			_cChavSZG := SZG->ZG_EST   + SZG->ZG_MUN  + SZG->ZG_FORN + SZG->ZG_LOJA + Space(01)
+			AADD(aCols,Array(Len(_aCampos)+1))
 
-			While SZG->(!Eof()) .And. _cChavSZG == SZG->ZG_EST   + SZG->ZG_MUN  + SZG->ZG_FORN + SZG->ZG_LOJA + Space(01)
+			aCols[Len(aCols),_nPDTEMI] := ZF1->ZF1_DTEMIS
+			aCols[Len(aCols),_nPPRODU] := ZF1->ZF1_PRODUT
+			aCols[Len(aCols),_nPPRCAN] := ZF1->ZF1_PRCANT
+			aCols[Len(aCols),_nPPRCAT] := ZF1->ZF1_PRCATU
+			aCols[Len(aCols),_nPUSUAR] := ZF1->ZF1_USUARI
+			aCols[Len(aCols),Len(_aCampos)+1]:=.F.
 
-				If !Empty(SZG->ZG_LIBER)
-					SZG->(dbSkip())
-					Loop
-				Endif
-
-				AADD(aCols,Array(Len(_aCampos)+1))
-
-				ACOLS[Len(Acols),_NPDIST]   := SZG->ZG_DIST
-				ACOLS[Len(Acols),_NPMUN]    := SZG->ZG_MUN
-				ACOLS[Len(Acols),_NPFORN]   := SZG->ZG_FORN
-				ACOLS[Len(Acols),_NPLOJA]   := SZG->ZG_LOJA
-				ACOLS[Len(Acols),_NPVALOR]  := SZG->ZG_VALOR
-				ACOLS[Len(Acols),_NPFRETE]  := SZG->ZG_FRETE
-				ACOLS[Len(Acols),_NPFAGRTRA]:= SZG->ZG_FAGRTRA
-				//Frete Descarga
-				ACOLS[Len(Acols),_NPFRETED]  := SZG->ZG_FRETED
-				ACOLS[Len(Acols),_NPFAGRTRD]:= SZG->ZG_FAGRTRD
-
-
-				If nOpcx == 2
-					//If _cEmpresa == "50"
-					_cFilNew := SCR->CR_FILIAL
-					//Else
-					//	_cFilNew := xFilial("ZA2")
-					//Endif
-
-					ZA5->(dbSetOrder(1))
-					If ZA5->(!dbSeek(_cFilNew + SZG->ZG_EST  + SZG->ZG_MUN))
-						If ZA5->(dbSeek(_cFilNew + SZG->ZG_EST  + Space(35)))
-							ZA5->(dbSeek(_cFilNew + SZG->ZG_EST  + Space(35) + SZG->ZG_DIST,.T.))
-							If ZA5->ZA5_ESTADO == SZG->ZG_EST
-								ACOLS[Len(Acols),_NPVLMAXG]:= ZA5->ZA5_VLMAXG
-								ACOLS[Len(Acols),_NPVLMAXE]:= ZA5->ZA5_VLMAXE
-								ACOLS[Len(Acols),_NPVLMAXA]:= ZA5->ZA5_VLMAXA
-							Endif
-						Endif
-					Endif
-				Endif
-
-				aCols[Len(aCols),Len(_aCampos)+1]:=.F.
-
-				SZG->(dbSkip())
-			EndDo
 		Endif
 
-		_lEdit        := .F.
-		cTitulo       := "Cadastro da Tabela de Precos"
-		cAliasGetD    := "SZG"
+		_lEdit  := .F.
+
+		cTitulo       := "TABELA DE PREÇO"
+		cAliasGetD    := "ZF1"
 		cLinOk        := "AllwaysTrue()"
 		cTudOk        := "AllwaysTrue()"
 		cFieldOk      := "AllwaysTrue()"
 
 		_lRetMod2     := MZ56_06(cTitulo,cAliasGetD,cLinOk,cTudOk,_nOpcE,_nOpcG,cFieldOk,_lOutEmp,_cMod,_nCont)
 
-		//If _cEmpresa == "50"
-		_cFilNew := SCR->CR_FILIAL
-		//Else
-		//	_cFilNew := "01"
-		//Endif
+		_cFilNew      := SCR->CR_FILIAL
 
 		If _lRetMod2 .And. nOpcx == 3
 			If _lOutEmp                                  //  1             2               3          4          5        6       7
 				StartJob("U_BRI75_B", GetEnvServer(), .T., _cEmpresa     , _cFilNew     ,_cAprovador,_cTipoZAH,_cNumZAH,_cUserZAH,_cMod,CA097USER)
 			Else       //   1        2       3       4    5
-				U_BRI072(_cEmpresa, _cFilNew,_cAprovador,_cMod,CA097USER )
+				U_BRI072(_cEmpresa, _cFilNew, _cAprovador,_cMod,CA097USER )
 			Endif
 
 			aWBrowse2[_nCont][9] := dDataBase
 			aWBrowse2[_nCont,2]  := .F.
 			oWBrowse2:Refresh()
 		Endif
+
+
+
+
 
 	ElseIf SCR->CR_TIPO == "04" // TABELA DE PRECO DE COMPRAS
 		Private _cGrAprov:= ""
@@ -2139,15 +2090,6 @@ Static Function MZ56_06(cTitulo,cAlias2   ,cLinOk,cTudOk,_nOpcE,_nOpcG,cFieldOk,
 		@ 3.8,050 MSGET oTotPed  VAR _nTOTPED             When .F.     PICTURE "@E 9,999,999.99" SIZE 50,10
 
 		_nTop := aPosObj[2,1] + 7
-	ElseIf SCR->CR_TIPO == "03" // TABELA DE FRETE
-		@ 2.8,002 Say "Estado: "
-		@ 2.8,005 MSGET oEstado  VAR _cEstado          When .F.     PICTURE "@!" SIZE 30,10
-
-		@ 2.8,010 Say "Municipo: "
-		@ 2.8,014 MSGET oMun     VAR _cMun             When .F.     PICTURE "@!" SIZE 50,10
-
-		@ 2.8,025 Say "Distancia: "
-		@ 2.8,030 MSGET oDist    VAR _cDist            When .F.     PICTURE "@!" SIZE 50,10
 
 	ElseIf SCR->CR_TIPO == "05"
 		@ 2.8,002 Say "Cliente: "
@@ -2173,6 +2115,18 @@ Static Function MZ56_06(cTitulo,cAlias2   ,cLinOk,cTudOk,_nOpcE,_nOpcG,cFieldOk,
 	ElseIf SCR->CR_TIPO $ "07|02"
 		@ 2.8,002 Say "Pedido: "
 		@ 2.8,005 MSGET oPedido VAR _cPedido           When .F.     PICTURE "@!" SIZE 30,10
+
+		@ 2.8,010 Say "Cliente: "
+		@ 2.8,014 MSGET oCliente VAR _cCliente         When .F.     PICTURE "@!" SIZE 30,10
+
+		@ 2.8,020 Say "Loja: "
+		@ 2.8,023 MSGET oLoja    VAR _cLoja            When .F.     PICTURE "99" SIZE 30,10
+
+		@ 2.8,027 Say "Nome Cliente: "
+		@ 2.8,032 MSGET oNomCli  VAR _cNomCli          When .F.     SIZE 150,10
+
+		_nTop := aPosObj[2,1] + 7
+	ElseIf SCR->CR_TIPO $ "03"
 
 		@ 2.8,010 Say "Cliente: "
 		@ 2.8,014 MSGET oCliente VAR _cCliente         When .F.     PICTURE "@!" SIZE 30,10
