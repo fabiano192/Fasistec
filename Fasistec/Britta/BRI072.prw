@@ -400,7 +400,8 @@ User Function BRI072(_cEmp,_cFil,_cAprovador,_cMod,CA097USER)
 		SCR->(dbSetOrder(1))
 		If SCR->(dbseek(xFilial("SCR")+ _cTpDoc + _cDocSCR))
 
-			_nTam	 := Len(Space(TAMSX3("ZF1_FILIAL")[1])+Space(TAMSX3("ZF1_CLIENT")[1])+Space(TAMSX3("ZF1_LOJA")[1])+Space(TAMSX3("ZF1_PRODUT")[1]))
+			_nTam	 := Len(Space(TAMSX3("ZF1_FILIAL")[1])+Space(TAMSX3("ZF1_CLIENT")[1])+Space(TAMSX3("ZF1_LOJA")[1])+;
+			Space(TAMSX3("ZF1_PROCES")[1])+Space(TAMSX3("ZF1_PRODUT")[1]))
 
 			ZF1->(dbsetOrder(1))
 			If ZF1->(MsSeek(PadR(_cDocSCR,_nTam)+"P"))

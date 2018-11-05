@@ -1230,9 +1230,9 @@ Static Function BRI75_D(_cMod,_lOutEmp,_nCont)
 		Private _nPUSUAR := aScan( aHeader, { |x| Alltrim(x[2])== "ZF1_USUARI"  } )
 
 		aCols     := {}
-//		_cChave  := Substr(SCR->CR_NUM,1,TAMSX3("C6_NUM")[1])
 		_cChave  := Alltrim(SCR->CR_NUM)
-		_nTam	 := Len(Space(TAMSX3("ZF1_FILIAL")[1])+Space(TAMSX3("ZF1_CLIENT")[1])+Space(TAMSX3("ZF1_LOJA")[1])+Space(TAMSX3("ZF1_PRODUT")[1]))
+		_nTam	 := Len(Space(TAMSX3("ZF1_FILIAL")[1])+Space(TAMSX3("ZF1_CLIENT")[1])+Space(TAMSX3("ZF1_LOJA")[1])+;
+		Space(TAMSX3("ZF1_PROCES")[1])+Space(TAMSX3("ZF1_PRODUT")[1]))
 
 		ZF1->(dbsetOrder(1))
 		If ZF1->(MsSeek(PadR(_cChave,_nTam)+"P"))

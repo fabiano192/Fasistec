@@ -7,7 +7,7 @@ USER Function Teste()
 
 	Local _oReport
 
-	Define User_Report _oReport Name TESTE01 Title "Teste Birt" //ASKPAR EXCLUSIVE
+	Define User_Report _oReport Name TESTE01 Title "Teste Birt" ASKPAR EXCLUSIVE
 
 	Activate REPORT _oReport LAYOUT TESTE01 Format HTML
 

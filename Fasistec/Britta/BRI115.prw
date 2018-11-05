@@ -2,7 +2,8 @@
 #INCLUDE 'TOPCONN.CH'
 
 #Define Verde "#9AFF9A"
-#Define Amarelo "#FFD700"
+#Define Amarelo_Ouro "#FFD700"
+#Define Amarelo "#FFFF00"
 #Define Vermelho "#FF0000"
 #Define Salmao "#FF8C69"
 #Define Branco "#FFFAFA"
@@ -13,6 +14,9 @@
 #Define Azul_Escuro "#191970"
 #Define Vermelho_Escuro "#8B0000"
 #Define Amarelo_Escuro "#8B6914"
+#Define Chocolate "#FF7F24"
+#Define Roxo "#912CEE"
+#Define Roxo_Escuro "#551A8B"
 
 
 /*/{Protheus.doc} BRI115
@@ -58,6 +62,9 @@ User Function BRI115()
 
 	Private _nReaj	:= 1
 	Private _nTipo	:= 1
+
+	Private _oTFont1		:= TFont():New('Courier new',,-14,,.T.,,,,,.T.)
+	Private _oTFont2		:= TFont():New('Calibri',,-14,,.T.,,,,,.F.)
 
 	_oSize := FwDefSize():New( .F. )							// Com enchoicebar
 	_oSize:AddObject( "P1", 100, 13, .T., .t. )
@@ -251,23 +258,56 @@ Static Function Panel04()
 	Local _nLiI4 		:= _oSize:GetDimension( "P4", "LININI" )+6
 	Local _nColI		:= _oSize:GetDimension( "P4", "COLINI")
 	Local _nColF		:= _oSize:GetDimension( "P4", "COLEND")
-	Local _oTFont		:= TFont():New('Courier new',,-14,,.T.,,,,,.T.)
+	Local _nTmBut		:= 60
+	Local _oTBut1		:= Nil
+	Local _oTBut2		:= Nil
+	Local _oTBut3		:= Nil
+	Local _nCol1		:= _nColI+100
+	Local _nFiC1		:= _nCol1+_nTmBut
+	Local _nCol3		:= _nColF-100-_nTmBut
+	Local _nCol2		:= _nFiC1 + ((_nCol3 - _nFiC1)/2) - (_nTmBut /2)
+	Local _cStyle		:= ''
 
-	_oTBut1	:= TButton():New( _nLiI4, _nColI+100, "Reajustar" ,_oDlg,{||LjMsgRun("Processando Reajuste, aguarde...","Tabela de Preço",{||Reajustar()})}	, 60,15,,_oTFont,.F.,.T.,.F.,,.F.,,,.F. )
+
+	_oTBut1	:= TButton():New( _nLiI4, _nColI+100, "Reajustar" ,_oDlg,{||LjMsgRun("Processando Reajuste, aguarde...","Tabela de Preço",{||Reajustar()})},;
+	_nTmBut,15,,_oTFont1,.F.,.T.,.F.,,.F.,,,.F. )
 	_oTBut1 :cTooltip = "Reajustar"
-	_oTBut1:SetCss(+;
-	"QPushButton { background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 "+Branco+", stop: 1 "+Amarelo+");border-style: outset;border-width: 2px;border-radius: 10px;border-color: "+Amarelo_Escuro+" }"+;
-	"QPushButton:pressed { background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 "+Amarelo+", stop: 1 "+Branco+");border-style: outset;border-width: 2px;border-radius: 10px;border-color: "+Amarelo_Escuro+" }")
+	_cStyle := GetStyle(Branco,Amarelo_Ouro,Amarelo_Escuro,Preto)
+	_oTBut1:SetCss(_cStyle)
 
-	_oTBut2	:= TButton():New( _nLiI4, _nColF-100-60, "Cancelar/Sair" ,_oDlg,{||_oDlg:End()}	, 60,15,,_oTFont,.F.,.T.,.F.,,.F.,,,.F. )
-	_oTBut2 :cTooltip = "Cancelar"
-	_oTBut2:SetCss(+;
-	"QPushButton { background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 "+Branco+", stop: 1 "+Salmao+");border-style: outset;border-width: 2px;border-radius: 10px;border-color: "+Vermelho_Escuro+" }"+;
-	"QPushButton:pressed { background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 "+Salmao+", stop: 1 "+Branco+");border-style: outset;border-width: 2px;border-radius: 10px;border-color: "+Vermelho_Escuro+" }")
+
+	//	_oTBut2	:= TButton():New( _nLiI4, _nCol2, "Desfazer" ,_oDlg,{||LjMsgRun("Processando Reajuste, aguarde...","Tabela de Preço",{||Desfazer()})},;
+	_oTBut2	:= TButton():New( _nLiI4, _nCol2, "Desfazer" ,_oDlg,{||Desfazer()},;
+	_nTmBut,15,,_oTFont1,.F.,.T.,.F.,,.F.,,,.F. )
+	_oTBut2 :cTooltip = "Desfazer Reajuste das tabelas Bloqueadas"
+	_cStyle := GetStyle(Preto,Branco,Cinza,Amarelo)
+	_oTBut2:SetCss(_cStyle)
+
+
+	_oTBut3	:= TButton():New( _nLiI4, _nCol3, "Cancelar/Sair" ,_oDlg,{||_oDlg:End()},;
+	_nTmBut,15,,_oTFont1,.F.,.T.,.F.,,.F.,,,.F. )
+	_oTBut3 :cTooltip = "Cancelar"
+	_cStyle := GetStyle(Branco,Salmao,Vermelho_Escuro,Preto)
+	_oTBut3:SetCss(_cStyle)
 
 Return(Nil)
 
 
+
+Static Function GetStyle(_cCor1,_cCor2,_cCor3,_cCor4)
+
+	Local _cMod := ''
+
+	_cMod := "QPushButton { background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 "+_cCor1+", stop: 1 "+_cCor2+");"
+	_cMod += "border-style: outset;border-width: 2px;
+	_cMod += "border-radius: 10px;border-color: "+_cCor3+";"
+	_cMod += "color: "+_cCor4+"};"
+	_cMod += "QPushButton:pressed { background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 "+_cCor2+", stop: 1 "+_cCor1+");"
+	_cMod += "border-style: outset;border-width: 2px;"
+	_cMod += "border-radius: 10px;"
+	_cMod += "border-color: "+_cCor3+" }"
+
+Return(_cMod)
 
 
 Static Function Consulta()
@@ -420,6 +460,7 @@ Static Function Reajustar()
 	Local _cFil		:= ''
 	Local _cCli		:= ''
 	Local _cLoja	:= ''
+	Local _cNome	:= ''
 	Local _cProd	:= ''
 	Local _nPrcAt	:= 0
 	Local _nPCalc	:= 0
@@ -438,6 +479,7 @@ Static Function Reajustar()
 			_nPrcAt		:= _aBrowse[_nInd][8]
 			_nPCalc		:= _aBrowse[_nInd][9]
 			_nDif		:= _aBrowse[_nInd][10]
+			_cNome		:= Alltrim(_aBrowse[_nInd][5])
 
 			If _nDif < 0
 
@@ -487,7 +529,8 @@ Static Function Reajustar()
 
 						SCR->(Reclock("SCR",.T.))
 						SCR->CR_FILIAL	:= xFilial("SCR")
-						SCR->CR_NUM		:= _cFil + _cCli + _cLoja + _cProd
+//						SCR->CR_NUM		:= _cFil + _cCli + _cLoja + _cProd
+						SCR->CR_NUM		:= _cFil + _cCli + _cLoja + _cProcLib + Alltrim(_cProd)
 						SCR->CR_TIPO	:= _cCodBlq
 						SCR->CR_NIVEL	:= SAL->AL_NIVEL
 						SCR->CR_USER	:= SAL->AL_USER
@@ -498,8 +541,8 @@ Static Function Reajustar()
 						SCR->CR_TXMOEDA := 1
 						SCR->CR_OBS     := Alltrim(SM0->M0_NOME) +" - TABELA DE PREÇO"
 						SCR->CR_TOTAL	:= _nPCalc
-//						SCR->CR_YCLIENT	:= _cCli
-//						SCR->CR_YLOJA	:= _cLoja
+						//						SCR->CR_YCLIENT	:= _cCli
+						//						SCR->CR_YLOJA	:= _cLoja
 						SCR->(MsUnlock())
 
 						ZAH->(RecLock("ZAH",.T.))
@@ -535,6 +578,7 @@ Static Function Reajustar()
 			ZF1->ZF1_FILIAL	:= _cFil
 			ZF1->ZF1_CLIENT	:= _cCli
 			ZF1->ZF1_LOJA	:= _cLoja
+			ZF1->ZF1_NOME	:= _cNome
 			ZF1->ZF1_PRODUT	:= _cProd
 			ZF1->ZF1_PROCES	:= _cProcLib
 			ZF1->ZF1_DTEMIS	:= dDataBase
@@ -559,6 +603,8 @@ Static Function Reajustar()
 
 	If _lProc
 		MsgInfo("Reajuste realizado com sucesso!")
+	Else
+		MsgAlert("Não foi encontrado itens para Reajustar.")
 	Endif
 
 Return(Nil)
@@ -618,5 +664,151 @@ Static Function VldCpo()
 	_aBrowse[_oBrowse:nAt][10]:= _aBrowse[_oBrowse:nAt][9] - _aBrowse[_oBrowse:nAt][8]
 
 	_oBrowse:Refresh()
+
+Return(Nil)
+
+
+
+
+Static Function Desfazer()
+
+	Local _oDlg1	:= Nil
+	Local _cQry		:= ''
+	Local _oFont2	:= Nil
+	Local _oTBut5	:= Nil
+
+	If Select("TSB") > 0
+		TSB->(dbCloseArea())
+	Endif
+
+	_cQry := " SELECT ZF1.R_E_C_N_O_ AS ZF1RECNO,* FROM "+RetSqlName("ZF1")+" ZF1 " + CRLF
+	_cQry += " WHERE ZF1.D_E_L_E_T_ = '' " + CRLF
+	_cQry += " AND ZF1_STATUS = 'P' " + CRLF
+	//	_cQry += " AND ZF1_USUARI = '"+Alltrim(UsrRetName(RetCodUsr()))+"' " + CRLF
+	_cQry += " ORDER BY ZF1_FILIAL, ZF1_CLIENT,ZF1_LOJA,ZF1_PRODUT,ZF1_DTEMIS "	+ CRLF
+
+	TcQuery _cQry New Alias "TSB"
+
+	Count to _nTSB
+
+	If _nTSB = 0
+		MsgAlert("Não foi encontrado Tabela de Preço Bloqueada para desfazer o reajuste!")
+		TSB->(dbCloseArea())
+		Return(Nil)
+	Endif
+
+	TcSetField("TSB","ZF1_DTEMIS","D")
+
+	TSB->(dbGoTop())
+
+	_aBlq := {}
+
+	While TSB->(!EOF())
+
+		AADD(_aBlq,{;
+		.F.				,; //01
+		TSB->ZF1_FILIAL	,; //02
+		TSB->ZF1_CLIENT	,; //03
+		TSB->ZF1_LOJA	,; //04
+		TSB->ZF1_NOME	,; //05
+		TSB->ZF1_PRODUT	,; //06
+		TSB->ZF1_DTEMIS	,; //07
+		TSB->ZF1_PRCANT	,; //08
+		TSB->ZF1_PRCATU	,; //09
+		TSB->ZF1_PRCATU - TSB->ZF1_PRCANT ,; //10
+		TSB->ZF1_USUARI	,; //11
+		TSB->ZF1RECNO	,; //12
+		TSB->ZF1_PROCES	}) //13
+
+		TSB->(dbSkip())
+	EndDo
+
+	TSB->(dbCloseArea())
+
+
+	DEFINE MSDIALOG _oDlg1 TITLE OemToAnsi("Desfazer Reajuste") FROM 0,0 TO 300,1000 OF _oDlg1 PIXEL
+
+	DEFINE FONT _oFont2 NAME "Arial" BOLD SIZE 0,16 OF _oDlg
+
+	_oSay1	:= TSay():New(05,05,{||'Selecione abaixo os itens que deseja excluir o Reajuste.'},_oDlg1,,_oTFont2,,,,.T.,CLR_HRED,CLR_WHITE,400,10,,,,,.T.)
+	_oSay1:lTransparent := .F.
+
+	_oTBut5	:= TButton():New( 05, 400, "Processar" ,_oDlg1,{||LjMsgRun("Processando, aguarde...","Tabela de Preço",{||Processar(_aBlq)} ,_oDlg1:End() )},;
+	60,12,,_oTFont2,.F.,.T.,.F.,,.F.,,,.F. )
+	_oTBut5 :cTooltip = "Processar"
+	_cStyle := GetStyle(Branco,Roxo,Roxo_Escuro,Preto)
+
+	_oTBut5:SetCss(_cStyle)
+
+
+	_aFields := {'','Filial','Cliente','Loja','Nome','Produto','Emissão','Preço Atual','Preço Calculado','Diferença','Usuário','Processo'}
+
+	_oBlq := TwBrowse():New( 20, 05,490,125,,_aFields,,_oDlg1,,,,,{||},,,,,,,.F.,,.T.,,.F.,,,)
+
+	_oBlq:SetArray(_aBlq)
+
+	_oBlq:bLine := {||{If(_aBlq[_oBlq:nAt,1],_oOk,_oNo ),; //1 - Marcador
+	_aBlq[_oBlq:nAt,2],;
+	_aBlq[_oBlq:nAt,3],;
+	_aBlq[_oBlq:nAt,4],;
+	_aBlq[_oBlq:nAt,5],;
+	_aBlq[_oBlq:nAt,6],;
+	_aBlq[_oBlq:nAt,7],;
+	Transform(_aBlq[_oBlq:nAt,8],"@E 9,999,999.99"),;
+	Transform(_aBlq[_oBlq:nAt,9],"@E 9,999,999.99"),;
+	Transform(_aBlq[_oBlq:nAt,10],"@E 9,999,999.99"),;
+	_aBlq[_oBlq:nAt,11],;
+	_aBlq[_oBlq:nAt,13]}}
+
+	_oBlq:bLDblClick := {|| _aBlq[_oBlq:nAt][1] := !_aBlq[_oBlq:nAt][1]}
+
+	_oBlq:nAt := 1
+	_oBlq:Refresh()
+
+	ACTIVATE MSDIALOG _oDlg1 CENTERED
+
+Return(Nil)
+
+
+
+Static Function Processar(_aBlq)
+
+	Local _nFor  := 1
+	Local _cType := "03"
+	Local _cUpd  := ''
+
+	BEGIN TRANSACTION
+
+		For _nFor := 1 To Len(_aBlq)
+			If _aBlq[_nFor][1]
+
+				_cFil		:= Alltrim(_aBlq[_nFor][2])
+				_cCli		:= Alltrim(_aBlq[_nFor][3])
+				_cLoja		:= Alltrim(_aBlq[_nFor][4])
+				_cProd		:= Alltrim(_aBlq[_nFor][6])
+				_cUser		:= Alltrim(_aBlq[_nFor][11])
+				_cProc		:= Alltrim(_aBlq[_nFor][13])
+				_cNum		:= _cFil + _cCli + _cLoja + Alltrim(_cProc)+ Alltrim(_cProd)
+
+				If Alltrim(_cUser) <> Alltrim(UsrRetName(RetCodUsr()))
+					ShowHelpDlg('BRI115_4',{'Usuário não é o mesmo que realizou o Reajuste!'},1,{'Solicite a exclusão ao usuário que realizou o Reajuste.'},1)
+				Endif
+
+				ZF1->(dbGoTo(_aBlq[_nFor][12]))
+
+				ZF1->(RecLock("ZF1",.F.))
+				ZF1->(dbDelete())
+				ZF1->(MsUnLock())
+
+				//			_cUpd := "DELETE "+RetSqlName("ZAH")+ " WHERE ZAH_FILIAL = '"+_cFil+"' AND ZAH_NUM = '"+_cNum+"' AND ZAH_TIPO = '"+_cType+"' "
+				_cUpd := "DELETE "+RetSqlName("ZAH")+ " WHERE ZAH_NUM = '"+_cNum+"' AND ZAH_TIPO = '"+_cType+"' AND D_E_L_E_T_ = '' "
+				TcSqlExec(_cUpd)
+
+				_cUpd := "DELETE "+RetSqlName("SCR")+ " WHERE CR_NUM = '"+_cNum+"' AND CR_TIPO = '"+_cType+"'  AND D_E_L_E_T_ = '' "
+				TcSqlExec(_cUpd)
+
+			Endif
+		Next _nFor
+	END TRANSACTION
 
 Return(Nil)
