@@ -26,7 +26,7 @@ User Function BRI114(_nLin)
 	_cOC	:= aCols[_nLin][_nPosOC]
 
 	SZ2->(dbsetOrder(4))
-	If SZ2->(msSeek(xFilial("SZ2")+M->C5_CLIENTE+M->C5_LOJACLI+_cProd))
+	If SZ2->(msSeek(xFilial("SZ2")+M->C5_CLIENTE+M->C5_LOJACLI+_cProd+'L'))
 
 		SCR->(dbSetOrder(1))
 		If SCR->(dbSeek(xFilial("SCR")+ _cCodBlq + _cPedido + _cItem ))
@@ -60,19 +60,10 @@ User Function BRI114(_nLin)
 				Return
 			EndIf
 
-			lFirstNiv   := .T.
-			cAuxNivel   := ""
-			_lLibera    := .T.
-
 			SAL->(dbSetOrder(2))
 			If SAL->(dbSeek(xFilial() + _cGrAprov))
 
 				While SAL->(!Eof()) .And. xFilial("SAL")+_cGrAprov == SAL->AL_FILIAL+SAL->AL_COD
-
-					If lFirstNiv
-						cAuxNivel := SAL->AL_NIVEL
-						lFirstNiv := .F.
-					EndIf
 
 					SCR->(Reclock("SCR",.T.))
 					SCR->CR_FILIAL	:= xFilial("SCR")

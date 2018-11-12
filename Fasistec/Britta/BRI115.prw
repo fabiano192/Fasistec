@@ -18,7 +18,6 @@
 #Define Roxo "#912CEE"
 #Define Roxo_Escuro "#551A8B"
 
-
 /*/{Protheus.doc} BRI115
 //Reajuste de Tabela de Preço
 @author Fabiano
@@ -49,7 +48,7 @@ User Function BRI115()
 	Private _nValor	:= 0
 
 	Private _oBrowse:= Nil
-	Private _aBrowse:= {{.F.,'','','','','','',0,0,0}}
+	Private _aBrowse:= {{.F.,'','','','','','',0,0,0,0}}
 
 	Private _oOK	:= LoadBitmap(GetResources(),'LBOK')
 	Private _oNO	:= LoadBitmap(GetResources(),'LBNO')
@@ -168,7 +167,6 @@ Static Function Panel01()
 	"QPushButton { background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 "+Branco+", stop: 1 "+Verde+");border-style: outset;border-width: 2px;border-radius: 10px;border-color: "+Verde_Escuro+" }"+;
 	"QPushButton:pressed { background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 "+Verde+", stop: 1 "+Branco+");border-style: outset;border-width: 2px;border-radius: 10px;border-color: "+Verde_Escuro+"}")
 
-
 Return(Nil)
 
 
@@ -208,7 +206,6 @@ Static Function Panel02()
 	_oTBut1:SetCss(+;
 	"QPushButton { background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 "+Branco+", stop: 1 "+Azul+");border-style: outset;border-width: 2px;border-radius: 10px;border-color: "+Azul_Escuro+"}"+;
 	"QPushButton:pressed { background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 "+Azul+", stop: 1 "+Branco+");border-style: outset;border-width: 2px;border-radius: 10px;border-color: "+Azul_Escuro+"}")
-
 
 Return(Nil)
 
@@ -268,13 +265,11 @@ Static Function Panel04()
 	Local _nCol2		:= _nFiC1 + ((_nCol3 - _nFiC1)/2) - (_nTmBut /2)
 	Local _cStyle		:= ''
 
-
 	_oTBut1	:= TButton():New( _nLiI4, _nColI+100, "Reajustar" ,_oDlg,{||LjMsgRun("Processando Reajuste, aguarde...","Tabela de Preço",{||Reajustar()})},;
 	_nTmBut,15,,_oTFont1,.F.,.T.,.F.,,.F.,,,.F. )
 	_oTBut1 :cTooltip = "Reajustar"
 	_cStyle := GetStyle(Branco,Amarelo_Ouro,Amarelo_Escuro,Preto)
 	_oTBut1:SetCss(_cStyle)
-
 
 	//	_oTBut2	:= TButton():New( _nLiI4, _nCol2, "Desfazer" ,_oDlg,{||LjMsgRun("Processando Reajuste, aguarde...","Tabela de Preço",{||Desfazer()})},;
 	_oTBut2	:= TButton():New( _nLiI4, _nCol2, "Desfazer" ,_oDlg,{||Desfazer()},;
@@ -282,7 +277,6 @@ Static Function Panel04()
 	_oTBut2 :cTooltip = "Desfazer Reajuste das tabelas Bloqueadas"
 	_cStyle := GetStyle(Preto,Branco,Cinza,Amarelo)
 	_oTBut2:SetCss(_cStyle)
-
 
 	_oTBut3	:= TButton():New( _nLiI4, _nCol3, "Cancelar/Sair" ,_oDlg,{||_oDlg:End()},;
 	_nTmBut,15,,_oTFont1,.F.,.T.,.F.,,.F.,,,.F. )
@@ -310,6 +304,7 @@ Static Function GetStyle(_cCor1,_cCor2,_cCor3,_cCor4)
 Return(_cMod)
 
 
+
 Static Function Consulta()
 
 	Local _cQuery := ""
@@ -318,7 +313,7 @@ Static Function Consulta()
 		TRB->(dbCloseArea())
 	Endif
 
-	_cQuery := " SELECT * FROM "+RetSqlName("SZ2")+" SZ2 " + CRLF
+	_cQuery := " SELECT SZ2.R_E_C_N_O_ AS Z2RECNO,* FROM "+RetSqlName("SZ2")+" SZ2 " + CRLF
 	_cQuery += " INNER JOIN "+RetSqlName("SA1")+" SA1 ON A1_COD = Z2_CLIENTE AND A1_LOJA = Z2_LOJA " + CRLF
 	_cQuery += " WHERE SZ2.D_E_L_E_T_ = '' " + CRLF
 	_cQuery += " AND Z2_FILIAL	BETWEEN '"+_cFilDe+"' AND '"+_cFilAt+"' " + CRLF
@@ -327,9 +322,7 @@ Static Function Consulta()
 	_cQuery += " AND A1_EST		BETWEEN '"+_cUFDe+"'  AND '"+_cUFAt+"' " + CRLF
 	_cQuery += " AND Z2_PRODUTO	BETWEEN '"+_cProDe+"' AND '"+_cProAt+"' " + CRLF
 	_cQuery += " AND Z2_PRECO > 0 " + CRLF
-	If SZ2->(FieldPos("Z2_LIBERAD")) > 0
-		_cQuery += " AND Z2_LIBERAD = 'S' " + CRLF
-	Endif
+	_cQuery += " AND Z2_LIBERAD = 'L' " + CRLF
 	_cQuery += " ORDER BY Z2_FILIAL, Z2_CLIENTE,Z2_LOJA,Z2_PRODUTO "	+ CRLF
 
 	TcQuery _cQuery New Alias "TRB"
@@ -358,7 +351,8 @@ Static Function Consulta()
 		TRB->Z2_PRODUTO	,; //07
 		TRB->Z2_PRECO	,; //08
 		0	,; //09
-		0	}) //10
+		0	,; //10
+		TRB->Z2RECNO	}) //11
 
 		TRB->(dbSkip())
 	EndDo
@@ -387,7 +381,6 @@ Return(Nil)
 
 
 
-
 //Marcação de todos os Cheques
 Static Function MarkAll(_aList,_oList)
 
@@ -402,8 +395,6 @@ Static Function MarkAll(_aList,_oList)
 	_oDlg:Refresh()
 
 Return(Nil)
-
-
 
 
 
@@ -467,133 +458,149 @@ Static Function Reajustar()
 	Local _nDif		:= 0
 	Local _cChavSCR	:= ''
 	Local _lProc	:= .F.
+	Local _nZ2Recno := 0
 
-	For _nInd := 1 To Len(_aBrowse)
-		If _aBrowse[_nInd][1]
+	Begin Transaction
+		For _nInd := 1 To Len(_aBrowse)
+			If _aBrowse[_nInd][1]
 
-			_cProcLib	:= GetSxeNum('ZF1','ZF1_PROCES')
-			_cFil		:= Alltrim(_aBrowse[_nInd][2])
-			_cCli		:= Alltrim(_aBrowse[_nInd][3])
-			_cLoja		:= Alltrim(_aBrowse[_nInd][4])
-			_cProd		:= Alltrim(_aBrowse[_nInd][7])
-			_nPrcAt		:= _aBrowse[_nInd][8]
-			_nPCalc		:= _aBrowse[_nInd][9]
-			_nDif		:= _aBrowse[_nInd][10]
-			_cNome		:= Alltrim(_aBrowse[_nInd][5])
+				_cProcLib	:= GetSxeNum('ZF1','ZF1_PROCES')
+				_cFil		:= Alltrim(_aBrowse[_nInd][2])
+				_cCli		:= Alltrim(_aBrowse[_nInd][3])
+				_cLoja		:= Alltrim(_aBrowse[_nInd][4])
+				_cProd		:= Alltrim(_aBrowse[_nInd][7])
+				_nPrcAt		:= _aBrowse[_nInd][8]
+				_nPCalc		:= _aBrowse[_nInd][9]
+				_nDif		:= _aBrowse[_nInd][10]
+				_cNome		:= Alltrim(_aBrowse[_nInd][5])
+				_nZ2Recno	:= _aBrowse[_nInd][11]
 
-			If _nDif < 0
+				If _nDif < 0
 
-				SCR->(dbSetOrder(1))
-				If SCR->(dbSeek(xFilial("SCR")+ _cCodBlq + _cFil + _cCli + _cLoja + _cProd))
+					SCR->(dbSetOrder(1))
+					If SCR->(dbSeek(xFilial("SCR")+ _cCodBlq + _cFil + _cCli + _cLoja + _cProd))
 
-					_cChavSCR := SCR->CR_TIPO + SCR->CR_NUM
+						_cChavSCR := SCR->CR_TIPO + SCR->CR_NUM
 
-					ZAH->(dbSetOrder(1))
-					If ZAH->(dbSeek(SCR->CR_FILIAL + _cChavSCR  ))
+						ZAH->(dbSetOrder(1))
+						If ZAH->(dbSeek(SCR->CR_FILIAL + _cChavSCR  ))
 
-						_cCq := " DELETE "+RetSqlName("ZAH")+ " WHERE ZAH_FILIAL = '"+SCR->CR_FILIAL+"' AND ZAH_NUM = '"+SCR->CR_NUM+"' AND ZAH_TIPO = '"+SCR->CR_TIPO+"' "
-						TcSqlExec(_cCq)
+							_cCq := " DELETE "+RetSqlName("ZAH")+ " WHERE ZAH_FILIAL = '"+SCR->CR_FILIAL+"' AND ZAH_NUM = '"+SCR->CR_NUM+"' AND ZAH_TIPO = '"+SCR->CR_TIPO+"' "
+							TcSqlExec(_cCq)
+						Endif
+
+						While SCR->(!Eof()) .And. _cChavSCR == SCR->CR_TIPO + SCR->CR_NUM
+
+							SCR->(RecLock("SCR",.F.))
+							SCR->(dbDelete())
+							SCR->(MsUnlock())
+
+							SCR->(dbSkip())
+						EndDo
 					Endif
 
-					While SCR->(!Eof()) .And. _cChavSCR == SCR->CR_TIPO + SCR->CR_NUM
+					_cGrAprov:= SuperGetMV("ASC_GRPRPV",.F.,'')
 
-						SCR->(RecLock("SCR",.F.))
-						SCR->(dbDelete())
-						SCR->(MsUnlock())
+					SAL->(dbSetOrder(2))
+					If SAL->(!dbSeek(xFilial() + _cGrAprov))
+						MSGSTOP("Grupo Nao Cadastrado, Favor Contatar o Administrador do Sistema!")
+						Return
+					EndIf
 
-						SCR->(dbSkip())
-					EndDo
+					lFirstNiv   := .T.
+					cAuxNivel   := ""
+					_lLibera    := .T.
+
+					SAL->(dbSetOrder(2))
+					If SAL->(dbSeek(xFilial() + _cGrAprov))
+
+						While SAL->(!Eof()) .And. xFilial("SAL")+_cGrAprov == SAL->AL_FILIAL+SAL->AL_COD
+
+							If lFirstNiv
+								cAuxNivel := SAL->AL_NIVEL
+								lFirstNiv := .F.
+							EndIf
+
+							SCR->(Reclock("SCR",.T.))
+							SCR->CR_FILIAL	:= xFilial("SCR")
+							//						SCR->CR_NUM		:= _cFil + _cCli + _cLoja + _cProd
+							SCR->CR_NUM		:= _cFil + _cCli + _cLoja + _cProcLib + Alltrim(_cProd)
+							SCR->CR_TIPO	:= _cCodBlq
+							SCR->CR_NIVEL	:= SAL->AL_NIVEL
+							SCR->CR_USER	:= SAL->AL_USER
+							SCR->CR_APROV	:= SAL->AL_APROV
+							SCR->CR_STATUS	:= "02"
+							SCR->CR_EMISSAO := dDataBase
+							SCR->CR_MOEDA	:= 1
+							SCR->CR_TXMOEDA := 1
+							SCR->CR_OBS     := Alltrim(SM0->M0_NOME) +" - TABELA DE PREÇO"
+							SCR->CR_TOTAL	:= _nPCalc
+							//						SCR->CR_YCLIENT	:= _cCli
+							//						SCR->CR_YLOJA	:= _cLoja
+							SCR->(MsUnlock())
+
+							ZAH->(RecLock("ZAH",.T.))
+							ZAH->ZAH_FILIAL:= SCR->CR_FILIAL
+							ZAH->ZAH_NUM   := SCR->CR_NUM
+							ZAH->ZAH_TIPO  := SCR->CR_TIPO
+							ZAH->ZAH_NIVEL := SCR->CR_NIVEL
+							ZAH->ZAH_USER  := SCR->CR_USER
+							ZAH->ZAH_APROV := SCR->CR_APROV
+							ZAH->ZAH_STATUS:= SCR->CR_STATUS
+							ZAH->ZAH_TOTAL := SCR->CR_TOTAL
+							ZAH->ZAH_EMISSA:= SCR->CR_EMISSAO
+							ZAH->ZAH_MOEDA := SCR->CR_MOEDA
+							ZAH->ZAH_TXMOED:= SCR->CR_TXMOEDA
+							ZAH->ZAH_OBS   := SCR->CR_OBS
+							ZAH->ZAH_TOTAL := SCR->CR_TOTAL
+							ZAH->(MsUnlock())
+
+							SAL->(dbSkip())
+						EndDo
+					EndIf
+
+					ShowHelpDlg("BRI115_3", {'Tabela de Preço Bloqueada, pois o valor calculado é menor que o valor em vigência.',;
+					'Filial+Cliente+Loja: '+_cFil+"-"+_cCli +"-"+_cLoja,;
+					'Produto: '+_cProd,;
+					'Preço Calculado: '+Alltrim(Transform(_nPCalc,"@e 999,999.99")),;
+					'Preço Vigente: '+Alltrim(Transform(_nPrcAt,"@e 999,999.99"))},5,;
+					{'Solicite a liberação junto ao setor responsável.'},1)
+
+				EndIf
+
+				ZF1->(RecLock("ZF1",.T.))
+				ZF1->ZF1_FILIAL	:= _cFil
+				ZF1->ZF1_CLIENT	:= _cCli
+				ZF1->ZF1_LOJA	:= _cLoja
+				ZF1->ZF1_NOME	:= _cNome
+				ZF1->ZF1_PRODUT	:= _cProd
+				ZF1->ZF1_PROCES	:= _cProcLib
+				ZF1->ZF1_DTEMIS	:= dDataBase
+				ZF1->ZF1_PRCANT	:= _nPrcAt
+				ZF1->ZF1_PRCATU	:= _nPCalc
+				ZF1->ZF1_STATUS	:= If(_nDif < 0,"P","L")
+				ZF1->ZF1_USUARI	:= UsrRetName(RetCodUsr())
+				ZF1->(MsUnLock())
+
+				ConfirmSX8()
+
+				SZ2->(dbgoto(_nZ2Recno))
+
+				SZ2->(RecLock("SZ2",.F.))
+				If _nDif < 0
+					SZ2->Z2_PRCBLQ := _nPCalc
+				Else
+					SZ2->Z2_PRECO  := _nPCalc
+					SZ2->Z2_PRCBLQ := _nPCalc
 				Endif
+				SZ2->Z2_PROCES := _cProcLib
+				SZ2->(MsUnlock())
 
-				_cGrAprov:= SuperGetMV("ASC_GRPRPV",.F.,'')
+				_lProc := .T.
 
-				SAL->(dbSetOrder(2))
-				If SAL->(!dbSeek(xFilial() + _cGrAprov))
-					MSGSTOP("Grupo Nao Cadastrado, Favor Contatar o Administrador do Sistema!")
-					Return
-				EndIf
-
-				lFirstNiv   := .T.
-				cAuxNivel   := ""
-				_lLibera    := .T.
-
-				SAL->(dbSetOrder(2))
-				If SAL->(dbSeek(xFilial() + _cGrAprov))
-
-					While SAL->(!Eof()) .And. xFilial("SAL")+_cGrAprov == SAL->AL_FILIAL+SAL->AL_COD
-
-						If lFirstNiv
-							cAuxNivel := SAL->AL_NIVEL
-							lFirstNiv := .F.
-						EndIf
-
-						SCR->(Reclock("SCR",.T.))
-						SCR->CR_FILIAL	:= xFilial("SCR")
-//						SCR->CR_NUM		:= _cFil + _cCli + _cLoja + _cProd
-						SCR->CR_NUM		:= _cFil + _cCli + _cLoja + _cProcLib + Alltrim(_cProd)
-						SCR->CR_TIPO	:= _cCodBlq
-						SCR->CR_NIVEL	:= SAL->AL_NIVEL
-						SCR->CR_USER	:= SAL->AL_USER
-						SCR->CR_APROV	:= SAL->AL_APROV
-						SCR->CR_STATUS	:= "02"
-						SCR->CR_EMISSAO := dDataBase
-						SCR->CR_MOEDA	:= 1
-						SCR->CR_TXMOEDA := 1
-						SCR->CR_OBS     := Alltrim(SM0->M0_NOME) +" - TABELA DE PREÇO"
-						SCR->CR_TOTAL	:= _nPCalc
-						//						SCR->CR_YCLIENT	:= _cCli
-						//						SCR->CR_YLOJA	:= _cLoja
-						SCR->(MsUnlock())
-
-						ZAH->(RecLock("ZAH",.T.))
-						ZAH->ZAH_FILIAL:= SCR->CR_FILIAL
-						ZAH->ZAH_NUM   := SCR->CR_NUM
-						ZAH->ZAH_TIPO  := SCR->CR_TIPO
-						ZAH->ZAH_NIVEL := SCR->CR_NIVEL
-						ZAH->ZAH_USER  := SCR->CR_USER
-						ZAH->ZAH_APROV := SCR->CR_APROV
-						ZAH->ZAH_STATUS:= SCR->CR_STATUS
-						ZAH->ZAH_TOTAL := SCR->CR_TOTAL
-						ZAH->ZAH_EMISSA:= SCR->CR_EMISSAO
-						ZAH->ZAH_MOEDA := SCR->CR_MOEDA
-						ZAH->ZAH_TXMOED:= SCR->CR_TXMOEDA
-						ZAH->ZAH_OBS   := SCR->CR_OBS
-						ZAH->ZAH_TOTAL := SCR->CR_TOTAL
-						ZAH->(MsUnlock())
-
-						SAL->(dbSkip())
-					EndDo
-				EndIf
-
-				ShowHelpDlg("BRI115_3", {'Tabela de Preço Bloqueada, pois o valor calculado é menor que o valor em vigência.',;
-				'Filial+Cliente+Loja: '+_cFil+"-"+_cCli +"-"+_cLoja,;
-				'Produto: '+_cProd,;
-				'Preço Calculado: '+Alltrim(Transform(_nPCalc,"@e 999,999.99")),;
-				'Preço Vigente: '+Alltrim(Transform(_nPrcAt,"@e 999,999.99"))},5,;
-				{'Solicite a liberação junto ao setor responsável.'},1)
-
-			EndIf
-
-			ZF1->(RecLock("ZF1",.T.))
-			ZF1->ZF1_FILIAL	:= _cFil
-			ZF1->ZF1_CLIENT	:= _cCli
-			ZF1->ZF1_LOJA	:= _cLoja
-			ZF1->ZF1_NOME	:= _cNome
-			ZF1->ZF1_PRODUT	:= _cProd
-			ZF1->ZF1_PROCES	:= _cProcLib
-			ZF1->ZF1_DTEMIS	:= dDataBase
-			ZF1->ZF1_PRCANT	:= _nPrcAt
-			ZF1->ZF1_PRCATU	:= _nPCalc
-			ZF1->ZF1_STATUS	:= If(_nDif < 0,"P","L")
-			ZF1->ZF1_USUARI	:= UsrRetName(RetCodUsr())
-			ZF1->(MsUnLock())
-
-			ConfirmSX8()
-
-			_lProc := .T.
-
-		Endif
-	Next
+			Endif
+		Next
+	End Transaction
 
 	_aBrowse:= {{.F.,'','','','','','',0,0,0}}
 
@@ -725,7 +732,6 @@ Static Function Desfazer()
 
 	TSB->(dbCloseArea())
 
-
 	DEFINE MSDIALOG _oDlg1 TITLE OemToAnsi("Desfazer Reajuste") FROM 0,0 TO 300,1000 OF _oDlg1 PIXEL
 
 	DEFINE FONT _oFont2 NAME "Arial" BOLD SIZE 0,16 OF _oDlg
@@ -807,6 +813,13 @@ Static Function Processar(_aBlq)
 				_cUpd := "DELETE "+RetSqlName("SCR")+ " WHERE CR_NUM = '"+_cNum+"' AND CR_TIPO = '"+_cType+"'  AND D_E_L_E_T_ = '' "
 				TcSqlExec(_cUpd)
 
+				SZ2->(dbSetOrder(4))
+				If SZ2->(Msseek(_cFil+_cCli+_cLoja+_cProd+'L'))
+					SZ2->(RecLock("SZ2",.F.))
+					SZ2->Z2_PRCBLQ := SZ2->Z2_PRECO
+					SZ2->Z2_PROCES := ''
+					SZ2->(MsUnlock())
+				Endif
 			Endif
 		Next _nFor
 	END TRANSACTION

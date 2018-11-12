@@ -1196,6 +1196,7 @@ Static Function BRI75_D(_cMod,_lOutEmp,_nCont)
 			aWBrowse2[_nCont,2]  := .F.
 			oWBrowse2:Refresh()
 		Endif
+
 	ElseIf SCR->CR_TIPO == "03" // TABELA DE PRECO
 
 		Private Acols	:={}
@@ -1233,6 +1234,10 @@ Static Function BRI75_D(_cMod,_lOutEmp,_nCont)
 		_cChave  := Alltrim(SCR->CR_NUM)
 		_nTam	 := Len(Space(TAMSX3("ZF1_FILIAL")[1])+Space(TAMSX3("ZF1_CLIENT")[1])+Space(TAMSX3("ZF1_LOJA")[1])+;
 		Space(TAMSX3("ZF1_PROCES")[1])+Space(TAMSX3("ZF1_PRODUT")[1]))
+
+		_cCliente	:= Space(TAMSX3("ZF1_CLIENT")[1])
+		_cLoja		:= Space(TAMSX3("ZF1_LOJA")[1])
+		_cNomCli	:= Space(TAMSX3("ZF1_NOME")[1])
 
 		ZF1->(dbsetOrder(1))
 		If ZF1->(MsSeek(PadR(_cChave,_nTam)+"P"))
@@ -1276,11 +1281,8 @@ Static Function BRI75_D(_cMod,_lOutEmp,_nCont)
 			oWBrowse2:Refresh()
 		Endif
 
-
-
-
-
 	ElseIf SCR->CR_TIPO == "04" // TABELA DE PRECO DE COMPRAS
+
 		Private _cGrAprov:= ""
 		wOpcao      := 	"V"
 		Do Case
@@ -1396,6 +1398,7 @@ Static Function BRI75_D(_cMod,_lOutEmp,_nCont)
 			aWBrowse2[_nCont,2]  := .F.
 			oWBrowse2:Refresh()
 		Endif
+
 	ElseIf SCR->CR_TIPO == "05" // LIMITE DE CREDITO
 
 		Private   Acols	:={}
@@ -1520,6 +1523,7 @@ Static Function BRI75_D(_cMod,_lOutEmp,_nCont)
 			aWBrowse2[_nCont,2]  := .F.
 			oWBrowse2:Refresh()
 		Endif
+
 	ElseIf SCR->CR_TIPO == "06" // BORDERO DE PAGAMENTO
 
 		Private   Acols	:={}
@@ -1834,6 +1838,7 @@ Static Function BRI75_D(_cMod,_lOutEmp,_nCont)
 			aWBrowse2[_nCont,2]  := .F.
 			oWBrowse2:Refresh()
 		Endif
+
 	ElseIf SCR->CR_TIPO == "02" // PRECO PEDIDO DE VENDA
 
 		Private   Acols	:={}
@@ -1887,7 +1892,6 @@ Static Function BRI75_D(_cMod,_lOutEmp,_nCont)
 		_cLoja    := Space(02)
 		_cNomCli  := Space(40)
 
-//		_cNewFil  := "z"+substr(_cFilNew,2,1)
 		_cNewFil  := _cFilNew
 
 		SC6->(dbSetOrder(1))

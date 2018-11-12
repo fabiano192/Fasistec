@@ -48,10 +48,10 @@ User function Mta410
 		// INCLUIDO POR ALEXANDRO EM 05/11/12
 
 
-		If u__fValAcols(_nVez,"C6_YBLQPRC")=="S"
+//		If u__fValAcols(_nVez,"C6_YBLQPRC")=="S"
 			//Gera Processo de Liberação do Pedido
 			U_BRI114(_nVez)
-		Endif
+//		Endif
 
 
 

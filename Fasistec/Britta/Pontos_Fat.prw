@@ -91,6 +91,7 @@ User Function SF2520E()
 Return
 
 
+
 User Function M410ALOK()
 
 	Local lRetorno := .T.
@@ -214,6 +215,8 @@ Posicione("SC9",1,xFilial("SC9")+cPed)  //C9_FILIAL, C9_PEDIDO, C9_ITEM, C9_SEQU
 RETURN
 */
 
+
+
 User Function M030EXC()
 
 	Private lret := .T.,lachou
@@ -235,6 +238,8 @@ User Function M030EXC()
 
 Return .T.
 
+
+
 User Function A020DELE()
 
 	_aAliORI := GetArea()
@@ -254,6 +259,7 @@ User Function A020DELE()
 	RestArea(_aAliORI)
 
 Return(_lRet)
+
 
 
 User Function MA020TOK()
@@ -283,6 +289,7 @@ User Function MA020TOK()
 	RestArea(_aAliORI)
 
 Return(lRet)
+
 
 
 User Function MA030TOK()
@@ -315,6 +322,8 @@ User Function MA030TOK()
 	RestArea(_aAliORI)
 
 Return(lRet)
+
+
 
 User function Msd2460()
 

@@ -1,7 +1,6 @@
 #INCLUDE "TOTVS.CH"
 #INCLUDE "TOPCONN.CH"
 
-
 /*/{Protheus.doc} SZ2010
 Manutenção de dados em SZ2-TAB. CLI X PROD X PRECO.
 /*/
@@ -9,32 +8,16 @@ Manutenção de dados em SZ2-TAB. CLI X PROD X PRECO.
 User Function SZ2010()
 
 	//Indica a permissão ou não para a operação (pode-se utilizar 'ExecBlock')
-	//	Local _cVldAlt := '.T.' // Operacao: ALTERACAO
-	//	Local _cVldExc := '.T.' // Operacao: EXCLUSAO
-	Local _cVldAlt := "U_VldAltSZ2()" // Operacao: ALTERACAO
-	Local _cVldExc := "U_VldExcSZ2(1)" // Operacao: EXCLUSAO
-	Local _aRotAdic:= {{ "Histórico","U_Z2HIST", 0 , 6 }}
-	//	Local _bNoTTS  := {|| VldSZ2()}
+	Local _cVldAlt	:= "U_VldAltSZ2()" // Operacao: ALTERACAO
+	Local _cVldExc	:= "U_VldExcSZ2(1)" // Operacao: EXCLUSAO
+	Local _aRotAdic	:= {{ "Histórico","U_Z2HIST", 0 , 6 }}
 
 	chkFile("SZ2")
 
 	SZ2->(dbSetOrder(1))
 
-	//	axCadastro("SZ2", "TAB. CLI X PROD X PRECO", _cVldExc, _cVldAlt,_aRotAdic,,,,_bNoTTS)
 	axCadastro("SZ2", "TAB. CLI X PROD X PRECO", _cVldExc, _cVldAlt,_aRotAdic)
-	/*
-	Local aRotAdic :={}
-	Local bPre := {||MsgAlert('Chamada antes da função')}
-	Local bOK  := {||MsgAlert('Chamada ao clicar em OK'), .T.}
-	Local bTTS  := {||MsgAlert('Chamada durante transacao')}
-	Local bNoTTS  := {||MsgAlert('Chamada após transacao')}
 
-	Local aButtons := {}//adiciona botões na tela de inclusão, alteração, visualização e exclusao
-	aadd(aButtons,{ "PRODUTO", {|| MsgAlert("Teste")}, "Teste", "Botão Teste" }  ) //adiciona chamada no aRotina
-	aadd(aRotAdic,{ "Adicional","U_Adic", 0 , 6 })
-	AxCadastro("SA1", "Clientes", "U_DelOk()", "U_COK()", aRotAdic, bPre, bOK, bTTS, bNoTTS, , , aButtons, , )
-	Return(.T.)
-	*/
 Return(Nil)
 
 
@@ -101,7 +84,6 @@ User Function Z2HIST()
 
 	TSB->(dbCloseArea())
 
-
 	DEFINE MSDIALOG _oDlg1 TITLE OemToAnsi("Histórico") FROM 0,0 TO 300,1000 OF _oDlg1 PIXEL
 
 	DEFINE FONT _oTFont2 NAME "Arial" BOLD SIZE 0,14 OF _oDlg1
@@ -146,43 +128,33 @@ Return(Nil)
 
 
 
-
 User Function VldAltSZ2()
 
 	Local _lRet		:= .F.
 	Local _cProcLib	:= GetSxeNum('ZF1','ZF1_PROCES')
 	Local _cGrAprov	:= SuperGetMV("ASC_GRPRPV",.F.,'')
-
+	Local _nPNew	:= M->Z2_PRECO
 	Local _cFil		:= xFilial("SZ2")
 	Local _cCli		:= M->Z2_CLIENTE
 	Local _cLoja	:= M->Z2_LOJA
 	Local _cProd	:= M->Z2_PRODUTO
 	Local _nPrcAt	:= 0
-	Local _nPNew	:= M->Z2_PRECO
 	Local _nDif		:= M->Z2_PRECO
 	LOcal _cNome	:= M->Z2_NOME
 	Local _cCodBlq	:= '03'
 	Local lFirstNiv	:= .T.
 	Local cAuxNivel	:= ""
-	Local _lGera	:= .T.
+	Local _AreaOri	:= GetArea()
 
 	If Altera
 		_nPrcAt		:= SZ2->Z2_PRECO
-		If SZ2->(FieldPos("Z2_PRCBLQ")) > 0
-			If M->Z2_PRCBLQ <> _nPrcAt
-				U_VldExcSZ2(2)
-			Endif
-			RegToMemory("SZ2")
+		If M->Z2_PRCBLQ <> _nPrcAt
+			U_VldExcSZ2(2)
 		Endif
 	Endif
 
 	_nDif		:= _nPrcAt -_nPNew
-	If _nDif < 0
-		_lGera	:= .F.
-		_lRet	:= .T.
-	Endif
-
-	If _lGera
+	If _nDif > 0 .Or. Inclui
 
 		SAL->(dbSetOrder(2))
 		If SAL->(!dbSeek(xFilial() + _cGrAprov))
@@ -257,16 +229,45 @@ User Function VldAltSZ2()
 
 		ConfirmSX8()
 
+		M->Z2_PRECO := _nPrcAt
+		M->Z2_PROCES := _cProcLib
+		M->Z2_PRCBLQ := _nPNew
+
+		If Inclui
+			M->Z2_LIBERAD:= 'B'
+		Endif
+
 		_lRet := .T.
 
+	ElseIf _nDif < 0
+
+		ZF1->(RecLock("ZF1",.T.))
+		ZF1->ZF1_FILIAL	:= _cFil
+		ZF1->ZF1_CLIENT	:= _cCli
+		ZF1->ZF1_LOJA	:= _cLoja
+		ZF1->ZF1_NOME	:= _cNome
+		ZF1->ZF1_PRODUT	:= _cProd
+		ZF1->ZF1_PROCES	:= _cProcLib
+		ZF1->ZF1_DTEMIS	:= dDataBase
+		ZF1->ZF1_PRCANT	:= _nPrcAt
+		ZF1->ZF1_PRCATU	:= _nPNew
+		ZF1->ZF1_STATUS	:= 'L'
+		ZF1->ZF1_USUARI	:= UsrRetName(RetCodUsr())
+		ZF1->(MsUnLock())
+
+		ConfirmSX8()
+
 		M->Z2_PROCES := _cProcLib
-		If SZ2->(FieldPos("Z2_PRCBLQ")) > 0
-			M->Z2_PRCBLQ := _nPNew
-		Endif
+		M->Z2_PRCBLQ := _nPNew
+
+		_lRet := .T.
 	Endif
 
-Return(_lRet)
+	RestArea(_AreaOri)
 
+	_lRet := .T.
+
+Return(_lRet)
 
 
 
@@ -285,23 +286,20 @@ User Function VldExcSZ2(_nOpc)
 	Local _cCodBlq	:= '03'
 	Local _cNum		:= _cFil + _cCli + _cLoja + _cProcLib + Alltrim(_cProd)
 
-	If SZ2->(FieldPos("Z2_LIBERAD")) > 0
-		If _nOpc = 1
-			If SZ2->Z2_LIBERAD = 'S'
-				Return(_lRet)
-			Endif
+	If _nOpc = 1
+		If SZ2->Z2_LIBERAD = 'S'
+			Return(_lRet)
 		Endif
-
-		_cUpd := "DELETE "+RetSqlName("ZF1")+ " WHERE ZF1_CLIENT = '"+_cCli+"' AND ZF1_LOJA = '"+_cLoja+"' AND D_E_L_E_T_ = '' "
-		_cUpd += "AND ZF1_PRODUT = '"+_cProd+"' AND ZF1_PROCES = '"+_cProcLib+"' "
-		TcSqlExec(_cUpd)
-
-		_cUpd := "DELETE "+RetSqlName("ZAH")+ " WHERE ZAH_NUM = '"+_cNum+"' AND ZAH_TIPO = '"+_cCodBlq+"' AND D_E_L_E_T_ = '' "
-		TcSqlExec(_cUpd)
-
-		_cUpd := "DELETE "+RetSqlName("SCR")+ " WHERE CR_NUM = '"+_cNum+"' AND CR_TIPO = '"+_cCodBlq+"'  AND D_E_L_E_T_ = '' "
-		TcSqlExec(_cUpd)
-
 	Endif
+
+	_cUpd := "DELETE "+RetSqlName("ZF1")+ " WHERE ZF1_CLIENT = '"+_cCli+"' AND ZF1_LOJA = '"+_cLoja+"' AND D_E_L_E_T_ = '' "
+	_cUpd += "AND ZF1_PRODUT = '"+_cProd+"' AND ZF1_PROCES = '"+_cProcLib+"' "
+	TcSqlExec(_cUpd)
+
+	_cUpd := "DELETE "+RetSqlName("ZAH")+ " WHERE ZAH_NUM = '"+_cNum+"' AND ZAH_TIPO = '"+_cCodBlq+"' AND D_E_L_E_T_ = '' "
+	TcSqlExec(_cUpd)
+
+	_cUpd := "DELETE "+RetSqlName("SCR")+ " WHERE CR_NUM = '"+_cNum+"' AND CR_TIPO = '"+_cCodBlq+"'  AND D_E_L_E_T_ = '' "
+	TcSqlExec(_cUpd)
 
 Return(_lRet)

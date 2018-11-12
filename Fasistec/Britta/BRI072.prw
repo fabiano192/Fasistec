@@ -389,6 +389,7 @@ User Function BRI072(_cEmp,_cFil,_cAprovador,_cMod,CA097USER)
 		dbSetOrder(1)
 
 	ElseIf SCR->CR_TIPO == "03"
+
 		_cDocSCR := SCR->CR_NUM
 		_cTpDoc  := SCR->CR_TIPO
 
@@ -408,6 +409,15 @@ User Function BRI072(_cEmp,_cFil,_cAprovador,_cMod,CA097USER)
 				ZF1->(Reclock("ZF1",.F.))
 				ZF1->ZF1_STATUS := "L"
 				ZF1->(MsUnlock())
+
+				SZ2->(dbSetOrder(4))
+				If SZ2->(Msseek(ZF1->ZF1_FILIAL+ZF1->ZF1_CLIENT+ZF1->ZF1_LOJA+ZF1->ZF1_PRODUT))
+					SZ2->(RecLock("SZ2",.F.))
+					SZ2->Z2_PRECO   := SZ2->Z2_PRCBLQ
+					SZ2->Z2_LIBERAD := 'L'
+					SZ2->(MsUnlock())
+				Endif
+
 			Endif
 
 			_cChavSCR := SCR->CR_TIPO + SCR->CR_NUM
@@ -444,6 +454,7 @@ User Function BRI072(_cEmp,_cFil,_cAprovador,_cMod,CA097USER)
 		dbSetOrder(1)
 
 	ElseIf SCR->CR_TIPO == "04"
+
 		_cDocSCR := SCR->CR_NUM
 		_cFornece:= SCR->CR_YFORNEC
 		_cLojaFor:= SCR->CR_YLOJFOR

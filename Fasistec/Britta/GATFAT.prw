@@ -21,6 +21,8 @@ User function GATFAT01()
 
 Return(_nValRet)
 
+
+
 User function GATFAT02()
 
 	nPosQtde  := Ascan(aHeader,{|xCpo| Alltrim(xCpo[2]) == "C6_QTDLIB"})
@@ -38,6 +40,7 @@ User function GATFAT02()
 	EndIf
 
 Return(.T.)
+
 
 
 User Function GFAT003()
@@ -66,6 +69,8 @@ User Function GFAT003()
 	RestArea(_aAliOri)
 
 Return(_cRet)
+
+
 
 User Function GFAT004()
 
@@ -99,6 +104,8 @@ User Function GFAT004()
 	RestArea(_aAliOri)
 
 Return(_cRet)
+
+
 
 User Function GFAT005()
 
@@ -152,6 +159,8 @@ User Function GFAT005()
 
 Return(_dRet)
 
+
+
 User Function GFAT006()
 
 	_aAliOri := GetArea()
@@ -192,6 +201,7 @@ User Function GFAT007()
 	RestArea(_aAliori)
 
 Return(_lRet)
+
 
 
 //Função para validar se o campo Gera OC poderá ser editado.
@@ -236,7 +246,7 @@ User Function GFAT009()
 	Local _nPrcV	:= aCols[n][_nPosPc]
 
 	SZ2->(dbsetOrder(4))
-	If SZ2->(msSeek(xFilial("SZ2")+M->C5_CLIENTE+M->C5_LOJACLI+_cProd))
+	If SZ2->(msSeek(xFilial("SZ2")+M->C5_CLIENTE+M->C5_LOJACLI+_cProd+'S'))
 		If _nPrcV < SZ2->Z2_PRECO
 			aCols[n][_nPosOC]	:= Space(TAMSX3('C6_PDGEROC')[1])
 			aCols[n][_nPosLi]	:= 0
