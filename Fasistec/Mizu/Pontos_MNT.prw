@@ -9,26 +9,24 @@ Link TDN			:	http://tdn.totvs.com/pages/releaseview.action?pageId=6793713
 */
 User Function MNTA280BT()
 
-Local aRet   := {}
+	Local aRet   := {}
 
-//If cEmpAnt $ "30|40|10|11|01|20"
-//If cEmpAnt $ "30|40|10|11|01|20" .Or. cEmpAnt + cFilAnt $ "0222|0223"		//EMPRESA 02
 	aAdd( aRet , { "Imprimir",   "U_ChkMntr120()"   , 0 , 6} )
-//Endif
 
 Return aRet
+
 
 
 //Função chamada pelo Ponto de Entrada MNTA280BT
 User Function ChkMntr120()
 
-Local aImpSS := {}
+	Local aImpSS := {}
 
-If MsgYesNo("Deseja Imprimir a SS: "+TQB->TQB_SOLICI+" ?")
-	AAdd(aImpSS, {TQB->TQB_FILIAL, TQB->TQB_SOLICI})
+	If MsgYesNo("Deseja Imprimir a SS: "+TQB->TQB_SOLICI+" ?")
+		AAdd(aImpSS, {TQB->TQB_FILIAL, TQB->TQB_SOLICI})
 
-	MNTR120(aImpSS)
-Endif
+		MNTR120(aImpSS)
+	Endif
 
 Return(nil)
 
@@ -42,15 +40,12 @@ Link TDN			:	http://tdn.totvs.com/pages/releaseview.action?pageId=118885622
 */
 User Function MNTA280E()
 
-Local _lRet := .T.
+	Local _lRet := .T.
 
-//If cEmpAnt $ "30|40|10|11|01|20"
-//If cEmpAnt $ "30|40|10|11|01|20" .Or. cEmpAnt + cFilAnt $ "0222|0223"		//EMPRESA02
 	If !FwIsAdmin() //Verifica se o usuario é administrador
 		MsgAlert( "Não é permitido a exclusão de Solicitação de Serviço, contate o Administrador!" )
 		_lRet := .F.
 	EndIf
-//EndIf
 
 Return(_lRet)
 
@@ -87,18 +82,11 @@ User Function MNTA9902()
 	aTRB2	:= ParamIXB[3]
 	aDBFa	:= ParamIXB[4]
 
-	nPosDBF := aScan( aDBF  ,{ |x| Upper(Alltrim(x[1])) == "YDESMNT" } )
+	nPosDBF := aScan( aDBF ,{ |x| Upper(Alltrim(x[1])) == "YDESMNT" } )
 	If nPosDBF = 0
 		aSize( aDBF, Len( aDBF ) + 1 )
 		aIns( aDBF, 3 )
 		aDBF[3] := { "YDESMNT", "C", 40, 0 }
-	EndIf
-
-	nPOsAtu := aScan( aTRB1,{ |x| Upper(Alltrim(x[1])) == "SEQRELA" } )
-	If nPOsAtu = 0
-		aSize( aTRB1, Len( aTRB1 ) + 1 )
-		aIns( aTRB1, 4 )
-		aTRB1[4] := { "SEQRELA", Nil, "Sequencia" }
 	EndIf
 
 	nPOsAtu := aScan( aTRB1,{ |x| Upper(Alltrim(x[1])) == "YDESMNT" } )
@@ -115,13 +103,6 @@ User Function MNTA9902()
 		aDBFa[3] := { "YDESMNT", "C", 40, 0 }
 	EndIf
 
-	nPOsAtu := aScan( aTRB2, {|x| upper(x[1]) == "SEQRELA" } )
-	If nPOsAtu = 0
-		aSize( aTRB2, Len( aTRB2 ) + 1 )
-		aIns( aTRB2, 4  )
-		aTRB2[4] := { "SEQRELA", NIL, "Sequencia" }
-	EndIf
-
 	nPOsAtu := aScan( aTRB2,{ |x| Upper(Alltrim(x[1])) == "YDESMNT" } )
 	If nPOsAtu = 0
 		aSize( aTRB2, Len( aTRB2 ) + 1 )
@@ -129,6 +110,35 @@ User Function MNTA9902()
 		aTRB2[3] := { "YDESMNT", Nil, "Descrição Manutenção" }
 	EndIf
 
+
+
+	nPosDBF := aScan( aDBF  ,{ |x| Upper(Alltrim(x[1])) == "BEMPAI" } )
+	If nPosDBF = 0
+		aSize( aDBF, Len( aDBF ) + 1 )
+		aIns( aDBF, 3 )
+		aDBF[3] := { "BEMPAI", "C", TamSx3('TC_CODBEM')[1], 0 }
+	EndIf
+
+	nPOsAtu := aScan( aTRB1,{ |x| Upper(Alltrim(x[1])) == "BEMPAI" } )
+	If nPOsAtu = 0
+		aSize( aTRB1, Len( aTRB1 ) + 1 )
+		aIns( aTRB1, 3 )
+		aTRB1[3] := { "BEMPAI", Nil, "Bem Pai" }
+	EndIf
+
+	nPosDBF := aScan( aDBFa, {|x| upper(x[1]) == "BEMPAI" } )
+	If nPosDBF = 0
+		aSize( aDBFa, Len( aDBFa ) + 1 )
+		aIns( aDBFa, 3  )
+		aDBFa[3] := { "BEMPAI", "C", TamSx3('TC_CODBEM')[1], 0 }
+	EndIf
+
+	nPOsAtu := aScan( aTRB2,{ |x| Upper(Alltrim(x[1])) == "BEMPAI" } )
+	If nPOsAtu = 0
+		aSize( aTRB2, Len( aTRB2 ) + 1 )
+		aIns( aTRB2, 3 )
+		aTRB2[3] := { "BEMPAI", Nil, "Bem Pai" }
+	EndIf
 
 Return
 
@@ -144,7 +154,6 @@ Link TDN			:	http://tdn.totvs.com/display/public/mp/MNTA9904+-+Carrega+campos+cr
 */
 User Function MNTA9904()
 
-
 	//Carrega variáveis de Entrada e Saída
 	c990TRB1 := ParamIXB[1]
 
@@ -158,8 +167,16 @@ User Function MNTA9904()
 		_cDescMnt := STF->TF_NOMEMAN
 	EndIf
 
-	//Carrega o campo de usuário criado pelo ponto de entrada MNTA9902
 	(c990TRB1)->YDESMNT := _cDescMnt
+
+
+	_cBemPai := Space(TamSX3("TC_CODBEM")[1])
+	STC->(dbSetOrder(3))
+	If STC->(MsSeek(xFilial("STC")+(c990TRB1)->CODBEM))
+		_cBemPai := STC->TC_CODBEM
+	Endif
+
+	(c990TRB1)->BEMPAI := _cBemPai
 
 Return
 
@@ -169,26 +186,34 @@ Return
 Ponto de Entrada	:	MNTA9905
 Autor				:	Fabiano da Silva
 Data				:	30/09/15
-Descrição			:	Carrega campos criado pelo ponto de entrada MNTA9902
+Descrição			:	MNTA9905 - Carrega campos do ponto de entrada MNTA9902 na alteração da Programação
 Link TDN			:	http://tdn.totvs.com/display/public/mp/MNTA9904+-+Carrega+campos+criado+pelo+ponto+de+entrada+MNTA9902;jsessionid=808ED2ED9E1E8B0D8EB83698AF535973
 */
 User Function MNTA9905()
 
+
 	//Carrega variáveis de Entrada e Saída
 	c990TRB1 := ParamIXB[1]
 
-	cChvSTF := If( NgVerify("STJ"),(c990TRB3)->SEQRELA,Str((c990TRB3)->SEQUENC,3) )
+	cChvSTF := If( NgVerify("STJ"),(c990TRB1)->SEQRELA,Str((c990TRB1)->SEQUENC,3) )
 
 	aTam := TamSX3("TF_NOMEMAN")
 	_cDescMnt := Space(aTam[1])
 
 	STF->(dbSetOrder(1))
-	If STF->(msSeek(xFilial("STF")+(c990TRB3)->CODBEM+(c990TRB3)->CODSER+cChvSTF))
+	If STF->(msSeek(xFilial("STF")+(c990TRB1)->CODBEM+(c990TRB1)->CODSER+cChvSTF))
 		_cDescMnt := STF->TF_NOMEMAN
 	EndIf
 
-	//Carrega o campo de usuário criado pelo ponto de entrada MNTA9902
 	(c990TRB1)->YDESMNT := _cDescMnt
+
+	_cBemPai := Space(TamSX3("TC_CODBEM")[1])
+	STC->(dbSetOrder(3))
+	If STC->(MsSeek(xFilial("STC")+(c990TRB1)->CODBEM))
+		_cBemPai := STC->TC_CODBEM
+	Endif
+
+	(c990TRB1)->BEMPAI := _cBemPai
 
 Return
 
@@ -202,6 +227,7 @@ Descrição			:	Carrega campos criado pelo ponto de entrada MNTA9902
 Link TDN			:	http://tdn.totvs.com/pages/releaseview.action?pageId=42041593
 */
 User Function MNTA9906()
+
 
 	//Carrega variáveis de Entrada e Saída
 	c990TRB3 := ParamIXB[1]
@@ -219,7 +245,18 @@ User Function MNTA9906()
 	//Carrega o campo de usuário criado pelo ponto de entrada MNTA9902
 	(c990TRB3)->YDESMNT := _cDescMnt
 
+
+	_cBemPai := Space(TamSX3("TC_CODBEM")[1])
+	STC->(dbSetOrder(3))
+	If STC->(MsSeek(xFilial("STC")+(c990TRB3)->CODBEM))
+		_cBemPai := STC->TC_CODBEM
+	Endif
+
+	(c990TRB3)->BEMPAI := _cBemPai
+
 Return
+
+
 
 /*
 Ponto de Entrada	:	MNTA990A
@@ -230,12 +267,9 @@ Link TDN			:	http://tdn.totvs.com/pages/releaseview.action?pageId=134152333
 */
 User Function MNTA990A()
 
-Local cEstrut := Space(4)
+	Local cEstrut := Space(4)
 
-//	@ nwVerBt1,138 Button "Etapas" Size 40,10 Of oScrDlg Pixel Action U_MZ0180()
 	@ nwVerBt1,138 Button "Etapas" Size 40,10 Of oPanelBAll Pixel Action U_MZ0180()
-
-//Endif
 
 Return cEstrut
 
@@ -246,9 +280,9 @@ Descrição			:	Ponto de entrada que possibilita a criação de um botão específico 
 */
 User Function MNTA420I()
 
-Local aRot := aClone(ParamIXB[1])
+	Local aRot := aClone(ParamIXB[1])
 
-aAdd(aRot,{"Relatório OS", "U_MNTR675A()" , 0 , 9,0})
+	aAdd(aRot,{"Relatório OS", "U_MNTR675A()" , 0 , 9,0})
 
 Return aRot
 
@@ -260,11 +294,12 @@ Descrição			:	Ponto de entrada que adiciona botões na rotina de retorno de ordem
 */
 User Function MNTA400I()
 
-Local aRot := aClone(ParamIXB[1])
+	Local aRot := aClone(ParamIXB[1])
 
-aAdd(aRot,{"Relatório OS","U_MNTR675A()" ,0,4,,.F.})
+	aAdd(aRot,{"Relatório OS","U_MNTR675A()" ,0,4,,.F.})
 
 Return aRot
+
 
 
 /*
