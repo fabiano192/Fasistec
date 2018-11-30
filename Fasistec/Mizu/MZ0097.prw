@@ -1,6 +1,8 @@
-#INCLUDE "PROTHEUS.CH"
+#INCLUDE "TOTVS.CH"
 #INCLUDE "TOPCONN.CH"
 #INCLUDE "AP5MAIL.CH"
+#INCLUDE "RWMAKE.CH" 	//MARCUS VINICIUS - 13/11/2018
+#INCLUDE "TBICONN.CH"	//MARCUS VINICIUS - 13/11/2018
 
 /*
 Função			:	MZ0097
@@ -61,8 +63,6 @@ User Function MZ0097(_cMd)
 	Endif
 
 Return(Nil)
-
-
 
 User Function MZ97A()
 
@@ -371,7 +371,7 @@ User Function MZ97B(cSubject,cMensagem,cEMail,aFiles)
 	lMailAuth	:= .T.	                             // GETMV("MZ_RELAUTH")
 
 	// Alterado pois estamos utilizando o grupo de email de inventário pelo Microsoft Exchange, caso precise acrescentar mais destinatários, inclua pelo office 365.
-	_cEmail := GetMv("MV_MAILINV")+";alexandro@assystem.com.br"
+	_cEmail := GetMv("MV_MAILINV")//+";alexandro@assystem.com.br"
 	//_cEmail := "alexandro@assystem.com.br"
 
 	cSubject    := "INVENTARIO ROTATIVO"
