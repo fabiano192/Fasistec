@@ -22,6 +22,8 @@ User Function BRI119(_aParm)
 
 	Private _cRedFold	:= SuperGetMV("BRI_LOCRED",,'\REDE\')
 	Private _cAnexo		:= ''
+	Private _cEmpresa	:= ''
+	Private _cFilial	:= ''
 
 	If _lAut
 		_nOpc := 0
@@ -129,7 +131,8 @@ Static Function BRI119A()
 					*/
 
 					_cGrupo := Alltrim(_aLin[2])
-
+					_cDtMov := Alltrim(_aLin[4])
+					_dDtMov := cTod(Left(_cDtMov,2)+'/'+Substr(_cDtMov,3,2)+'/'+Right(_cDtMov,4))
 					//					If Alltrim(aLin[17]) == 'T' //Se for Teste
 					//						FT_FUSE() //Fecha o arquivo
 					//						Exit
@@ -159,12 +162,13 @@ Static Function BRI119A()
 					19 		001 		Alfa 		Bandeira
 					*/
 
-					_cResVen    := Alltrim(_aLin[3])
-					_dDtEmis    := cTod(Left(_aLin[4],2)+'/'+Substr(_aLin[4],3,2)+'/'+Right(Alltrim(_aLin[4]),4))
-					_nValLiq    := Val(_aLin[7])/100
-					_dDtCred    := cTod(Left(_aLin[11],2)+'/'+Substr(_aLin[11],3,2)+'/'+Right(Alltrim(_aLin[11]),4))
+					_cPV      := Alltrim(_aLin[2])
+					_cContVen := Alltrim(_aLin[12])
+					_dDtEmis  := cTod(Left(_aLin[4],2)+'/'+Substr(_aLin[4],3,2)+'/'+Right(Alltrim(_aLin[4]),4))
+					_nValLiq  := Val(_aLin[7])/100
+					_dDtCred  := cTod(Left(_aLin[11],2)+'/'+Substr(_aLin[11],3,2)+'/'+Right(Alltrim(_aLin[11]),4))
 
-					LoadBaixa(_cFile,_cGrupo,_cResVen,_dDtEmis,_nValLiq,_dDtCred,)
+					LoadBaixa(_cFile,_cPV,_cGrupo,_cContVen,_dDtEmis,_nValLiq,_dDtCred,)
 
 				Endif
 			Endif
@@ -178,14 +182,21 @@ Static Function BRI119A()
 		If _lBKP
 			_cData    := GravaData(dDataBase,.f.,8)
 			_cHora    := Substr(Time(),1,2) + Substr(Time(),4,2) + Substr(Time(),7,2)
+			_cEmpFil  := _cEmpresa+_cFilial
 
-			__CopyFile( _cDir +_cFile, _cDir+"BKP\"+_cData+_cHora+"_"+_cFile )
+			If !ExistDir(_cDir+"BKP\"+_cEmpFil)
+				If MakeDir(_cDir+"BKP\"+_cEmpFil) <> 0
+					MsgAlert("Nao foi possível criar o diretório "+_cDir+"BKP\"+_cEmpFil)
+					Return(Nil)
+				Endif
+			Endif
+			__CopyFile( _cDir +_cFile, _cDir+"BKP\"+_cEmpFil+"\"+_cData+_cHora+"_"+_cFile )
 			FErase(_cDir +cFile)
 		Endif
 
 	Next NI
 
-Return
+Return(Nil)
 
 
 
@@ -276,7 +287,7 @@ Static Function BRI119C()
 		BRI119D() 	//Envia e-mail
 	Endif
 
-Return
+Return(Nil)
 
 
 
@@ -308,14 +319,14 @@ Static Function BRI119D()
 
 	FErase(_cAnexo)
 
-Return
+Return(Nil)
 
 
 
-Static Function LoadBaixa(_cFile,_cGrupo,_cResVen,_dDtEmis,_nValLiq,_dDtCred)
+Static Function LoadBaixa(_cFile,_cPV,_cGrupo,_cContVen,_dDtEmis,_nValLiq,_dDtCred)
 
 	ZF3->(dbSetOrder(2))
-	If !ZF3->(MsSeek(xFilial("ZF3")+Alltrim(_cGrupo)))
+	If !ZF3->(MsSeek(xFilial("ZF3")+Alltrim(_cPV)))
 		BR119->(RecLock("BRI119",.T.))
 		BR119->TIPO		:= '1'
 		BR119->EMPRESA	:= ''
@@ -359,9 +370,8 @@ Static Function LoadBaixa(_cFile,_cGrupo,_cResVen,_dDtEmis,_nValLiq,_dDtCred)
 	CONOUT("BRI119 - SETADA EMPRESA : "+_cEmpresa)
 	CONOUT("ROTINA --> BRI119 :"+DTOS(DDATABASE)+" HORA: "+TIME())
 
-
-	SE1->(dbOrderNickName(''))
-	If !SE1->(MsSeek(xFilial("SE1")+Alltrim(_cResVen)))
+	SE1->(dbOrderNickName('E1XNCC'))
+	If !SE1->(MsSeek(xFilial("SE1")+Alltrim(_cContVen)))
 		BR119->(RecLock("BRI119",.T.))
 		BR119->TIPO		:= '1'
 		BR119->EMPRESA	:= cEmpAnt
@@ -375,7 +385,7 @@ Static Function LoadBaixa(_cFile,_cGrupo,_cResVen,_dDtEmis,_nValLiq,_dDtCred)
 		BR119->DTPGTO	:= _dDtCred
 		BR119->VLRPGTO	:= _nValLiq
 		BR119->ARQUIVO	:= _cFile
-		BR119->MSG		:= 'Não encontrado título para baixa: '+Alltrim(_cResVen)
+		BR119->MSG		:= 'Não encontrado título para baixa: '+Alltrim(_cContVen)
 		BR119->(MsUnLock())
 
 		Return(Nil)
@@ -407,7 +417,6 @@ Static Function LoadBaixa(_cFile,_cGrupo,_cResVen,_dDtEmis,_nValLiq,_dDtCred)
 	MSExecAuto({|x,y| FINA070(x,y)},_aBaixa,3)
 
 	If lMsErroAuto
-
 		BR119->(RecLock("BRI119",.T.))
 		BR119->TIPO		:= '1'
 		BR119->EMPRESA	:= cEmpAnt
