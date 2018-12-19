@@ -46,7 +46,6 @@ User Function MZ0238(aDadosFiltro)
 		MV_PAR04 := aDadosFiltro[4] //Ate o Prefixo?
 		MV_PAR05 := aDadosFiltro[5] //Do Numero
 		MV_PAR06 := aDadosFiltro[6] //Até o Numero
-		MV_PAR07 := aDadosFiltro[7]
 	Endif
 
 	If nOpc == 1
