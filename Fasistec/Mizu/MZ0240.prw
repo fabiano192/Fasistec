@@ -1,23 +1,5 @@
 #INCLUDE 'TOTVS.CH'
 #INCLUDE 'TOPCONN.CH'
-/*
-#Define Verde "#9AFF9A"
-#Define Amarelo_Ouro "#FFD700"
-#Define Amarelo "#FFFF00"
-#Define Vermelho "#FF0000"
-#Define Salmao "#FF8C69"
-#Define Branco "#FFFAFA"
-#Define Azul "#87CEEB"
-#Define Preto "#000000"
-#Define Cinza "#696969"
-#Define Verde_Escuro "#006400"
-#Define Azul_Escuro "#191970"
-#Define Vermelho_Escuro "#8B0000"
-#Define Amarelo_Escuro "#8B6914"
-#Define Chocolate "#FF7F24"
-#Define Roxo "#912CEE"
-#Define Roxo_Escuro "#551A8B"
-*/
 
 #Define Verde "#9AFF9A"
 #Define Amarelo_Escuro "#8B6914"
@@ -49,7 +31,6 @@
 User Function MZ0240()
 
 	Private _oDlg
-	//	Private _oFont1
 
 	Private _cFilDe := cFilAnt
 	Private _cFilAt := cFilAnt
@@ -65,6 +46,8 @@ User Function MZ0240()
 
 	Private _dVenDe := Firstday(dDatabase)
 	Private _dVenAt := Lastday(dDatabase)
+
+	Private _cSit   := Space(20)
 
 	Private _oBrowse:= Nil
 	Private _aBrowse:= {{.F.,'','','','','','','',cTod(''),cTod(''),0,0,'','',0}}
@@ -107,12 +90,10 @@ User Function MZ0240()
 	_oSize:lLateral := .F.  									// Calculo vertical
 	_oSize:Process()
 
-	DEFINE MSDIALOG _oDlg TITLE OemToAnsi("Ajustes Títulos") FROM _oSize:aWindSize[1],_oSize:aWindSize[2] TO ;
+	DEFINE MSDIALOG _oDlg TITLE OemToAnsi("Ajuste Histórico/Situação de Cobrança") FROM _oSize:aWindSize[1],_oSize:aWindSize[2] TO ;
 	_oSize:aWindSize[3],_oSize:aWindSize[4] OF _oDlg PIXEL  Style DS_MODALFRAME
 
 	_oDlg:lEscClose := .F. //Não permite fechar a janela pelo botão "ESC"
-
-	//	DEFINE FONT _oFont1 NAME "Arial" BOLD SIZE 0,12 OF _oDlg
 
 	Panel01()
 
@@ -144,14 +125,14 @@ Static Function Panel01()
 
 	_nCol := _nColI
 
-	_oTBut2	:= TButton():New( _nLiI1, _nCol, "Histórico" ,_oDlg,{||_oDlg:End()},_nTmBut,15,,_oTFont1,.F.,.T.,.F.,,.F.,,,.F. )
+	_oTBut2	:= TButton():New( _nLiI1, _nCol, "Histórico" ,_oDlg,{||Histor()},_nTmBut,15,,_oTFont1,.F.,.T.,.F.,,.F.,,,.F. )
 	_oTBut2 :cTooltip = "Alterar Histórico"
 	_cStyle := GetStyle(Branco,Verde,Verde_Escuro,Preto)
 	_oTBut2:SetCss(_cStyle)
 
 	_nCol += 100
 
-	_oTBut3	:= TButton():New( _nLiI1, _nCol, "Situação" ,_oDlg,{||_oDlg:End()},_nTmBut,15,,_oTFont1,.F.,.T.,.F.,,.F.,,,.F. )
+	_oTBut3	:= TButton():New( _nLiI1, _nCol, "Situação" ,_oDlg,{||Situac()},_nTmBut,15,,_oTFont1,.F.,.T.,.F.,,.F.,,,.F. )
 	_oTBut3 :cTooltip = "Alterar Situaçao"
 	_cStyle := GetStyle(Branco,Azul,Azul_Escuro,Preto)
 	_oTBut3:SetCss(_cStyle)
@@ -246,6 +227,24 @@ Static Function Panel02()
 	@ _nLiI2+020, _nCol+52  MsGet _dVenAt	 Picture '@d' Size _nTmCol,08 Pixel Of _oGroup2
 
 	_nCol	+= (50 + _nTmCol  + 15)
+	_nTmCol	:= 70
+
+	_cSit := ' '
+
+	FRV->(dbSetOrder(1))
+	FRV->(dbGoTop())
+
+	While FRV->(!EOF())
+		_cSit += FRV->FRV_CODIGO
+		FRV->(dbSkip())
+	EndDo
+
+	_oSay10:= TSay():New(_nLiI2+005,_nCol,{||' Situação Cobrança?'},_oGroup2,,_oFont1,,,,.T.,CLR_WHITE,_oCor,_nTmCol,10,,,,,.T.)
+	_oSay10:SetCss(_cStSay)
+	_oSay10:Refresh()
+	@ _nLiI2+020, _nCol  MsGet _cSit	 Valid SitCob() Size _nTmCol,08 Pixel Of _oGroup2
+
+	_nCol	+= (_nTmCol  + 15)
 
 	_oTBut1	:= TButton():New( _nLiI2+005, _nCol, "Consultar" ,_oGroup2,{||LjMsgRun("Consultando Títulos, aguarde...","Contas a Receber",{||Consulta()})}	, 40,25,,,.F.,.T.,.F.,,.F.,,,.F. )
 	_oTBut1 :cTooltip = "Consultar"
@@ -273,7 +272,7 @@ Static Function Panel04()
 	_oGroup4:SetCss(_cStGrp)
 	_oGroup4:Refresh()
 
-//	_nCol	+= 34
+	//	_nCol	+= 34
 
 	_oCombo  := TComboBox():New( _nLiI1, _nCol, { |u| If( PCount() > 0, _cCombo := u, _cCombo ) }, _aCombo, 050, 012, _oGroup4  ,,{||IndexGrid(_oBrowse:aArray,_oBrowse,_cCombo)},,,,.T.,       ,,,{|| .T.},,,,, "_cCombo" )
 
@@ -288,15 +287,6 @@ Static Function Panel04()
 	_oTBut2:SetCss(_cStyle)
 
 	_nLiI1 += 3
-
-
-//	_nCol += 100
-//
-//	_oTBut1	:= TButton():New( _nLiI1, _nColF - _nTmBut - _nColI, "Sair" ,_oDlg,{||_oDlg:End()},_nTmBut,15,,_oTFont1,.F.,.T.,.F.,,.F.,,,.F. )
-//	_oTBut1 :cTooltip = "Fechar"
-//	_cStyle := GetStyle(Preto,Branco,Cinza,Amarelo)
-//	_oTBut1:SetCss(_cStyle)
-
 
 Return(Nil)
 
@@ -327,7 +317,7 @@ Static Function Panel03()
 	AtuGrid()
 
 	// Troca a imagem no duplo click do mouse
-	_oBrowse:bLDblClick := {|| _aBrowse[_oBrowse:nAt][1] := !_aBrowse[_oBrowse:nAt][1]}
+	_oBrowse:bLDblClick := {|| If(!Empty(_aBrowse[_oBrowse:nAt][3]), _aBrowse[_oBrowse:nAt][1] := !_aBrowse[_oBrowse:nAt][1],Nil)}
 
 	_oBrowse:bHeaderClick := {|o, _nCol| If(_nCol = 1,MarkAll(_aBrowse,_oBrowse),Nil) }
 
@@ -368,11 +358,22 @@ Return(_cMod)
 
 Static Function Consulta()
 
-	Local _cQuery := ""
+	Local _cQuery  := ""
+	Local _cSitCob := "('"
 
 	If Select("TRB") > 0
 		TRB->(dbCloseArea())
 	Endif
+
+	For n := 1 To Len(Alltrim(_cSit))
+		If Len(_cSitCob) = 2
+			_cSitCob += Substr(_cSit,n,1)
+		Else
+			_cSitCob += "','"+Substr(_cSit,n,1)
+		Endif
+	Next n
+
+	_cSitCob += "')"
 
 	_cQuery := " SELECT SE1.R_E_C_N_O_ AS E1RECNO,* FROM "+RetSqlName("SE1")+" SE1 " + CRLF
 	_cQuery += " WHERE SE1.D_E_L_E_T_ = '' " + CRLF
@@ -382,9 +383,10 @@ Static Function Consulta()
 	_cQuery += " AND E1_NUM		BETWEEN '"+_cTitDe+"' AND '"+_cTitAt+"' " + CRLF
 	_cQuery += " AND E1_VENCREA	BETWEEN '"+dTos(_dVenDe)+"' AND '"+dTos(_dVenAt)+"' " + CRLF
 	_cQuery += " AND E1_SALDO > 0 " + CRLF
+	_cQuery += " AND E1_SITUACA IN "+_cSitCob+" " + CRLF
 	_cQuery += " ORDER BY E1_FILIAL, E1_CLIENTE,E1_LOJA,E1_NUM "	+ CRLF
 
-//	Memowrite("D:\MZ0240.txt",_cQuery)
+	//	Memowrite("D:\MZ0240.txt",_cQuery)
 
 	TcQuery _cQuery New Alias "TRB"
 
@@ -394,36 +396,36 @@ Static Function Consulta()
 	Count to _nTRB
 
 	If _nTRB = 0
-		MsgAlert("Não foi encontrado Dados com os parâmetros informados!")
-		TRB->(dbCloseArea())
-		Return(Nil)
+		MsgAlert("Não foram encontrados dados de acordo com os parâmetros informados!")
+		_aBrowse:= {{.F.,'','','','','','','',cTod(''),cTod(''),0,0,'','',0}}
+	Else
+		TRB->(dbGoTop())
+
+		_aBrowse := {}
+
+		While TRB->(!EOF())
+
+			AADD(_aBrowse,{;
+			.F.				,; //01
+			TRB->E1_FILIAL	,; //02
+			TRB->E1_CLIENTE	,; //03
+			TRB->E1_LOJA	,; //04
+			TRB->E1_PREFIXO	,; //05
+			TRB->E1_NUM		,; //06
+			TRB->E1_PARCELA	,; //07
+			TRB->E1_TIPO	,; //08
+			TRB->E1_EMISSAO	,; //09
+			TRB->E1_VENCREA	,; //10
+			TRB->E1_VALOR	,; //11
+			TRB->E1_SALDO	,; //12
+			TRB->E1_SITUACA	,; //13
+			TRB->E1_HIST	,; //14
+			TRB->E1RECNO	}) //15
+
+			TRB->(dbSkip())
+		EndDo
+
 	Endif
-
-	TRB->(dbGoTop())
-
-	_aBrowse := {}
-
-	While TRB->(!EOF())
-
-		AADD(_aBrowse,{;
-		.F.				,; //01
-		TRB->E1_FILIAL	,; //02
-		TRB->E1_CLIENTE	,; //03
-		TRB->E1_LOJA	,; //04
-		TRB->E1_PREFIXO	,; //05
-		TRB->E1_NUM		,; //06
-		TRB->E1_PARCELA	,; //07
-		TRB->E1_TIPO	,; //08
-		TRB->E1_EMISSAO	,; //09
-		TRB->E1_VENCREA	,; //10
-		TRB->E1_VALOR	,; //11
-		TRB->E1_SALDO	,; //12
-		TRB->E1_SITUACA	,; //13
-		TRB->E1_HIST	,; //14
-		TRB->E1RECNO	}) //15
-
-		TRB->(dbSkip())
-	EndDo
 
 	TRB->(dbCloseArea())
 
@@ -509,8 +511,6 @@ Static Function IndexGrid(_aVet,_oObj,_cPesq)
 	_oObj:nAt := 1
 	_oObj:Refresh()
 
-//	AtuGrid()
-
 Return()
 
 
@@ -546,60 +546,271 @@ Static Function PesqCpo(_cString,_aVet,_oObj)
 
 	_oDlg:Refresh()
 
-//Return _lRet
 Return(Nil)
 
 
 
 
-/*
+Static Function SitCob(l1Elem)
 
-Static Function Processar(_aBlq)
+	Local cTitulo 	:= "St. Cobrança"
+	Local MvPar
 
-Local _nFor  := 1
-Local _cType := "03"
-Local _cUpd  := ''
+	Local MvParDef 	:= ""
+	Local oWnd
+	//	Local cCpos			:= "M->ZG_ROTINA"
+	//	Local cVar			:= Upper( Alltrim( ReadVar() ) )
 
-BEGIN TRANSACTION
+	Default l1Elem	:= .F.
+	Private _aSitCob:={}
 
-For _nFor := 1 To Len(_aBlq)
-If _aBlq[_nFor][1]
+	oWnd := GetWndDefault()
 
-_cFil		:= Alltrim(_aBlq[_nFor][2])
-_cCli		:= Alltrim(_aBlq[_nFor][3])
-_cLoja		:= Alltrim(_aBlq[_nFor][4])
-_cProd		:= Alltrim(_aBlq[_nFor][6])
-_cUser		:= Alltrim(_aBlq[_nFor][11])
-_cProc		:= Alltrim(_aBlq[_nFor][13])
-_cNum		:= _cFil + _cCli + _cLoja + Alltrim(_cProc)+ Alltrim(_cProd)
+	cAlias := Alias() 					 // Salva Alias Anterior
 
-If Alltrim(_cUser) <> Alltrim(UsrRetName(RetCodUsr()))
-ShowHelpDlg('BRI115_4',{'Usuário não é o mesmo que realizou o Reajuste!'},1,{'Solicite a exclusão ao usuário que realizou o Reajuste.'},1)
-Endif
+	MvPar := _cSit		 // Carrega Nome da Variavel do Get em Questao
+	//		MvRet:=Alltrim(ReadVar())			 // Iguala Nome da Variavel ao Nome variavel de Retorno
 
-ZF1->(dbGoTo(_aBlq[_nFor][12]))
+	FRV->(dbSetOrder(1))
+	FRV->(dbGoTop())
 
-ZF1->(RecLock("ZF1",.F.))
-ZF1->(dbDelete())
-ZF1->(MsUnLock())
+	Aadd(_aSitCob,'Vazio')
 
-//			_cUpd := "DELETE "+RetSqlName("ZAH")+ " WHERE ZAH_FILIAL = '"+_cFil+"' AND ZAH_NUM = '"+_cNum+"' AND ZAH_TIPO = '"+_cType+"' "
-_cUpd := "DELETE "+RetSqlName("ZAH")+ " WHERE ZAH_NUM = '"+_cNum+"' AND ZAH_TIPO = '"+_cType+"' AND D_E_L_E_T_ = '' "
-TcSqlExec(_cUpd)
+	MvParDef += ' '
 
-_cUpd := "DELETE "+RetSqlName("SCR")+ " WHERE CR_NUM = '"+_cNum+"' AND CR_TIPO = '"+_cType+"'  AND D_E_L_E_T_ = '' "
-TcSqlExec(_cUpd)
+	While FRV->(!EOF())
 
-SZ2->(dbSetOrder(4))
-If SZ2->(Msseek(_cFil+_cCli+_cLoja+_cProd+'L'))
-SZ2->(RecLock("SZ2",.F.))
-SZ2->Z2_PRCBLQ := SZ2->Z2_PRECO
-SZ2->Z2_PROCES := ''
-SZ2->(MsUnlock())
-Endif
-Endif
-Next _nFor
-END TRANSACTION
+		Aadd(_aSitCob,Alltrim(FRV->FRV_DESCRI))
+
+		MvParDef += FRV->FRV_CODIGO
+
+		FRV->(dbSkip())
+	EndDo
+
+	f_Opcoes(@MvPar,cTitulo,_aSitCob,MvParDef,12,49,l1Elem,1)  // Chama funcao f_Opcoes
+
+	_cSit := MvPar										 // Devolve Resultado
+
+
+Return( .T. )
+
+
+
+
+Static Function Histor()
+
+	Local _nFor  := 1
+	Local _oHist := Nil
+	Local _nRet  := 0
+	Local _cHist := Space(TamSX3("E1_HIST")[1])
+	Local _aHist := {'Concatenar','Substituir'}
+	Local _nHist := 1
+	Local _nProces := 0
+
+	For _nFor := 1 To Len(_aBrowse)
+		If _aBrowse[_nFor][1]
+			_nProces ++
+		Endif
+	Next _nFor
+
+	If _nProces > 0
+		DEFINE MSDIALOG _oHist TITLE OemToAnsi("Ajuste Histórico") FROM 0,0 TO 125,600 OF _oHist PIXEL Style DS_MODALFRAME
+
+		_oHist:lEscClose := .F. //Não permite fechar a janela pelo botão "ESC"
+
+		_oGroupA := TGroup():New(5,5,60,300,"",_oHist,CLR_BLUE,,.T.)
+
+		_oSayA	:= TSay():New(10,10,{||'Defina abaixo o histórico para os títulos marcados na tela anterior: '},_oHist,,_oFont1,,,,.T.,CLR_BLACK,,290,10)
+
+		@ 20, 10 MsGet _cHist	 Picture '@!' Size 290,08 Pixel Of _oHist
+
+		_oGroupB	:= TGroup():New(32,10,58,90,"Tipo de alteração do Histórico",_oHist,CLR_BLUE,,.T.)
+		_oRad1		:= TRadMenu():New(38,13,_aHist,{|u| If(PCount() > 0, _nHist := u, _nHist) },_oGroupB,,,,,"Tipo de Ajuste",,,60,10,,,,.T.)
+
+		_oGroupC	:= TGroup():New(32,100,58,300,"Ações",_oHist,CLR_BLUE,,.T.)
+		_oTButA		:= TButton():New( 41, 120, "OK"			,_oGroupC,{|| _nRet:= 1,_oHist:End()}	, 40,12,,,.F.,.T.,.F.,,.F.,,,.F. )
+		_oTButB		:= TButton():New( 41, 230, "Cancelar"	,_oGroupC,{|| _nRet:= 2,_oHist:End()}	, 40,12,,,.F.,.T.,.F.,,.F.,,,.F. )
+
+		ACTIVATE MSDIALOG _oHist CENTERED
+
+		If _nRet = 1
+
+			LjMsgRun('Atualizando Histórico...','Histórico',{||PrcHist(_nHist,_cHist)})
+
+			LjMsgRun('Atualizando dados...','Ajuste Histórico/Situação de Cobrança',{||Consulta()})
+
+		Endif
+	Else
+		ShowHelpDlg('MZ0240_1',{'Nenhum título marcado para alteração de Histórico.'},1,{'Não se aplica.'},2)
+	Endif
 
 Return(Nil)
-*/
+
+
+
+Static Function PrcHist(_nHist,_cHist)
+
+	_AreaE1 := SE1->(GetArea())
+	For _nFor := 1 To Len(_aBrowse)
+		If _aBrowse[_nFor][1]
+
+			SE1->(dbGoTo(_aBrowse[_nFor][15]))
+
+			If _nHist = 1 .And. !Empty(SE1->E1_HIST)
+				_cHistE1 := Alltrim(SE1->E1_HIST) + ' - '+Alltrim(_cHist)
+			Else
+				_cHistE1 := Alltrim(_cHist)
+			Endif
+
+			SE1->(RecLock("SE1",.F.))
+			SE1->E1_HIST := _cHistE1
+			SE1->(MsUnLock())
+
+		Endif
+	Next _nFor
+
+	RestArea(_AreaE1)
+
+Return(Nil)
+
+
+
+Static Function Situac()
+
+	Local _nFor		:= 1
+	Local _oSit		:= Nil
+	Local _nRet		:= 0
+	Local _nProces	:= 0
+
+	Local _cPort060	:= CRIAVAR("EF_BANCO",.F.)
+	Local _cAgen060	:= CriaVar("EF_AGENCIA",.f.)
+	Local _cContrato:= ""
+	Local _cNumBco	:= ""
+	Local _cConta060:= CRIAVAR("EF_CONTA",.F.)
+	Local _oSituacao:= Nil
+	Local _aCboSit	:= {'0-Carteira','1-Simples'}
+	Local _cCboSit	:= '0-Carteira'
+
+	Private _oDescrica	:= Nil
+	Private _cDescrica	:= ''
+	Private _oPort060	:= NIL
+
+	For _nFor := 1 To Len(_aBrowse)
+		If _aBrowse[_nFor][1]
+			_nProces ++
+		Endif
+	Next _nFor
+
+	If _nProces > 0
+
+		DEFINE MSDIALOG _oSit TITLE OemToAnsi("Ajuste Situação de Cobrança") FROM 0,0 TO 155,460 OF _oSit PIXEL Style DS_MODALFRAME
+
+		_oSit:lEscClose := .F. //Não permite fechar a janela pelo botão "ESC"
+
+		_oGroupA := TGroup():New(5,5,75,230,"",_oSit,CLR_BLUE,,.T.)
+
+		@ 010, 010 SAY	OemToAnsi('Portador')	SIZE 32, 7 OF _oGroupA PIXEL
+		@ 010, 040 MSGET _oPort060 VAR _cPort060 F3 "SA6" SIZE 25,10 OF _oGroupA PIXEL
+
+		@ 010, 078 SAY	OemToAnsi("Agência")	SIZE 26, 7 OF _oGroupA PIXEL
+		@ 010, 105 MSGET _cAgen060 SIZE 35,10 OF _oGroupA PIXEL
+
+		@ 010,155 SAY	OemToAnsi("Conta")	SIZE 26, 7 OF _oGroupA PIXEL
+		@ 010,175 MSGET  _cConta060 SIZE 50,10 OF _oGroupA PIXEL
+
+		@ 027,010 SAY OemToAnsi("Situação")	SIZE 26, 7 OF _oGroupA PIXEL
+		_oSituacao  := TComboBox():New( 027, 040, { |u| If( PCount() > 0, _cCboSit := u, _cCboSit ) }, _aCboSit, 185, 010, _oGroupA  ,,,,,,.T.,       ,,,{|| .T.},,,,, "_cCboSit" )
+
+		_oGroupC	:= TGroup():New(40,10,70,225,"Ações",_oSit,CLR_BLUE,,.T.)
+
+		_oTButA		:= TButton():New( 50, 030, "OK"			,_oGroupC,{|| If(VldDLG(_cPort060,_cAgen060,_cConta060,_cCboSit),(_nRet:= 1,_oSit:End()),Nil)}	, 40,12,,,.F.,.T.,.F.,,.F.,,,.F. )
+		_oTButB		:= TButton():New( 50, 155, "Cancelar"	,_oGroupC,{|| _nRet:= 2,_oSit:End()}	, 40,12,,,.F.,.T.,.F.,,.F.,,,.F. )
+
+		ACTIVATE MSDIALOG _oSit CENTERED
+
+		If _nRet = 1
+			LjMsgRun('Atualizando Cobrança...','Cobrança',{||SitTit(_cPort060,_cAgen060,_cConta060,_cCboSit)})
+			LjMsgRun('Atualizando dados...','Ajuste Histórico/Situação de Cobrança',{||Consulta()})
+		Endif
+	Else
+		ShowHelpDlg('MZ0240_1',{'Nenhum título marcado para alteração de Histórico.'},1,{'Não se aplica.'},2)
+	Endif
+
+Return(Nil)
+
+
+
+Static Function VldDLG(_cPort,_cAgen,_cConta,_cSituaca)
+
+	Local _lRet := .T.
+
+	If Left(_cSituaca,1) = '0' .And. (!Empty(_cPort) .Or. !Empty(_cAgen) .Or. !Empty(_cConta))
+		_lRet := .F.
+		ShowHelpDlg('MZ0240_4',{'Para situação do tipo "Carteira", os dados bancários não devem ser preenchidos.'},1,{'Não se aplica.'},2)
+	ElseIf Left(_cSituaca,1) = '1' .And. (Empty(_cPort) .Or. Empty(_cAgen) .Or. Empty(_cConta))
+		_lRet := .F.
+		ShowHelpDlg('MZ0240_5',{'Para situação do tipo "Simples", os dados bancários devem ser preenchidos.'},1,{'Não se aplica.'},2)
+	ElseIf Left(_cSituaca,1) = '1' .And. (!Empty(_cPort) .Or. !Empty(_cAgen) .Or. !Empty(_cConta))
+		SA6->(dbsetOrder(1))
+		If !SA6->(MsSeek(xFilial("SA6")+_cPort+_cAgen+_cConta))
+			_lRet := .F.
+			ShowHelpDlg('MZ0240_3',{'Cadastro do Banco/Agência/Conta informado não encontrado.'},1,{'Digite um código válido.'},2)
+		Endif
+	Endif
+
+Return(_lRet)
+
+
+Static Function VldSit(_cSitu)
+
+	Local _lRet :=  .T.
+
+	FRV->(dbSetOrder(1))
+	If !FRV->(MsSeek(xFilial("FRV")+_cSitu))
+		ShowHelpDlg('MZ0240_2',{'Cadastro não encontrado!'},1,{'Não se aplica.'},2)
+		_lRet := .F.
+	Else
+		_cDescrica := Alltrim(FRV->FRV_DESCRI)
+	Endif
+
+	_oDescrica:Refresh()
+
+Return(_lRet)
+
+
+
+Static Function SitTit(_cPort,_cAgen,_cConta,_cSituaca)
+
+	Local _cSituac := Left(_cSituaca,1)
+
+	_AreaE1 := SE1->(GetArea())
+	For _nFor := 1 To Len(_aBrowse)
+		If _aBrowse[_nFor][1]
+
+			cFilAnt_bkp	:= cFilAnt
+			cFilAnt		:= _aBrowse[_nFor][2]
+			aAreaSM0	:= SM0->(GetArea())
+
+			SM0->(MsSeek(cEmpAnt+cFilAnt))
+
+			SE1->(dbGoTo(_aBrowse[_nFor][15]))
+
+			If SE1->E1_SITUACA <> _cSituac
+				SE1->(RecLock("SE1",.F.))
+				SE1->E1_PORTADO := _cPort
+				SE1->E1_AGEDEP  := _cAgen
+				SE1->E1_CONTA	:= _cConta
+				SE1->E1_SITUACA := _cSituac
+				SE1->E1_MOVIMEN := dDataBase
+				SE1->(MsUnLock())
+			Endif
+
+			cFilAnt := cFilAnt_bkp
+			RestArea(aAreaSM0)
+		Endif
+
+	Next _nFor
+
+	RestArea(_AreaE1)
+
+Return(Nil)
