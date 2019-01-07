@@ -1,7 +1,6 @@
 #INCLUDE 'TOTVS.CH'
 #INCLUDE 'TOPCONN.CH'
 
-
 #Define Verde "#9AFF9A"
 #Define Amarelo "#FFD700"
 #Define Vermelho "#FF0000"
