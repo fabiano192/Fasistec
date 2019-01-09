@@ -23,13 +23,17 @@
 #Define Roxo_Escuro "#551A8B"
 #Define Laranja "#FFA500"
 
-/*/{Protheus.doc} 	MZ0240
+/*/{Protheus.doc} MZ0240
 //Alteração de Histórico e Transferência de carteira
 @author Fabiano
 @since 19/12/2018
 /*/
 User Function MZ0240()
 
+	If !U_ChkAcesso("MZ0240",6,.T.)
+		Return(Nil)
+	Endif
+	
 	Private _oDlg
 
 	Private _cFilDe := cFilAnt
@@ -518,7 +522,7 @@ Return()
 //Pesquisar o campo informado na listbox
 Static Function PesqCpo(_cString,_aVet,_oObj)
 
-	If _cCombo = 'Cliente+Loja'
+	If _cCombo = 'Cliente'
 		_nElem	:= 3
 		_cTp	:= 'C'
 	ElseIf _cCombo = 'Numero'
