@@ -30,10 +30,10 @@
 /*/
 User Function MZ0240()
 
-	If !U_ChkAcesso("MZ0240",6,.T.)
-		Return(Nil)
-	Endif
-	
+	//	If !U_ChkAcesso("MZ0240",6,.T.)
+	//		Return(Nil)
+	//	Endif
+
 	Private _oDlg
 
 	Private _cFilDe := cFilAnt
@@ -239,7 +239,9 @@ Static Function Panel02()
 	FRV->(dbGoTop())
 
 	While FRV->(!EOF())
-		_cSit += FRV->FRV_CODIGO
+		If FRV->FRV_DESCON = '2'
+			_cSit += FRV->FRV_CODIGO
+		Endif
 		FRV->(dbSkip())
 	EndDo
 
@@ -369,7 +371,7 @@ Static Function Consulta()
 		TRB->(dbCloseArea())
 	Endif
 
-	For n := 1 To Len(Alltrim(_cSit))
+	For n := 1 To Len(_cSit)
 		If Len(_cSitCob) = 2
 			_cSitCob += Substr(_cSit,n,1)
 		Else
@@ -390,7 +392,7 @@ Static Function Consulta()
 	_cQuery += " AND E1_SITUACA IN "+_cSitCob+" " + CRLF
 	_cQuery += " ORDER BY E1_FILIAL, E1_CLIENTE,E1_LOJA,E1_NUM "	+ CRLF
 
-	//	Memowrite("D:\MZ0240.txt",_cQuery)
+//		Memowrite("D:\MZ0240.txt",_cQuery)
 
 	TcQuery _cQuery New Alias "TRB"
 
@@ -562,8 +564,6 @@ Static Function SitCob(l1Elem)
 
 	Local MvParDef 	:= ""
 	Local oWnd
-	//	Local cCpos			:= "M->ZG_ROTINA"
-	//	Local cVar			:= Upper( Alltrim( ReadVar() ) )
 
 	Default l1Elem	:= .F.
 	Private _aSitCob:={}
@@ -584,9 +584,13 @@ Static Function SitCob(l1Elem)
 
 	While FRV->(!EOF())
 
-		Aadd(_aSitCob,Alltrim(FRV->FRV_DESCRI))
+		If FRV->FRV_DESCON = '2'
 
-		MvParDef += FRV->FRV_CODIGO
+			Aadd(_aSitCob,Alltrim(FRV->FRV_DESCRI))
+
+			MvParDef += FRV->FRV_CODIGO
+
+		Endif
 
 		FRV->(dbSkip())
 	EndDo
@@ -687,17 +691,21 @@ Static Function Situac()
 	Local _nProces	:= 0
 
 	Local _cPort060	:= CRIAVAR("EF_BANCO",.F.)
-	Local _cAgen060	:= CriaVar("EF_AGENCIA",.f.)
+	Local _cAgen060	:= CRIAVAR("EF_AGENCIA",.f.)
+	Local _cConta060:= CRIAVAR("EF_CONTA",.F.)
 	Local _cContrato:= ""
 	Local _cNumBco	:= ""
-	Local _cConta060:= CRIAVAR("EF_CONTA",.F.)
 	Local _oSituacao:= Nil
-	Local _aCboSit	:= {'0-Carteira','1-Simples'}
+
+	Local _aCboSit	:= MZ240Sit()
 	Local _cCboSit	:= '0-Carteira'
 
 	Private _oDescrica	:= Nil
 	Private _cDescrica	:= ''
 	Private _oPort060	:= NIL
+	Private _oAgen060	:= Nil
+	Private _oConta060	:= Nil
+	Private _lBanco		:= .F.
 
 	For _nFor := 1 To Len(_aBrowse)
 		If _aBrowse[_nFor][1]
@@ -713,17 +721,17 @@ Static Function Situac()
 
 		_oGroupA := TGroup():New(5,5,75,230,"",_oSit,CLR_BLUE,,.T.)
 
-		@ 010, 010 SAY	OemToAnsi('Portador')	SIZE 32, 7 OF _oGroupA PIXEL
-		@ 010, 040 MSGET _oPort060 VAR _cPort060 F3 "SA6" SIZE 25,10 OF _oGroupA PIXEL
+		@ 010,010 SAY OemToAnsi("Situação")	SIZE 26, 7 OF _oGroupA PIXEL
+		_oSituacao  := TComboBox():New( 010, 040, { |u| If( PCount() > 0, _cCboSit := u, _cCboSit ) }, _aCboSit, 185, 010, _oGroupA  ,,,,,,.T.,,,,{|| VldCombo(_cCboSit)},,,,, "_cCboSit" )
 
-		@ 010, 078 SAY	OemToAnsi("Agência")	SIZE 26, 7 OF _oGroupA PIXEL
-		@ 010, 105 MSGET _cAgen060 SIZE 35,10 OF _oGroupA PIXEL
+		@ 027, 010 SAY	OemToAnsi('Portador')	SIZE 32, 7 OF _oGroupA PIXEL
+		@ 027, 040 MSGET _oPort060 VAR _cPort060 F3 "SA6" WHEN _lBanco SIZE 25,10 OF _oGroupA PIXEL
 
-		@ 010,155 SAY	OemToAnsi("Conta")	SIZE 26, 7 OF _oGroupA PIXEL
-		@ 010,175 MSGET  _cConta060 SIZE 50,10 OF _oGroupA PIXEL
+		@ 027, 078 SAY	OemToAnsi("Agência")	SIZE 26, 7 OF _oGroupA PIXEL
+		@ 027, 105 MSGET _oAgen060 VAR _cAgen060 WHEN _lBanco SIZE 35,10 OF _oGroupA PIXEL
 
-		@ 027,010 SAY OemToAnsi("Situação")	SIZE 26, 7 OF _oGroupA PIXEL
-		_oSituacao  := TComboBox():New( 027, 040, { |u| If( PCount() > 0, _cCboSit := u, _cCboSit ) }, _aCboSit, 185, 010, _oGroupA  ,,,,,,.T.,       ,,,{|| .T.},,,,, "_cCboSit" )
+		@ 027,155 SAY	OemToAnsi("Conta")	SIZE 26, 7 OF _oGroupA PIXEL
+		@ 027,175 MSGET _oConta060 VAR _cConta060 WHEN _lBanco SIZE 50,10 OF _oGroupA PIXEL
 
 		_oGroupC	:= TGroup():New(40,10,70,225,"Ações",_oSit,CLR_BLUE,,.T.)
 
@@ -744,42 +752,76 @@ Return(Nil)
 
 
 
-Static Function VldDLG(_cPort,_cAgen,_cConta,_cSituaca)
+Static Function VldCombo(_cSitu)
 
 	Local _lRet := .T.
 
-	If Left(_cSituaca,1) = '0' .And. (!Empty(_cPort) .Or. !Empty(_cAgen) .Or. !Empty(_cConta))
-		_lRet := .F.
-		ShowHelpDlg('MZ0240_4',{'Para situação do tipo "Carteira", os dados bancários não devem ser preenchidos.'},1,{'Não se aplica.'},2)
-	ElseIf Left(_cSituaca,1) = '1' .And. (Empty(_cPort) .Or. Empty(_cAgen) .Or. Empty(_cConta))
-		_lRet := .F.
-		ShowHelpDlg('MZ0240_5',{'Para situação do tipo "Simples", os dados bancários devem ser preenchidos.'},1,{'Não se aplica.'},2)
-	ElseIf Left(_cSituaca,1) = '1' .And. (!Empty(_cPort) .Or. !Empty(_cAgen) .Or. !Empty(_cConta))
-		SA6->(dbsetOrder(1))
-		If !SA6->(MsSeek(xFilial("SA6")+_cPort+_cAgen+_cConta))
+	FRV->(dbSetOrder(1))
+	If FRV->(MsSeek(xFilial("FRV")+Left(_cSitu,1)))
+		If FRV->FRV_BANCO = '1'
+			_lBanco := .T.
+		Else
+			_lBanco := .F.
+		Endif
+	Endif
+
+	_oPort060:Refresh()
+	_oAgen060:Refresh()
+	_oConta060:Refresh()
+
+Return(_lRet)
+
+
+
+
+Static Function VldDLG(_cPort,_cAgen,_cConta,_cSituaca)
+
+	Local _lRet		:= .T.
+	Local _lBcoObg	:= .T.
+
+	FRV->(dbSetOrder(1))
+	If FRV->(MsSeek(xFilial("FRV")+Left(_cSituaca,1)))
+		If FRV->FRV_BANCO = '1'
+			_lBcoObg := .T.
+		Else
+			_lBcoObg := .F.
+		Endif
+
+		If !_lBcoObg .And. (!Empty(_cPort) .Or. !Empty(_cAgen) .Or. !Empty(_cConta))
 			_lRet := .F.
-			ShowHelpDlg('MZ0240_3',{'Cadastro do Banco/Agência/Conta informado não encontrado.'},1,{'Digite um código válido.'},2)
+			ShowHelpDlg('MZ0240_4',{'Para situação do tipo "'+Alltrim(Capital(FRV->FRV_DESCRI))+'", os dados bancários não devem ser preenchidos.'},1,{'Não se aplica.'},2)
+		ElseIf _lBcoObg .And. (Empty(_cPort) .Or. Empty(_cAgen) .Or. Empty(_cConta))
+			_lRet := .F.
+			ShowHelpDlg('MZ0240_5',{'Para situação do tipo "'+Alltrim(Capital(FRV->FRV_DESCRI))+'", os dados bancários devem ser preenchidos.'},1,{'Não se aplica.'},2)
+		ElseIf _lBcoObg .And. (!Empty(_cPort) .Or. !Empty(_cAgen) .Or. !Empty(_cConta))
+			SA6->(dbsetOrder(1))
+			If !SA6->(MsSeek(xFilial("SA6")+_cPort+_cAgen+_cConta))
+				_lRet := .F.
+				ShowHelpDlg('MZ0240_3',{'Cadastro do Banco/Agência/Conta informado não encontrado.'},1,{'Digite um código válido.'},2)
+			Endif
 		Endif
 	Endif
 
 Return(_lRet)
 
 
-Static Function VldSit(_cSitu)
 
-	Local _lRet :=  .T.
+
+Static Function MZ240Sit()
+
+	Local _aRet := {}
 
 	FRV->(dbSetOrder(1))
-	If !FRV->(MsSeek(xFilial("FRV")+_cSitu))
-		ShowHelpDlg('MZ0240_2',{'Cadastro não encontrado!'},1,{'Não se aplica.'},2)
-		_lRet := .F.
-	Else
-		_cDescrica := Alltrim(FRV->FRV_DESCRI)
-	Endif
+	FRV->(dbGoTop())
 
-	_oDescrica:Refresh()
+	While FRV->(!EOF())
+		If FRV->FRV_DESCON = '2'
+			AAdd(_aRet,Alltrim(FRV->FRV_CODIGO)+'-'+Alltrim(Capital(FRV->FRV_DESCRI)))
+		Endif
+		FRV->(dbSkip())
+	EndDo
 
-Return(_lRet)
+Return(_aRet)
 
 
 
