@@ -44,7 +44,12 @@ User Function Miz035(p_cOrigem)
 	Private _peso_sai := 0
 	private   nOpca
 	private lAltLacre,_lTicket := .f.
-	Private _aPedSZ1 := {}
+	Private _aPedSZ1   := {}
+	Private _nIcmFPaut := 0
+
+	Private	_cNFSZ1 := ""
+	Private	_cSeSZ1 := ""
+
 
 	Private _lZFM  := .F.
 	private cOrigem:= iif(p_cOrigem==nil, '',p_cOrigem)
@@ -63,8 +68,8 @@ User Function Miz035(p_cOrigem)
 	_cHora   := Left(time(),5)
 	_cMin    := Right(_cHora,2)
 
-	If SM0->M0_ESTCOB $ "AC/AM/MT/MS/RO/RR"
-		If _cHora   == "00"
+	If SM0->M0_ESTCOB $ "AC/AM/MT/MS/RO/RR/PI"
+		If SUBSTR(_cHora,1,2)   == "00"
 			_dEmissao--
 			If SM0->M0_ESTCOB $ "AC"
 				_cHora    := "22:" + _cMin // MENOS 02 HORAS
@@ -76,9 +81,9 @@ User Function Miz035(p_cOrigem)
 		Endif
 	Endif
 
-	If GETMV("MV_HVERAO")  /// SE VERDADEIRO ENTAO TEM HORARIO DE VERÃO
-		If SM0->M0_ESTCOB $ "DF/GO/ES/MT/MS/MG/PR/RJ/RS/SP/SC"
-			If _cHora   == "00"
+	If GETMV("MV_HVERAO") .AND. (_dEmissao >= GETMV("MV_HVERAOI") .AND. _dEmissao <= GETMV("MV_HVERAOF"))    /// SE VERDADEIRO ENTAO TEM HORARIO DE VERÃO
+		If !(SM0->M0_ESTCOB $ "DF/GO/ES/MT/MS/MG/PR/RJ/RS/SP/SC")
+			If SUBSTR(_cHora,1,2)   == "00"
 				_dEmissao--
 				_cHora    := "23:" + _cMin
 			Else
@@ -99,7 +104,7 @@ User Function Miz035(p_cOrigem)
 	EndIf
 
 	If UPPER(Alltrim(cUserName)) $ "ALE"
-		_BalSai := "E:\BALSAI.TXT"
+		_BalSai := "C:\BALSAI.TXT"
 	ElseIf UPPER(Alltrim(cUserName)) $ "ALISON"
 		_BalSai := "D:\BALSAI.TXT"
 	Else
@@ -114,7 +119,7 @@ User Function Miz035(p_cOrigem)
 		Return
 	End
 
-	If UPPER(Alltrim(cUserName)) $ "ALE|FABIANO|ALISON"
+	If UPPER(Alltrim(cUserName)) $ "ALE|FABIANO|ALISON|MARCUS.VINICIUS|RAPHAEL.MOURA"
 		_serie   := "ZZZ"
 		_prefixo := "ZZZ"
 	Else
@@ -162,14 +167,12 @@ User Function Miz035(p_cOrigem)
 		MsAguarde({||fPesoBal()},"Lendo Peso...")
 	endif
 
-	//If lUsaNewOC .and. cempant $ '01|10|11|12|20|30|40|50' .and. _peso_sai <= 0
 	If lUsaNewOC .and. _peso_sai <= 0
 
 		lpesoOk:=.f.
 		While  !lpesoOK
 
-			//if cEmpAnt $ "30/40"  // 17/10/14			Comentado por Alison  - 22/07/2016
-			IF cEmpAnt + cFilAnt $ "0210|3001|4001|0203"	//Incluso empresa 0203 - 12/09/2016
+			IF cEmpAnt + cFilAnt $ "0210|3001|4001|0203"
 				if  _peso_sai <= 0
 					u_smFrmPeso(@_peso_sai,"SAIDA",@cColeta)
 				endif
@@ -226,7 +229,7 @@ User Function Miz035(p_cOrigem)
 	DbSelectArea("SZ1")
 	DbSetOrder(8)
 	DbSeek(xFilial("SZ1")+SZ8->Z8_OC)
-	Do while .not. eof() .and. Z1_FILIAL == xFilial("SZ1") .and. Z1_OC == SZ8->Z8_OC
+	Do while .not. eof() .and. SZ1->Z1_FILIAL == xFilial("SZ1") .and. SZ1->Z1_OC == SZ8->Z8_OC
 		SB1->(DbSetOrder(1))
 		SB1->(DbSeek(xFilial("SB1")+SZ1->Z1_PRODUTO))
 
@@ -252,7 +255,7 @@ User Function Miz035(p_cOrigem)
 	DbSelectArea("SZ1")
 	DbSetOrder(8)
 	DbSeek(xFilial("SZ1")+SZ8->Z8_OC)
-	Do while .not. eof() .and. Z1_FILIAL == xFilial("SZ1") .and. Z1_OC == SZ8->Z8_OC
+	Do while .not. eof() .and. SZ1->Z1_FILIAL == xFilial("SZ1") .and. SZ1->Z1_OC == SZ8->Z8_OC
 		If Alltrim(SZ1->Z1_PRODUTO)=="PALET"
 			nqtpal+=SZ1->Z1_QUANT
 		EndIf
@@ -277,6 +280,9 @@ User Function Miz035(p_cOrigem)
 		_nQtde   := SZ1->Z1_QUANT
 		_nQtdenF := SZ1->Z1_QTENF
 	Endif
+
+	SZ3->(DbSetOrder(1))
+	SZ3->(DbSeek(xFilial("SZ3")+SZ1->Z1_MOTOR))	//Marcus Vinicius - 24/01/2018
 
 	nF2FRETE := 0
 	If _nQtdenF  > 0 .and. SB1->B1_YTRBIG==0 .and. SZ1->Z1_UNID $ "SC"
@@ -335,8 +341,7 @@ User Function Miz035(p_cOrigem)
 		@ 90,130 say "Vr.Total Pedágio: " + Alltrim(Transform(SZ8->Z8_PEDAGIO,"@E 9,999.99"))
 		nOpca:=0
 		@ 110,100 BmpButton Type 1  Action (IIF(val_nf(),(nOpca:=1,Close(oDlg1)), nOpca:=2))
-		//	@ 110,140 BmpButton Type 11 Action u_Altera_Peso()
-		@ 110,140 BmpButton Type 11 Action u_Altera_Peso(,"S") // Normando (Semar) 23/11/2015 Identificar o tipo de peso pelo parametro.
+		@ 110,140 BmpButton Type 11 Action u_Altera_Peso(,"S")
 		Activate MsDialog oDlg1 Centered
 
 		IF nOpca == 1
@@ -348,7 +353,8 @@ User Function Miz035(p_cOrigem)
 				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 				//³ Refresh no arquivo SZ8                                                   ³
 				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-				If !IsInCallStack("U_MIZ999")
+				If !IsInCallStack("U_MIZ999") .And. !IsInCallStack("U_MZ0219")
+					//				If !IsInCallStack("U_MIZ999")
 					ExecBlock("MIZ027",.F.,.F.)
 				EndIf
 			EndIf
@@ -394,50 +400,6 @@ Static Function Altera_LACRE()
 RETURN
 
 
-
-
-
-/*
-ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
-±±³Fun‡Æo    ³ fajfrete                                                   ³±±
-±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
-±±³Descri‡Æo ³ Atualiza arquivos referentes a emissao da NF               ³±±
-±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
-*/
-Static Function fajfrete()
-	Private nFreteFixo:=0
-
-	If SZ1->Z1_UNID == "TL" .and. SZ1->Z1_FRETE == "C"
-		SA1->(DbSetOrder(1))
-		SA1->(DbSeek(xFilial("SA1")+SZ1->Z1_CLIENTE+SZ1->Z1_LOJA))
-		SZG->(DbSetOrder(1))
-		SZG->(DbSeek(xFilial("SZG")+SZ1->Z1_UFE+SZ1->Z1_MUNE+SZ1->Z1_FORNECE+SZ1->Z1_LOJAF + "L"))
-
-		If nvalf == 0
-			nvalf := Iif(SA1->A1_YFGRA > 0,Round(_peso_liqinf * SA1->A1_YFGRA,2),Round(_peso_liqinf * SZG->ZG_VALOR,2))
-		EndIf
-		DEFINE MSDIALOG oDlgf TITLE "Ajusta valor do frete" FROM 40,50 TO 230,430 PIXEL
-		@ 40,15 say "Valor do Frete:"
-		@ 40,70 get nvalf Size 60,100   Pict "@e 999,999,999.99"
-		@ 60,100 BmpButton Type 1 Action Close(oDlgf)
-		Activate MsDialog oDlgf Centered
-		SZ3->(DbSetOrder(1))
-		SZ3->(DbSeek(xFilial("SZ3")+SZ1->Z1_MOTOR))
-		While !Reclock("SZ1",.f.);EndDo
-		If SZ3->Z3_TIPO == "2"
-			SZ1->Z1_FMOT := nvalf
-		Else
-			SZ1->Z1_FTRA := nvalf
-		EndIf
-		MsUnlock()
-	Else
-		MsgBox("Essa opcao e valida apenas para produtos com unidade de medida TL","Atencao","ALERT")
-	EndIf
-Return
 /*
 ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
@@ -451,7 +413,7 @@ Return
 */
 Static Function Continua()
 
-	Local lUsaNT   := SuperGetMV("MV_SMUSANT",,.F.) // Adicionado por Rodrigo (Semar) 19/12/16 - Tratar a origem do Peso bruto, (.T.) o peso se estiver zerado na SZ2 deve vim da ZZJ, (.F.) pesa da SZ2.
+	Local lUsaNT   := SuperGetMV("MV_SMUSANT",,.F.)
 	_margem      := 0
 
 	dbSelectArea("SB1")
@@ -468,10 +430,7 @@ Static Function Continua()
 	_nQtTot:= 0
 	_aConv := {}
 
-
-	//If SZ1->Z1_UNID $ 'SC*SA' .AND. !cEmpAnt $ "30            Comentado por Alison - 22/07/2016
 	If SZ1->Z1_UNID $ 'SC*SA' .And. !cEmpAnt+cFilAnt $ "0210|3001"
-		//_peso_total  := _qtd_fat  * SB1->B1_CONV ALTERADO POR ALEXANDRO EM  08/03/13
 
 		For AX:= 1 To Len(_aPedSZ1)
 			_cProd := _aPedSZ1[AX,1]
@@ -494,7 +453,6 @@ Static Function Continua()
 		_peso_total := _peso_liq * SB1->B1_CONV   // Granel
 	Endif
 
-	//If !cEmpAnt $ "30"			Comentado por Alison - 22/07/2016
 	If !cEmpAnt + cFilAnt $ '0210|3001'
 		_peso_maximo := _peso_total + (_peso_total * _margem / 100)
 		_peso_minimo := _peso_total - (_peso_total * _margem / 100)
@@ -503,42 +461,24 @@ Static Function Continua()
 
 		_CargaVeiculo:=Posicione("SZ2",1,xFilial('SZ2')+SZ8->Z8_PLACA,"Z2_PESOTRA")
 
-		//Adicionado por Rodrigo (Semar) em 19/12/16 - Tratar quando a unidade utilizar a nova tela de excessão e seu peso estiver vinculado ao tipo de veiculo (ZZJ) e não ao seu cadastro (SZ2).
 		if _CargaVeiculo == 0 .AND. lUsaNT
-			//Nesse caso a unidade utiliza e o campo Z2_PESOTRA está zerado, significa que o caminhão utiliza o peso de acordo com o tipo de veiculo (ZZJ / Tabela DNIT).
 			_CargaVeiculo := Posicione("ZZJ",1,xFilial('ZZJ')+SZ8->Z8_TPVEIC,"ZZJ_LOTACA")
 		endif
 
 		If _peso_total > _CargaVeiculo
-			//Marcus Vinicius - 15/06/2016 - Ajustado para impedir carregamento com seu peso de transporte acima do cadastrado na SZ2.
 			MsgBox("Peso acima da capacidade maxima do veiculo, verifique o pedido utilizado ou o cadastro do caminhão. ","Peso excedido","STOP")
 			Return .F.
 
 		Endif
 	EndIf
 
-	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-	//³ Calcula peso / tolerancia para cimento em Sacos                          ³
-	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-
 	_loDlg4 := .F.
-	//If  SZ1->Z1_UNID $ "SC,SA" .AND. !cEmpAnt $ "30"
+
 	If  SZ1->Z1_UNID $ "SC,SA" .AND. !cEmpAnt + cFilAnt $ '0210|3001'
 		If  _peso_liq > _peso_maximo .or. _peso_liq < _peso_minimo
 			_loDlg4 := .T.
 			DEFINE MSDIALOG oDlg4 TITLE "Saida de Caminhao carregado" FROM 0,0 TO 300,500 PIXEL
 			@ 8,10 to 100,220
-			//		@ 20,15 say "Sacos:"
-			//		@ 30,15 say "Peso por Saco:"
-			//		@ 40,15 say "Peso Total:"
-			//		@ 60,15 say "Peso Liquido:"
-			//		@ 70,15 say "Diferenca no peso:"
-			//		@ 80,15 say "DIFERENCA SACOS:"
-			//		@ 20,70 say trans(_qtd_fat    ,"@E 999,999")
-			//		@ 30,70 say trans(SB1->B1_CONV,"@E 999,999,999.99")
-			//		@ 40,70 say trans(_peso_total ,"@E 999,999,999.99")
-			//		@ 60,70 say trans(_peso_liq   ,"@E 999,999,999.99")
-			//		@ 70,70 say trans(_peso_exced ,"@E 999,999,999.99")
 
 			_nLin := 20
 			@ _nlin,15 say "Total de Sacos:"
@@ -581,10 +521,6 @@ Static Function Continua()
 		EndIf
 	EndIf
 
-
-
-	//Verifica se alterou o(s) LACRES - e atualiza o campo laltlacre e o campo Z8_LACRE  - Juailson - Semar 23/02/15
-	// Quando alterar os Lacres - gravar na SZ8
 	if alltrim(SZ8->Z8_LACRE) <> alltrim(_lacre)
 		laltlacre := .T.
 
@@ -594,14 +530,19 @@ Static Function Continua()
 
 	endif
 
-	aNotas   := {}
-	_cTpPed  := SZ1->Z1_TIPO
-	_cNumPed := SZ1->Z1_YPEDB
+	aNotas   	:= {}
+	_cTpPed  	:= SZ1->Z1_TIPO
+	_cNumPed 	:= SZ1->Z1_YPEDB
+	_cF2Placa	:= SZ1->Z1_PLACA
+	_cF2Plcar	:= SZ1->Z1_PLCAR
+	_cF2Plcar2	:= SZ1->Z1_PLCAR2
+	_cPedSC6	:= SZ1->Z1_PEDIDO
+	_cIteSC6	:= SZ1->Z1_ITEMPV
+	_cQtdSZ1	:= SZ1->Z1_QUANT
 
-	If Gera_NF()
-		//If cEmpAnt == "30" .And. _cTpPed == "T"
+	If U_Gera_NF()
 		If cEmpAnt + cFilAnt $ '0210|3001|0203' .And. _cTpPed == "T"
-			If UPPER(Alltrim(cUserName)) $ "ALE|FABIANO|ALISON"
+			If UPPER(Alltrim(cUserName)) $ "ALE|FABIANO|ALISON|MARCUS.VINICIUS|RAPHAEL.MOURA"
 				_serie   := "ZZZ"
 				_prefixo := "ZZZ"
 			Else
@@ -612,11 +553,9 @@ Static Function Continua()
 			SC5->(dbSetOrder(1))
 			If SC5->(dbSeek(xFilial("SC5")+_cNumPed))
 
-				//Inicio - Fabiano em 24/11/15
 				SC5->(RecLock("SC5",.F.))
 				SC5->C5_MENNOTA := "NF Venda: "+Alltrim(_cNFVen)+" emitida em "+dToc(dDatabase)
 				SC5->(MsUnlock())
-				//Fim - Fabiano em 24/11/15
 
 				SC6->(dbSetOrder(1))
 				If SC6->(dbSeek(xFilial("SC6")+_cNumPed))
@@ -673,6 +612,12 @@ Static Function Continua()
 					EndDo
 
 					MaPvlNfs(_aPv   , _serie, .F.      , .F.     , .F.      , .F.     , .F.     , 0      , 0          , .F., .F.)
+
+					SF2->(RecLock("SF2",.F.))
+					SF2->F2_YPLACA	:= _cF2Placa
+					SF2->F2_YPLCAR	:= _cF2Plcar
+					SF2->F2_YPLCAR2	:= _cF2Plcar2
+					SF2->(MsUnlock())
 				Endif
 			Endif
 
@@ -689,30 +634,58 @@ Static Function Continua()
 
 			RestArea(_aAliasSZ7)
 
-
-
 			_cNotaRem := SF2->F2_DOC
 			aadd(aNotas, _cNotaRem )
 
 			If lUsaNewOC
 				U_MzNfetransm('TODAS',_serie, aNotas[1], aNotas[len(aNotas)] )
-				//U_MzNfetransm('TODAS',_serie, _cNotaRem, _cNotaRem )
 			Endif
 		Else
 			if lUsaNewOC
-				If cEmpAnt+cFilAnt == "0203"   // ALEXANDRO
+				If cEmpAnt+cFilAnt == "0203"
 					U_TRANS_ASC('TODAS',_serie, aNotas[1], aNotas[len(aNotas)] )
 				Else
 					U_MzNfetransm('TODAS',_serie, aNotas[1], aNotas[len(aNotas)] )
 				Endif
-				If cEmpAnt+cFilAnt $ SuperGetMV("MV_YMDFE",,"") //Inserido por Fabiano em 09/12/16
-					//			If cEmpAnt == '01'
+				If cEmpAnt+cFilAnt $ SuperGetMV("MV_YMDFE",,"")
 					If SF2->F2_EST <> SM0->M0_ESTCOB .And. SF2->F2_YFRETE = 'F'
 						U_MZ0197(_serie, aNotas[1],,SZ8->Z8_OC )
 					Endif
 				Endif
 			Endif
 		Endif
+
+		If cFilAnt $ SuperGetMV('MZ_GESTPED',,'')
+			If !Empty(_cPedSC6) .And. !Empty(_cIteSC6) .And. !Empty(_cNFSZ1) .And. !Empty(_cSeSZ1)
+				_aAreaSC5 := SC5->(GetArea())
+				_aAreaSC6 := SC6->(GetArea())
+
+				SC5->(dbsetOrder(1))
+				If SC5->(msSeek(xFilial("SC5")+_cPedSC6))
+
+					SC5->(RecLock("SC5",.F.))
+					SC5->C5_LIBEROK := "S"
+					SC5->C5_NOTA   := _cNFSZ1
+					SC5->C5_SERIE  := _cSeSZ1
+					SC5->(MsUnlock())
+
+					SC6->(dbSetOrder(1))
+					If SC6->(msSeek(xFilial("SC6")+_cPedSC6+_cIteSC6))
+
+						SC6->(RecLock("SC6",.F.))
+						SC6->C6_QTDENT += _cQtdSZ1
+						SC6->C6_DATFAT := dDataBase
+						SC6->C6_NOTA   := _cNFSZ1
+						SC6->C6_SERIE  := _cSeSZ1
+						SC6->(MsUnlock())
+					Endif
+
+				Endif
+				RestArea(_aAreaSC6)
+				RestArea(_aAreaSC5)
+			Endif
+		Endif
+
 	Endif
 
 
@@ -728,16 +701,13 @@ Return
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 */
-Static Function Gera_NF()
+User Function Gera_NF()
 
 	local lReturn:=.f.
-	//Local cStat	:= if(cEmpAnt $ '30|01|40',"Z8_STATUS2","Z8_STATUS") // EMPRESA 40                      Comentado por Alison - 22/07/2016
-	Local cStat	:= if(cEmpAnt + cFilAnt $ '0101|3001|0210|4001|0203',"Z8_STATUS2","Z8_STATUS") // EMPRESA 40 | 	Incluso empresa 0203 - 12/09/2016
+	//Local cStat	:= if(cEmpAnt + cFilAnt $ '0101|0218|3001|0210|4001|0203',"Z8_STATUS2","Z8_STATUS")
+	Local cStat	:= if(cEmpAnt + cFilAnt $ '0101|0218|0210|0203',"Z8_STATUS2","Z8_STATUS")
 
 	Private npesoSZ1:=0,cpedmaior:="",npedmaior :=0,_senha2:=Space(10),cpeconv:=0
-	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-	//³ Fecha janela com mensagem de peso excedente                              ³
-	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 	If  _loDlg4
 
 		DEFINE MSDIALOG oDlg5 TITLE "Senha" FROM 40,50 TO 100,300 PIXEL
@@ -754,26 +724,14 @@ Static Function Gera_NF()
 		EndIf
 
 	EndIf
-	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-	//³ Fechar a tela para iniciar as impressoes                                 ³
-	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-	//Close(odlg1)
-
-	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-	//³ Inicio da transacao                                                      ³
-	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-
 
 	Begin Transaction
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³ Verificar todos os pedidos qual e o peso total                           ³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 
 		DbSelectArea("SZ1")
 		DbSetOrder(8)
 		DbSeek(xFilial("SZ1")+SZ8->Z8_OC)
 		npedmaior := 0
-		Do while .not. SZ1->(eof()) .and. Z1_FILIAL == xFilial("SZ1") .and. SZ1->Z1_OC == SZ8->Z8_OC
+		Do while SZ1->(!Eof()) .and. SZ1->Z1_FILIAL == xFilial("SZ1") .and. SZ1->Z1_OC == SZ8->Z8_OC
 			SB1->(DbSetOrder(1))
 			SB1->(DbSeek(xFilial("SB1")+SZ1->Z1_PRODUTO))
 
@@ -831,7 +789,7 @@ Static Function Gera_NF()
 		DbSelectArea("SZ1")
 		DbSetOrder(8)
 		DbSeek(xFilial("SZ1")+SZ8->Z8_OC)
-		Do while .not. eof() .and. Z1_FILIAL == xFilial("SZ1") .and. SZ1->Z1_OC == SZ8->Z8_OC
+		Do while .not. eof() .and. SZ1->Z1_FILIAL == xFilial("SZ1") .and. SZ1->Z1_OC == SZ8->Z8_OC
 
 			SA1->(DbSetOrder(1))
 			IF !SA1->(DbSeek(xFilial("SA1")+SZ1->Z1_CLIENTE+SZ1->Z1_LOJA))
@@ -839,7 +797,6 @@ Static Function Gera_NF()
 				SZ1->(DBSKIP())
 				LOOP
 			ENDIF
-
 
 			If SZ1->Z1_QTENF > 0
 				If ldivide == .f.
@@ -900,22 +857,16 @@ Static Function Gera_NF()
 
 			SA1->(DbSetOrder(1))
 			SA1->(DbSeek(xFilial("SA1")+SZ1->Z1_CLIENTE+SZ1->Z1_LOJA))
-			If SZ1->Z1_UNID == "SA" .and. SZ1->Z1_FRETE == "C"
+			If SZ1->Z1_UNID == "SA" .and. SZ1->Z1_FRETE == "C"   /// ALTERADO EM 10/01/18 RET
 				SZG->(DbSetOrder(1))
 				SZG->(DbSeek(xFilial("SZG")+SZ1->Z1_UFE+SZ1->Z1_MUNE+SZ1->Z1_FORNECE+SZ1->Z1_LOJAF + "L"))
 				nSal2UM := IF(SB1->B1_TIPCONV=="D",_qtd_fat/SB1->B1_CONV,_qtd_fat/SB1->B1_CONV)
-				If Reclock("SZ1" ,.f.)
-					SZ1->Z1_FTRA := Round(nSal2UM * SZG->ZG_VALOR,2)
-					MsUnlock()
-				EndIf
 
-				If SZ3->Z3_TIPO == "2"
-					SZ1->Z1_FMOT := Iif(SA1->A1_YFGRA > 0,Round(_qtd_fat * SA1->A1_YFGRA,2),Round(_qtd_fat * SZ4->Z4_FMOT,2))
-					SZ1->Z1_FTRA := Iif(SA1->A1_YFGRA > 0,Round(_qtd_fat * SA1->A1_YFGRA,2),Round(_qtd_fat * SZ4->Z4_FRETE,2))
-				Else
-					SZ1->Z1_FMOT := Iif(SA1->A1_YFGRA > 0,Round(_qtd_fat * SA1->A1_YFGRA,2),Round(_qtd_fat * SZG->ZG_FMOT,2))
-					SZ1->Z1_FTRA := Iif(SA1->A1_YFGRA > 0,Round(_qtd_fat * SA1->A1_YFGRA,2),Round(_qtd_fat * SZG->ZG_FRETE,2))
-				EndIf
+				SZ1->(Reclock("SZ1" ,.f.))
+				SZ1->Z1_FMOT := Iif(SA1->A1_YFGRA > 0,Round(_qtd_fat * SA1->A1_YFGRA,2),Round(_qtd_fat * SZG->ZG_FMOT,2))
+				SZ1->Z1_FTRA := Iif(SA1->A1_YFGRA > 0,Round(_qtd_fat * SA1->A1_YFGRA,2),Round(_qtd_fat * SZG->ZG_FRETE,2))
+				SZ1->(MsUnlock())
+				//EndIf
 			EndIf
 
 			SA1->(DbSetOrder(1))
@@ -929,11 +880,16 @@ Static Function Gera_NF()
 				SZ4->(DbSeek(xFilial("SZ4")+SZ1->Z1_UFE+SZ1->Z1_MUNE))
 				While !Reclock("SZ1",.f.);EndDo
 				If SZ3->Z3_AGREGA == "S"
-					SZ1->Z1_FTRA := Round(_qtd_fat * SZ4->Z4_FAGRTRA * SB1->B1_YTRBIG,2)
-					SZ1->Z1_FMOT := Round(_qtd_fat * SZ4->Z4_FAGRMOT  * SB1->B1_YTRBIG,2)
+					//SZ1->Z1_FTRA := Round(_qtd_fat * SZ4->Z4_FAGRTRA * SB1->B1_YTRBIG,2)
+					//SZ1->Z1_FMOT := Round(_qtd_fat * SZ4->Z4_FAGRMOT  * SB1->B1_YTRBIG,2)
+					SZ1->Z1_FTRA := Round(_qtd_fat * SZG->ZG_FAGRTRA * SB1->B1_YTRBIG,2)
+					SZ1->Z1_FMOT := Round(_qtd_fat * SZG->ZG_FAGRMOT  * SB1->B1_YTRBIG,2)
 				Else
-					SZ1->Z1_FTRA := Round(_qtd_fat * SZ4->Z4_FRETE * SB1->B1_YTRBIG,2)
-					SZ1->Z1_FMOT := Round(_qtd_fat * SZ4->Z4_FMOT  * SB1->B1_YTRBIG,2)
+					//SZ1->Z1_FTRA := Round(_qtd_fat * SZ4->Z4_FRETE * SB1->B1_YTRBIG,2)
+					//SZ1->Z1_FMOT := Round(_qtd_fat * SZ4->Z4_FMOT  * SB1->B1_YTRBIG,2)
+					SZ1->Z1_FTRA := Round(_qtd_fat * SZG->ZG_FRETE * SB1->B1_YTRBIG,2)
+					SZ1->Z1_FMOT := Round(_qtd_fat * SZG->ZG_FMOT  * SB1->B1_YTRBIG,2)
+
 				EndIf
 				MsUnlock()
 			EndIf
@@ -998,26 +954,17 @@ Static Function Gera_NF()
 			If SA1->A1_TIPO == "F" .And. SA1->A1_CONTRIB == "2" .And. SA1->A1_EST <> SM0->M0_ESTCOB // INCLUIDO POR ALEXANDRO EM 17/02/16 - PARA ATENDER EC 87/2015
 				wAliqIcm := 0
 			Else
-				//If cEmpAnt == "40"
-				SF7->(dbSetOrder(3))
+				SF7->(dbOrderNickName("INDSF71"))
 				If SF7->(dbSeek(xFilial("SF7")+SB1->B1_GRTRIB + SA1->A1_GRPTRIB + SA1->A1_EST))
 					wAliqIcm := SF7->F7_ALIQEXT
 				Else
 					wAliqIcm := 0
 				Endif
-				//Else
-				//	dbSelectArea("SF7")
-				//	dbSetOrder(2)
-				//	If dbSeek(xFilial("SF7")+PADR(SA1->A1_GRPTRIB,6)+SA1->A1_EST,.F.)
-				//		wAliqIcm := SF7->F7_ALIQEXT
-				//	Else
-				//		wAliqIcm := 0
-				//	Endif
-				//Endif	//desabilitado por Marcus Vinicius 15/07/16
 
 				If !Empty(SZ1->Z1_GRTR)
 					dbSelectArea("SF7")
-					dbSetOrder(2)
+					//dbSetOrder(2)
+					SF7->(dbOrderNickName("INDSF72"))
 					If dbSeek(xFilial("SF7")+PADR(SZ1->Z1_GRTR,6)+SA1->A1_EST,.F.)
 						wAliqIcm := F7_ALIQEXT
 					Else
@@ -1030,12 +977,6 @@ Static Function Gera_NF()
 			dbSetOrder(1)
 			dbSeek(xFilial()+SZ1->Z1_PLACA)
 
-			/*
-			_picm     := AliqIcms("N",;  // Tipo de Operacao
-			"S",;  // Tipo de Nota ('E'ntrada/'S'aida)
-			"C" ;  // Tipo do Cliente ou Fornecedor
-			)
-			*/
 			_picm     := PICM("N",;  // Tipo de Operacao
 			"S",;  // Tipo de Nota ('E'ntrada/'S'aida)
 			"C" ;  // Tipo do Cliente ou Fornecedor
@@ -1109,20 +1050,23 @@ Static Function Gera_NF()
 			If SA1->A1_TIPO == "F" .And. SA1->A1_CONTRIB == "2" .And. SA1->A1_EST <> SM0->M0_ESTCOB // INCLUIDO POR ALEXANDRO EM 17/02/16 - PARA ATENDER EC 87/2015
 				_b1PicRet := 0
 			Else
-				//If cEmpAnt == "30"
 				If cEmpAnt + cFilAnt $ '0210|3001'
 					If SA1->A1_EST <> SM0->M0_ESTCOB .And. SB1->B1_YMVAICM > 0
-						//	_b1PicRet := SB1->B1_YMVAICM / 100   //0.2723 //
 
-						// INCLUIDO NOVA REGRA EM 01/08/16
-
-						SF7->(dbSetOrder(2))
+						//SF7->(dbSetOrder(2))
+						SF7->(dbOrderNickName("INDSF72"))
 						If SF7->(dbSeek(xFilial("SF7") + SB1->B1_GRTRIB + SA1->A1_EST))
 							_b1PicRet := SF7->F7_MARGEM / 100
 						Else
 							_b1PicRet := 0.20
 						Endif
-						// INCLUIDO NOVA REGRA EM 01/08/16
+					Else
+						_b1PicRet := SB1->B1_PICMRET
+					Endif
+				ElseIf cEmpAnt + cFilAnt $ '0101|0218' .And. SA1->A1_EST = "ES" // incluso empresa 0218 - 16/04/18
+					SF7->(dbOrderNickName("INDSF71"))
+					If SF7->(dbSeek(xFilial("SF7") + SB1->B1_GRTRIB + SA1->A1_GRPTRIB + SA1->A1_EST))
+						_b1PicRet := SF7->F7_MARGEM
 					Else
 						_b1PicRet := SB1->B1_PICMRET
 					Endif
@@ -1133,6 +1077,20 @@ Static Function Gera_NF()
 
 			_qtde     := _qtd_fat
 
+			_FrePauta := 0
+			_nIcmFPaut:= 0
+			/*
+			If cEmpAnt + cFilAnt = "0213"
+			If SZ1->Z1_UNID = "SC"
+			_nQtde2   := (_qtde  * SB1->B1_CONV ) / 1000
+			_FrePauta := _nQtde2 * SZ1->Z1_FREPAUT
+			_nIcmFPaut:= _FrePauta * (_pICM /100)
+			Else
+			_FrePauta := _Qtde * SZ1->Z1_FREPAUT
+			_nIcmFPaut:= _FrePauta * (_pICM /100)
+			Endif
+			Endif
+			*/
 			aVetor   := {_opcao,;
 			_estado     ,;
 			_piss       ,;
@@ -1153,7 +1111,9 @@ Static Function Gera_NF()
 			_prfim      ,;
 			SZ1->Z1_UNID,;
 			wAliqIcm    ,;
-			_f4redicm    }
+			_f4redicm,;
+			_FrePauta,;
+			_nIcmFPaut }
 
 			aVetor   := U_MIZ300(aVetor)
 
@@ -1168,7 +1128,6 @@ Static Function Gera_NF()
 				dbCommit()
 			EndIf
 
-			//If cEmpAnt != "40"   Comentado por Alison - 12/09/2016
 			If !(cEmpAnt + cFilAnt) $ '0203|4001'
 				_prcven  := aVetor[1]
 				_valipi  := aVetor[2]
@@ -1195,7 +1154,6 @@ Static Function Gera_NF()
 				_picm    := aVetor[4]
 				_prcUni  := aVetor[1]
 
-				//If cEmpAnt + cFilAnt $ "0203|4001" .And. _lZFM
 				If cEmpAnt + cFilAnt $ "0203|0210" .And. _lZFM
 					_prcven  := ( (_qtd_fat * aVetor[1])- aVetor[3] ) / _qtd_fat
 				Else
@@ -1218,6 +1176,7 @@ Static Function Gera_NF()
 
 			_cPedVen := SZ1->Z1_NUM
 			_cNFVen  := _nf
+
 			dbSelectArea("SD2")
 			Reclock ("SD2",.T.)
 			SD2->D2_FILIAL  := xFilial("SD2")
@@ -1225,6 +1184,13 @@ Static Function Gera_NF()
 			SD2->D2_UM      := SB1->B1_UM
 			SD2->D2_SEGUM   := SB1->B1_SEGUM
 			SD2->D2_QUANT   := _qtd_fat
+
+			If SD2->(FIELDPOS("D2_YFREPAU")) > 0
+				SD2->D2_YFREPAU := _nIcmFPaut
+			Endif
+
+			SD2->D2_DESPESA := _nIcmFPaut
+
 			If SB1->B1_YVEND <> "N"
 				nqtven += SD2->D2_QUANT
 				cprven := SD2->D2_COD
@@ -1251,20 +1217,27 @@ Static Function Gera_NF()
 							_icmfret := 0
 							_bicmfre := 0
 						EndIf
+					ElseIf (cEmpAnt + cFilant == "0218" .And. Upper(Alltrim(SZ1->Z1_MUNE))=="VITORIA".and.Upper(Alltrim(SZ1->Z1_UFE))=="ES") .or. ;
+					(cEmpAnt + cFilant == "0220"    .And. Upper(Alltrim(SZ1->Z1_MUNE))=="GOVERNADOR VALADARES".and.Upper(Alltrim(SZ1->Z1_UFE))=="MG") .or. ;
+					(cEmpAnt + cFilAnt == "0221"    .And. Upper(Alltrim(SZ1->Z1_MUNE))=="CAMPOS".and.Upper(Alltrim(SZ1->Z1_UFE))=="RJ") .OR. ;
+					(cEmpAnt + cFilant == "0218"    .And. Upper(Alltrim(SZ1->Z1_MUNE))=="RIO DE JANEIRO".and.Upper(Alltrim(SZ1->Z1_UFE))=="RJ")
+						If SZ3->Z3_AGREGA=="S" .and. SZ3->Z3_TIPO=="2"
+							_icmfret := 0
+							_bicmfre := 0
+						EndIf
 					ElseIf Upper(Alltrim(SZ1->Z1_UFE)) == Upper(Alltrim(SM0->M0_ESTCOB)) .and. SZ3->Z3_AGREGA=="S" .and. SZ3->Z3_TIPO=="2"
 						_icmfret := Round(_bicmfre * 12 /100,2)
 						_bicmfre := 0
 					EndIf
 				EndIf
 
-				//If (cEmpAnt + cFilAnt) $ "0203|4001"
 				If (cEmpAnt + cFilAnt) $ "0203|0210"
 					If _lZFM
 						SD2->D2_DESCZFR := _valicm
 						SD2->D2_VALICM  := 0
 						SD2->D2_BASEICM := 0
 					Else
-						SD2->D2_VALICM  := _valicm + Iif(SZ3->Z3_TIPO=="2" .and. cfilant <> "03" .and. SA1->A1_YFICMS <> "S",_icmfret,0)
+						SD2->D2_VALICM  := _valicm  + Iif(SZ3->Z3_TIPO=="2" .and. cfilant <> "03" .and. SA1->A1_YFICMS <> "S",_icmfret,0)
 						SD2->D2_BASEICM := _baseicm + Iif(SZ3->Z3_TIPO=="2" .and. cfilant <> "03".and. SA1->A1_YFICMS <> "S",_bicmfre,0)
 					Endif
 				Else
@@ -1272,7 +1245,6 @@ Static Function Gera_NF()
 					SD2->D2_BASEICM := _baseicm + Iif(SZ3->Z3_TIPO=="2" .and. cfilant <> "03".and. SA1->A1_YFICMS <> "S",_bicmfre,0)
 				Endif
 			Else
-				//If cEmpAnt + cFilAnt $ "0203|4001"
 				If cEmpAnt + cFilAnt $ "0203|0210"
 					If _lZFM
 						SD2->D2_DESCZFR := _valicm
@@ -1324,7 +1296,6 @@ Static Function Gera_NF()
 			SD2->D2_SERIE   := _serie
 			SD2->D2_CUSTO1  := _qtd_fat * SB2->B2_CM1
 
-			//If cEmpAnt + cFilAnt $ "0203|4001"
 			If cEmpAnt + cFilAnt $ "0203|0210"
 				If _lZFM
 					SD2->D2_PRUNIT  := _prcUni
@@ -1366,18 +1337,21 @@ Static Function Gera_NF()
 			ZZA->(DbSeek(xFilial("ZZA")+"10             "))
 			SD2->D2_YCSTSAC := Val(ZZA->ZZA_CONTEU)
 
-			If SA1->A1_TIPO == "F" .And. SA1->A1_CONTRIB == "2" .And. SA1->A1_EST <> SM0->M0_ESTCOB // INCLUIDO POR ALEXANDRO EM 17/02/16 - PARA ATENDER EC 87/2015
+			If SA1->A1_TIPO     == "F" .And. SA1->A1_CONTRIB == "2" .And. SA1->A1_EST <> SM0->M0_ESTCOB // INCLUIDO POR ALEXANDRO EM 17/02/16 - PARA ATENDER EC 87/2015
 				_icmsret := 0
 				_bricms	 := 0
+			ElseIf SA1->A1_TIPO == "F" .And. SA1->A1_CONTRIB == "1" .And. Alltrim(SA1->A1_ATIVIDA) $ "3/6" .And. SA1->A1_EST <> SM0->M0_ESTCOB .And. SM0->M0_CODIGO + LEFT(SM0->M0_CODFIL,2) $ "0101/0203/0210/0213/0216/0223/0226/0218" // INCLUIDO POR ALEXANDRO EM 08/11/17 - CONSUMIDOR FINAL E CONTRIBUINTE
+				_bricms  := _baseicm
+				_icmsret := Round(_bricms * (_picmest - (_picm/100)),2)
 			Else
-				If _icmsret == 0 .and. SA1->A1_YDIFALI == "S" .and. Alltrim(SA1->A1_ATIVIDA) $ "36"
-					_bricms  := (_baseicm + Iif(SZ3->Z3_TIPO=="2",0,0))//+SD2->D2_VALFRE ALTERADO EM 03/10/14
+				If _icmsret == 0 .and. SA1->A1_YDIFALI == "S" .and. Alltrim(SA1->A1_ATIVIDA) $ "3/6"
+					_bricms  := (_baseicm + Iif(SZ3->Z3_TIPO=="2",0,0))
 					_icmsret := Round(_bricms*(_picmest - (_picm/100)),2)
 				EndIf
 			Endif
 
 			SD2->D2_BRICMS  := _bricms
-			SD2->D2_ALIQSOL := _picmret        // Marcus Vinícius - 16/09/2016 - Alimenta o conteúdo da tag <PICMSST> no xml conforme solicitado no chamado 27390
+			SD2->D2_ALIQSOL := _picmret
 			SD2->D2_ICMSRET := _icmsret
 
 			_nPreco := 0
@@ -1402,44 +1376,87 @@ Static Function Gera_NF()
 			SD2->D2_CLASFIS := SB1->B1_ORIGEM+SF4->F4_SITTRIB
 
 			If SD2->D2_VALICM > 0
-				If SA1->A1_TIPO == "F" .And. SA1->A1_CONTRIB == "2" .And. SA1->A1_EST <> SM0->M0_ESTCOB // INCLUIDO POR ALEXANDRO EM 17/02/16 - PARA ATENDER EC 87/2015
+				If SA1->A1_TIPO == "F" .And. SA1->A1_CONTRIB == "2" .And. SA1->A1_EST <> SM0->M0_ESTCOB
 
-					_nAno           := YEAR(dDataBase)
-					_aAlqDIFAL      := &(GETMV("MV_PPDIFAL"))
-					_nAliqDes       := _aAlqDIFAL[ASCAN(_aAlqDIFAL,{|x| x[1] == _nAno})][2] // 40
-					_nAliqOri       := _aAlqDIFAL[ASCAN(_aAlqDIFAL,{|x| x[1] == _nAno})][3] // 60
-
-					_nFECP          := 0
-					CFC->(dbSetorder(1))
-					If CFC->(dbSeek(xFilial("CFC")+GETMV("MV_ESTADO") + SA1->A1_EST ))
-						_nFECP := CFC->CFC_ALQFCP
-					Endif
-
-					SD2->D2_ALFCCMP := _nFECP
-					SD2->D2_PDORI	:= _nAliqOri
-					SD2->D2_PDDES   := _nAliqDes
-					SD2->D2_BASEDES := SD2->D2_BASEICM
-
-					If SA1->A1_EST == "RO"
-						_nAliqInt   := Val(Subs(GETMV("MV_ESTICM"),AT(SA1->A1_EST,GETMV("MV_ESTICM"))+2,5))
+					If cEmpAnt + cFilAnt == "0210" .And. SA1->A1_EST == "MA" .AND. SD2->D2_CF == "6151"    //add condição CFOP 6151 atendendo ao chamado 47903 
+						_lNaoTem := .T.  // NAO TEM DIFAL CONFORME LIMINAR
 					Else
-						_nAliqInt   := Val(Subs(GETMV("MV_ESTICM"),AT(SA1->A1_EST,GETMV("MV_ESTICM"))+2,2))
+						_nAno           := YEAR(dDataBase)
+						_aAlqDIFAL      := &(GETMV("MV_PPDIFAL"))
+						_nAliqDes       := _aAlqDIFAL[ASCAN(_aAlqDIFAL,{|x| x[1] == _nAno})][2]
+						_nAliqOri       := _aAlqDIFAL[ASCAN(_aAlqDIFAL,{|x| x[1] == _nAno})][3]
+
+						_nFECP          := 0
+						CFC->(dbSetorder(1))
+						If CFC->(dbSeek(xFilial("CFC")+GETMV("MV_ESTADO") + SA1->A1_EST ))
+							_nFECP := CFC->CFC_ALQFCP
+						Endif
+
+						SD2->D2_ALFCCMP := _nFECP
+						SD2->D2_PDORI	:= _nAliqOri
+						SD2->D2_PDDES   := _nAliqDes
+						SD2->D2_BASEDES := SD2->D2_BASEICM
+
+						If SA1->A1_EST == "RO"
+							_nAliqInt   := Val(Subs(GETMV("MV_ESTICM"),AT(SA1->A1_EST,GETMV("MV_ESTICM"))+2,5))
+						Else
+							_nAliqInt   := Val(Subs(GETMV("MV_ESTICM"),AT(SA1->A1_EST,GETMV("MV_ESTICM"))+2,2))
+						Endif
+
+						_nDifAliq       := _nAliqInt - SD2->D2_PICM// - _nFECP
+
+						_nIcmNovo       := SD2->D2_BASEDES * (_nDifAliq /100)
+
+						SD2->D2_ALIQCMP := _nAliqInt
+						SD2->D2_ICMSCOM := _nIcmNovo * (SD2->D2_PDORI / 100)
+						SD2->D2_DIFAL   := _nIcmNovo * (SD2->D2_PDDES / 100)
+						SD2->D2_VFCPDIF := SD2->D2_BASEDES * (_nFECP  / 100)
 					Endif
+					//ElseIf SA1->A1_EST == SM0->M0_ESTCOB .And. SM0->M0_ESTCOB == "RJ"   
+				ElseIf SA1->A1_EST == SM0->M0_ESTCOB .And. SM0->M0_ESTCOB $ "PI/RJ"  // ALTERADO 21/12/18
+					If SF4->F4_ISEFECP <> "1"
+						CFC->(dbSetorder(1))
+						If CFC->(dbSeek(xFilial("CFC")+GETMV("MV_ESTADO") + SA1->A1_EST ))
+							_nFECP    := CFC->CFC_ALQFCP
 
-					_nDifAliq       := _nAliqInt - SD2->D2_PICM// - _nFECP
+							_nValFECP := SD2->D2_BASEICM * (_nFECP / 100)
 
-					_nIcmNovo       := SD2->D2_BASEDES * (_nDifAliq /100)
+							SD2->D2_BASFECP := SD2->D2_BASEICM
+							SD2->D2_ALQFECP := _nFECP
+							SD2->D2_VALFECP := _nValFECP
 
-					SD2->D2_ALIQCMP := _nAliqInt              // ALTERADO EM 05/09/16
-					//SD2->D2_ALIQCMP := _nAliqInt  - _nFECP  // ALTERADO EM 20/07/16
-					SD2->D2_ICMSCOM := _nIcmNovo * (SD2->D2_PDORI / 100)
-					SD2->D2_DIFAL   := _nIcmNovo * (SD2->D2_PDDES / 100)
-					SD2->D2_VFCPDIF := SD2->D2_BASEDES * (_nFECP  / 100)
+							SD2->D2_BSFCPST := SD2->D2_BRICMS - SD2->D2_BASEICM // ADD ABATIMENTO BASE ICM EM 2018/10/16 - POR RAPHAEL MOURA - CHAMADO 47733 
+							SD2->D2_ALFCPST := _nFECP
+							SD2->D2_VFECPST := (SD2->D2_BRICMS - SD2->D2_BASEICM) * (_nFECP/100) // ADD ABATIMENTO BASE ICM EM 2018/10/16 - POR RAPHAEL MOURA - CHAMADO 47733
+
+							// ALTERADO EM 05/09/18 POR ALEXANDRO
+							//SD2->D2_BSFCPST := SD2->D2_BRICMS
+							//SD2->D2_ALFCPST := _nFECP                       	Comentado em 2018/10/22 - Chamado 47733
+							//SD2->D2_VFECPST := SD2->D2_BRICMS * (_nFECP/100)
+						EndIf
+					Endif
 				Endif
 			Endif
 
+
 			msUnlock()
 			dbCommit()
+
+
+			//Início e-mail de Faturamento
+			_lEnvMail := (Alltrim(cFilAnt) $ SuperGetMV("MZ_FILMAIL",,"26"))
+
+			If _lEnvMail
+				_cTipo := '6' // Pesagem de Faturamento
+				_cNF1	:= Alltrim(SZ1->Z1_SERIE)+"-"+Alltrim(SZ1->Z1_NUMNF)
+				_cNF2	:= If(!Empty(SZ1->Z1_NUMNF2), Alltrim(SZ1->Z1_SERIE)+"-"+Alltrim(SZ1->Z1_NUMNF2),'')
+				_aSMS	:= {SZ1->Z1_NUM,Alltrim(SZ1->Z1_PRODUTO),Alltrim(Transform(SD2->D2_QUANT,"@e 9,999,999.99")),SD2->D2_UM,Alltrim(STR(_peso_sai)),_cNF1,_cNF2}
+				//				_aSMS	:= {SZ1->Z1_NUM,Alltrim(SZ1->Z1_PRODUTO),Alltrim(STR(SZ1->Z1_QTENF)),SZ1->Z1_UNID,Alltrim(STR(_peso_sai)),_cNF1,_cNF2}
+				LjMsgRun("Enviando e-mail/SMS Faturamento","Aguarde!",{||U_MZ0235(_cTipo,.F.,_peso_sai,_aSMS)})
+			Endif
+			//Fim e-mail de Pesagem de Saída
+
+
 
 			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 			//³ Grava SF2 - Cabecalho da NF Saida                                        ³
@@ -1490,9 +1507,8 @@ Static Function Gera_NF()
 			EndIf
 			SF2->F2_ICMFRET := _icmfret
 			SF2->F2_TIPOCLI := SA1->A1_TIPO
-			SF2->F2_VALBRUT := _valtot
+			SF2->F2_VALBRUT := _valtot + _nIcmFPaut
 
-			//If cEmpAnt + cFilAnt $ "0203|4001"
 			If cEmpAnt + cFilAnt $ "0203|0210"
 				If _lZFM
 					SF2->F2_DESCZFR := _valicm
@@ -1510,6 +1526,7 @@ Static Function Gera_NF()
 			SF2->F2_VALIPI  := _valipi + _valipiF
 			SF2->F2_BASEIPI := _baseipi + _baseipiF
 			SF2->F2_VALMERC := _total
+			SF2->F2_DESPESA := _nIcmFPaut
 			SF2->F2_TIPO    := "N"
 			SF2->F2_ICMSRET := _icmsret
 			SF2->F2_PLIQUI  := Iif(SB1->B1_UM $ "SC,SA",Round(_qtd_fat/(1000/SB1->B1_CONV),4),_qtd_fat)
@@ -1530,17 +1547,18 @@ Static Function Gera_NF()
 			SZ4->(DbSeek(xFilial("SZ4")+SZ1->Z1_UFE+SZ1->Z1_MUNE))
 			SF2->F2_YDIST   := SZ4->Z4_DIST
 			SF2->F2_YFRETE  := SZ1->Z1_FRETE
+			SF2->F2_TPFRETE := SZ1->Z1_FRETE
 			SF2->F2_YOC     := SZ1->Z1_OC
 			SF2->F2_YMUNE   := SZ1->Z1_MUNE
 			SF2->F2_YUFE    := SZ1->Z1_UFE
 			SF2->F2_YPLACA	:= SZ1->Z1_PLACA
 			SF2->F2_YPLCAR  := SZ1->Z1_PLCAR
+			SF2->F2_YPLCAR2 := SZ1->Z1_PLCAR2
 			SF2->F2_HORA    := _cHora
 			SF2->F2_ROTINA  := AllTrim(Funname())
 			SF2->F2_YOBRA   := SZ1->Z1_OBRA
 			SF2->F2_VEICUL1 := SZ1->Z1_PLACA
 
-			// Marcus Vinicius - 14/09/2016 - Preenchimento da tag QVOL no XML, solicitado através do chamado 27338
 			If TRIM(SB1->B1_UM) $ "TL|TN"
 				SF2->F2_ESPECI1 := "VOLUME"
 				SF2->F2_VOLUME1 := 1
@@ -1551,9 +1569,7 @@ Static Function Gera_NF()
 				SF2->F2_ESPECI1 := ""
 				SF2->F2_VOLUME1 := 0
 			ENDIF
-			// Até aqui
 
-			//Sergio(Semar)  Gravaçao dos Campos de MesoRegiao
 			If cEmpAnt $ "01|02|12"
 				if sz1->(fieldpos('Z1_YMESCR'))>0 .and.  sf2->(fieldpos('F2_YMESCR'))>0
 					SF2->F2_YREGIA := SZ1->Z1_YREGIA
@@ -1562,8 +1578,18 @@ Static Function Gera_NF()
 				endif
 			EndIF
 
+			// ALTERADO EM 05/09/18 POR ALEXANDRO
+
+			SF2->F2_BASFECP := SD2->D2_BASFECP
+			SF2->F2_BSFCPST := SD2->D2_BSFCPST   
+
+			// ALTERADO EM 05/09/18 POR ALEXANDRO
 
 			msUnlock()
+
+			_cNFSZ1 := _nf
+			_cSeSZ1 := _serie
+
 			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 			//³ Atualizar SZ8                                                            ³
 			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
@@ -1571,13 +1597,12 @@ Static Function Gera_NF()
 			While !Reclock("SZ8",.f.);EndDo
 			SZ8->Z8_PSSAI   := _peso_sai
 			if SZ8->(FieldPos("Z8_DTPSAI")) > 0; SZ8->Z8_DTPSAI := DATE(); endif
-			//If cEmpAnt $ "30/40"		Comentado por Alison - 22/07/2016
+
 			If cEmpAnt + cFilAnt $ '0210|3001|0203|4001'
 				if SZ8->Z8_STATUS2 = "8"
 					SZ8->Z8_STATUS2 := "9"
 				else
-					SZ8->Z8_STATUS2 := "9"	//Comentado e corrigdo por Rodrigo (Semar) - 01/08/16
-					//SZ8->Z8_FATUR := "S"  //Descomentado linha acima e comentado essa linha por Rodrigo (semar) - 12/08/16
+					SZ8->Z8_STATUS2 := "9"
 				endif
 			else
 				SZ8->Z8_FATUR := "S"
@@ -1589,7 +1614,6 @@ Static Function Gera_NF()
 			SZ8->Z8_QUANT   := nqtven
 			SZ8->Z8_YDTLIB  := _DtLib
 
-			//if cEmpAnt $ "30"         Comentado por Alison - 22/07/2016
 			If cEmpAnt + cFilAnt $ '0210|3001'
 				if SZ8->Z8_STATUS2 != "9"
 					SZ8->Z8_PAGER   := if(SuperGetMV("MV_SMULIBS",,.F.),SZ8->Z8_PAGER,'')
@@ -1606,8 +1630,6 @@ Static Function Gera_NF()
 
 			MsUnlock()
 
-			//nbasecof := SF2->F2_VALBRUT - SF2->F2_VALIPI - SF2->F2_ICMSRET
-
 			If cEmpAnt == "02" .And. SD2->D2_EMISSAO >= CTOD("01/04/17") // BENEFICIOS PARA POLIMIX A PARTIR DE 01/04/17
 				nbasecof := SD2->D2_TOTAL + SD2->D2_VALFRE - SD2->D2_VALICM
 			Else
@@ -1618,9 +1640,10 @@ Static Function Gera_NF()
 			SF4->(DbSeek(xFilial("SF4")+SD2->D2_TES))
 			SED->(DbSetOrder(1))
 			SED->(DbSeek(xFilial("SED")+SA1->A1_NATUREZ))
-			If Reclock("SD2",.f.)
+			If SD2->(Reclock("SD2",.f.))
 				If cEmpAnt + cFilAnt $ "0203"
-					SF7->(dbSetOrder(3))
+					//SF7->(dbSetOrder(3))
+					SF7->(dbOrderNickName("INDSF71"))
 					If SF7->(dbSeek(xFilial("SF7")+SB1->B1_GRTRIB + SA1->A1_GRPTRIB + SA1->A1_EST))
 						_nTxPIS	:= SF7->F7_ALIQPIS
 						_nTxCOF	:= SF7->F7_ALIQCOF
@@ -1659,7 +1682,7 @@ Static Function Gera_NF()
 					Endif
 				Endif
 
-				SD2->D2_VALBRUT := _valtot
+				SD2->D2_VALBRUT := _valtot + _nIcmFPaut
 
 				_nAlqLeiTr := 0
 
@@ -1696,7 +1719,7 @@ Static Function Gera_NF()
 			cCliente := SF2->F2_CLIENTE
 			cLoja    := SF2->F2_LOJA
 
-			U_MIZ1100(CDOC,CSERIE,CCLIENTE,CLOJA,CTIPO)
+			//U_MIZ1100(CDOC,CSERIE,CCLIENTE,CLOJA,CTIPO) ALTERADO PARA ATENDER A LIMINAR DE BARAUNA
 
 			DbSelectArea("SA1")
 			aArea := GetArea()
@@ -1716,6 +1739,59 @@ Static Function Gera_NF()
 			MaFisAtuSF3(1,"S",SF2->(RecNo()),"","",cCNAE)
 			RestArea(aAreaSP)
 			dbSelectArea("SF2")
+
+			/// AJUSTE ABAIXO CONFORME LIMINAR DO ESTADO DE BARAUNA E SERGIPE - 06/03/18 E 04/04/18
+
+			If SA1->A1_TIPO == "F" .And. SA1->A1_CONTRIB == "2" .And. SA1->A1_EST <> SM0->M0_ESTCOB
+				//If cEmpAnt + cFilAnt == "0210" .And. SF4->F4_TPMOV = "F" .And. SA1->A1_EST != "MA" .And. SD2->D2_VALICM = 0 // TRANSFERENCIA DE PRODUTOS	 -- CONFORME LIMINAR PARA PACATUBA SERÁ ZERADO OS 20% ICMS ORIGEM
+				If cEmpAnt + cFilAnt $ "0210/0213" .And. SF4->F4_TPMOV = "F" .And. SA1->A1_EST != "MA" .And. SD2->D2_VALICM = 0 // TRANSFERENCIA DE PRODUTOS	 -- CONFORME LIMINAR PARA PACATUBA SERÁ ZERADO OS 20% ICMS ORIGEM
+					_nAno           := YEAR(dDataBase)
+					_aAlqDIFAL      := &(GETMV("MV_PPDIFAL"))
+					_nAliqDes       := _aAlqDIFAL[ASCAN(_aAlqDIFAL,{|x| x[1] == _nAno})][2]
+					_nAliqOri       := _aAlqDIFAL[ASCAN(_aAlqDIFAL,{|x| x[1] == _nAno})][3]
+
+					If SA1->A1_EST == "RO"
+						_nAliqInt   := Val(Subs(GETMV("MV_ESTICM"),AT(SA1->A1_EST,GETMV("MV_ESTICM"))+2,5))
+					Else
+						_nAliqInt   := Val(Subs(GETMV("MV_ESTICM"),AT(SA1->A1_EST,GETMV("MV_ESTICM"))+2,2))
+					Endif
+
+					_nDifAliq       := _nAliqInt - 12
+					_nBaseDes       := SD2->D2_TOTAL + SD2->D2_VALFRE
+					_nIcmNovo       := _nBaseDes * (_nDifAliq /100)
+
+					SD2->(RecLock("SD2",.F.))
+					SD2->D2_BASEDES	:= _nBaseDES
+					SD2->D2_ALIQCMP := _nAliqInt
+					SD2->D2_PDDES   := _nAliqDes
+					SD2->D2_DIFAL   := _nIcmNovo * (SD2->D2_PDDES / 100)
+					SD2->(MsUnlock())
+
+					_aAliSF3 := SF3->(GetArea())
+
+					SF3->(dbSetOrder(4))
+					If SF3->(dbSeek(SF2->F2_FILIAL + SF2->F2_CLIENTE + SF2->F2_LOJA + SF2->F2_DOC + SF2->F2_SERIE ))
+						SF3->(RecLock("SF3",.F.))
+						SF3->F3_REPROC  := "N"
+						SF3->F3_BASEDES := _nBaseDES
+						SF3->F3_DIFAL	:= SD2->D2_DIFAL
+						SF3->(MsUnlock())
+
+						_aAliSFT := SFT->(GetArea())
+						SFT->(dbSetOrder(1))
+						If SFT->(dbSeek(SF2->F2_FILIAL +"S" + SF2->F2_SERIE + SF2->F2_DOC + SF2->F2_CLIENTE + SF2->F2_LOJA ))
+							SFT->(RecLock("SFT",.F.))
+							SFT->FT_BASEDES := _nBaseDES
+							SFT->FT_DIFAL	:= SD2->D2_DIFAL
+							SFT->(MsUnlock())
+						Endif
+						RestArea(_aAliSFT)
+					Endif
+					RestArea(_aAliSF3)
+				Endif
+			Endif
+
+			U_MIZ1100(CDOC,CSERIE,CCLIENTE,CLOJA,CTIPO)  // ALTERADO PARA ATENDER A LIMINAR DE BARAUNA E SERGIPE
 
 			If SF4->F4_DUPLIC == "S"
 				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
@@ -1774,10 +1850,23 @@ Static Function Gera_NF()
 					SE1->E1_STATUS  := "A"
 					SE1->E1_ORIGEM  := "MIZ035"
 					SE1->E1_SITUACA := "0"
-					SE1->E1_PORTADO := IIF(!EMPTY(SA1->A1_BCO1),SA1->A1_BCO1,GETMV("MV_YBCOPAD"))
+					//If cEmpAnt + cFilAnt == "0218"			
+					//	SE1->E1_PORTADO := "021"  // CODIGO DO BANCO BANESTES
+					//Else
+					//	SE1->E1_PORTADO := IIF(!EMPTY(SA1->A1_BCO1),SA1->A1_BCO1,GETMV("MV_YBCOPAD"))
+					//Endif
+
+					Z07->(dbSetOrder(1))
+					If Z07->(dbSeek(xFilial("Z07")+SA1->A1_COD+SA1->A1_LOJA))
+						_cSa1Bco := Z07->Z07_BANCO
+					Else		
+						_cSa1Bco := IF(!EMPTY(SA1->A1_BCO1),SA1->A1_BCO1,GETMV("MV_YBCOPAD"))
+					Endif
+					SE1->E1_PORTADO := _cSa1Bco
+
 					IF SE1->E1_VENCTO > dDataBase+1
-						SE1->E1_NUMBCO:= u_NossoNumero( SE1->E1_PORTADO )
-					ENDIF
+						SE1->E1_NUMBCO:= U_NossoNumero( SE1->E1_PORTADO )
+					Endif
 
 					MsUnLock()
 
@@ -1789,12 +1878,11 @@ Static Function Gera_NF()
 				dbSelectArea("SB2")
 				dbSetOrder(1)
 				If  dbSeek(xFilial("SB2") + SZ1->Z1_PRODUTO + SB1->B1_LOCPAD)
-					While ! Reclock("SB2",.F.) ; End
+					SB2->(Reclock("SB2",.F.))
 					SB2->B2_QATU  := SB2->B2_QATU - _qtd_fat
 					SB2->B2_VATU1 := SB2->B2_CM1  * SB2->B2_QATU
-					msUnLock()
-					dbCommit()
-				End
+					SB2->(MsUnLock())
+				Endif
 			Endif
 
 			dbSelectArea("SA1")
@@ -1822,7 +1910,7 @@ Static Function Gera_NF()
 			dbSelectArea("SX5")
 			dbSetOrder(1)
 
-			If UPPER(Alltrim(cUserName)) $ "ALE|FABIANO|ALISON"
+			If UPPER(Alltrim(cUserName)) $ "ALE|FABIANO|ALISON|MARCUS.VINICIUS|RAPHAEL.MOURA"
 				If .NOT. dbSeek(xFilial("SX5")+"01"+"ZZZ")
 					help("Numero NF",1,"Y_MIZ035/"+"01"+"ZZZ")
 				ELSE
@@ -1956,6 +2044,7 @@ Static Function Gera_NF()
 					EndIf
 					SZ7->Z7_YPEDCOM	:= SZ1->Z1_YPEDCOM
 					SZ7->Z7_YITEMPC	:= SZ1->Z1_YITEMPC
+					SZ7->Z7_YGRPPRC	:= SZ1->Z1_YGRPPRC	//Marcus Vinicius - 17/12/2018 - Grupo de preços
 
 					If cEmpAnt $ "01|02|12"
 						if sz1->(fieldpos('Z1_YMESCR'))>0 .and.  sz7->(fieldpos('Z7_YMESCR'))>0
@@ -1971,19 +2060,43 @@ Static Function Gera_NF()
 						SZ7->Z7_YITPPAL := SZ1->Z1_YITPPAL
 						SZ7->Z7_YORIGPD := SZ1->Z1_YORIGPD
 					Endif
-
 				EndIf
 				MsUnLock()
+			EndIf
+
+			If Trim(SZ1->Z1_TIPO) = "T"
+
+				SC6->(dbSetOrder(1))
+				If SC6->(dbSeek(xFilial("SC6")+SZ1->Z1_YPEDB))
+					_cPedRem 	:= SZ1->Z1_YPEDB
+					_cCliRem 	:= SZ1->Z1_YCLITRI
+					_cLjRem  	:= SZ1->Z1_YLJTRI
+					_cTesRem 	:= SZ1->Z1_YTESTRI
+					_cProdRem	:= SZ1->Z1_PRODUTO
+					_cTransp	:= SZ1->Z1_FORNECE
+					_cLjTransp	:= SZ1->Z1_LOJAF
+					_cFrete		:= SF2->F2_FRETE
+					_cPesoLiq	:= SF2->F2_PLIQUI
+					_cPesoBruto	:= SF2->F2_PBRUTO
+					_cD2PrcVen	:= SD2->D2_PRCVEN
+					_cVolume1	:= SF2->F2_VOLUME1
+					_cEspeci1	:= SF2->F2_ESPECI1
+
+					U_MIZ017L(_cPedRem,_cCliRem,_cLjRem,_cTesRem,_cProdRem,4,_cTransp,_cLjTransp,_cFrete,_cPesoLiq,_cPesoBruto,_cD2PrcVen,_cVolume1,_cEspeci1)
+
+				EndIf
 			EndIf
 
 			DbSelectArea("SZ1")
 			If  Recno() <> _reg
 				Alert("O SZ1 FOI DISPOSICIONADO")
 			EndIf
+
 			If SZ1->Z1_QTENF > 0 .and. ldivide == .F.
 				ldivide := .T.
 				Loop
 			EndIf
+
 			DbSkip()
 			ldivide := .F.
 		EndDo
@@ -1991,31 +2104,44 @@ Static Function Gera_NF()
 		DbSelectArea("SZ1")
 		DbSetOrder(8)
 		DbSeek(xFilial("SZ1")+SZ8->Z8_OC)
-		Do while .not. eof() .and. Z1_FILIAL==xFilial("SZ1") .and. SZ1->Z1_OC == SZ8->Z8_OC
+		Do while .not. eof() .and. SZ1->Z1_FILIAL==xFilial("SZ1") .and. SZ1->Z1_OC == SZ8->Z8_OC
 			While !RecLock("SZ1",.f.);EndDo
 			Delete
 			MsUnLock()
 			DbSkip()
 		EndDo
 
-		IF SE1->E1_VENCTO > SE1->E1_EMISSAO .AND. SZ7->Z7_COND<>'100'	  //MARCUS VINICIUS - 10/02/16
+		If SE1->E1_VENCTO > SE1->E1_EMISSAO .AND. !(TRIM(SZ7->Z7_COND) $ '100|CRE')
 			DbSelectArea("SZ7")
 			DbSetOrder(8)
 			DbSeek(xFilial("SZ7")+SZ8->Z8_OC)
-			Do while .not. eof() .and. Z7_FILIAL==xFilial("SZ7") .and. SZ7->Z7_OC == SZ8->Z8_OC
+			Do while .not. eof() .and. SZ7->Z7_FILIAL==xFilial("SZ7") .and. SZ7->Z7_OC == SZ8->Z8_OC
 				Do Case
-					Case ( sm0->m0_codigo == '01' .and. SM0->M0_CODFIL $ "01,04,06,08,09,21") .or. ( sm0->m0_codigo $  "02,10,11,12,20,30,40" ) // .and. SM0->M0_CODFIL $ "01")
+					//Case ( sm0->m0_codigo == '01' .and. LEFT(SM0->M0_CODFIL,2) $ "01,04,06,08,09,21") .or. ( sm0->m0_codigo $  "02,10,11,12,20,30,40" ) 
+					Case SM0->M0_CODIGO == "02"
 
-					awParam:={  2,;					//Filtrar por         1=Bordero ou 2=Titulo Expecif
-					"",;				//Bordero
-					SZ7->Z7_PREFIXO,;	//Do Prefixo
-					SZ7->Z7_PREFIXO,;	//Ate o Prefixo
-					SZ7->Z7_NUMNF,;		//Do Numero
-					Iif(Empty(SZ7->Z7_NUMNF2),SZ7->Z7_NUMNF,SZ7->Z7_NUMNF2),;	//Ate o Numero
-					"" }				//Mensagem Adcional
+					awParam:={  2,;												//	Filtrar por         1=Bordero ou 2=Titulo Expecif
+					"",;														//	Bordero
+					SZ7->Z7_PREFIXO,;											//	Do Prefixo
+					SZ7->Z7_PREFIXO,;											//	Ate o Prefixo
+					SZ7->Z7_NUMNF,;												//	Do Numero
+					Iif(Empty(SZ7->Z7_NUMNF2),SZ7->Z7_NUMNF,SZ7->Z7_NUMNF2),;	//	Ate o Numero
+					"" }														//	Mensagem Adcional
 
-					u_BOLCODBAR(awParam)
+					Z07->(dbSetOrder(1))
+					If Z07->(dbSeek(xFilial("Z07")+SE1->E1_CLIENTE + SE1->E1_LOJA))
+						_cSa1Bco := Z07->Z07_BANCO
+					Else		
+						_cSa1Bco := Posicione("SA1",1,xFilial("SA1")+SE1->(E1_CLIENTE+E1_LOJA),"A1_BCO1")
+						_cSa1Bco := IF(!EMPTY(_cSa1Bco),_cSa1Bco,GETMV("MV_YBCOPAD"))
+					Endif
 
+					If _cSa1Bco == "021"
+						U_MZ0238(awParam)
+					Else
+						U_BOLCODBAR(awParam)
+					Endif
+					
 					OtherWise
 					Execblock("MIZ060",.f.,.f.)
 				EndCase
@@ -2025,13 +2151,10 @@ Static Function Gera_NF()
 			EndDo
 		ENDIF
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³ Imprime NF saida                                                         ³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 		DbSelectArea("SZ7")
 		DbSetOrder(8)
 		DbSeek(xFilial("SZ7")+SZ8->Z8_OC)
-		Do while .not. eof() .and. Z7_FILIAL==xFilial("SZ7") .and. SZ7->Z7_OC == SZ8->Z8_OC
+		Do while .not. eof() .and. SZ7->Z7_FILIAL==xFilial("SZ7") .and. SZ7->Z7_OC == SZ8->Z8_OC
 			dbSelectArea("SX1")
 			dbSetOrder(1)
 			If  dbSeek(PADR("MIZ100",10))
@@ -2043,17 +2166,15 @@ Static Function Gera_NF()
 
 			If  cEmpAnt+cFilAnt $ "1101|0213"
 				Execblock("MIZ056",.F.,.F.)
-			Elseif cOrigem <> 'MIZ999'
+			Elseif !cOrigem $ 'MIZ999|MZ0219'
 				Execblock("MIZ055",.F.,.F.)
 			EndIf
 			DbSelectArea("SZ7")
 			DbSkip()
 		EndDo
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³ Final da transacao                                                       ³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 		DbcommitAll()
+
 	End Transaction
 
 	lReturn:=.t.
@@ -2065,7 +2186,7 @@ Static Function Gera_NF()
 		DbSeek(xFilial("SZ7")+SZ8->Z8_OC)
 		ldivide := .F.
 		aenvio :={}
-		Do while .not. eof() .and. Z7_FILIAL==xFilial("SZ7") .and. SZ7->Z7_OC == SZ8->Z8_OC
+		Do while .not. eof() .and. SZ7->Z7_FILIAL==xFilial("SZ7") .and. SZ7->Z7_OC == SZ8->Z8_OC
 			If SZ3->Z3_TIPO == "2"
 				DbSelectArea("SX1")
 				DbSetOrder(1)
@@ -2094,12 +2215,13 @@ Static Function Gera_NF()
 	DbSelectArea("SZ7")
 	DbSetOrder(8)
 	DbSeek(xFilial("SZ7")+SZ8->Z8_OC)
-	Do while .not. eof() .and. Z7_FILIAL==xFilial("SZ7") .and. SZ7->Z7_OC == SZ8->Z8_OC
+	Do while .not. eof() .and. SZ7->Z7_FILIAL==xFilial("SZ7") .and. SZ7->Z7_OC == SZ8->Z8_OC
 		SA1->(DbSetOrder(1))
 		SA1->(DbSeek(xFilial("SA1")+SZ7->Z7_CLIENTE+SZ7->Z7_LOJA))
 		If SA1->A1_YTICKET == "S"
 			_lTicket:=.T.
-			if !IsInCallStack("U_MIZ999")
+			//			if !IsInCallStack("U_MIZ999")
+			if !IsInCallStack("U_MIZ999") .And. !IsInCallStack("U_MZ0219")
 				ExecBlock("MIZ790",.F.,.F.,{SZ7->Z7_NUMNF,SZ7->Z7_SERIE} )
 			endif
 		EndIf
@@ -2113,7 +2235,8 @@ Static Function Gera_NF()
 		restArea(warea)
 	endif
 
-	If !IsInCallStack("U_MIZ999")
+	//	If !IsInCallStack("U_MIZ999")
+	If !IsInCallStack("U_MIZ999") .And. !IsInCallStack("U_MZ0219")
 		ExecBlock("MIZ027",.F.,.F.)
 	EndIf
 
@@ -2144,7 +2267,7 @@ User Function NossoNumero(_cBcoBoleto)
 		PutMv("MV_BOL"+_cBcoBoleto,wNumero) //GRAVA A SEQUENCIA DO BOLETO
 		//	wNumero := _cAgenBol+cfilant+wNumero
 		wNumero := "3" + cfilant + wNumero
-		wNumero := u_Digito_BR() //DIGITO DO BANCO BRADESCO
+		wNumero := U_Digito_BR() //DIGITO DO BANCO BRADESCO
 	ELSEIF _cBcoBoleto == "001" //ENTRA SE O BANCO PADRÃO PARA GERAÇÃO DESTE BOLETO FOR O BANCO BRASIL
 		wNumero := _cSeqBol
 		wNumero := IIF( Val(wNumero) > 0, wNumero, PadL("",5,"0") )
@@ -2158,6 +2281,13 @@ User Function NossoNumero(_cBcoBoleto)
 		wNumero := Soma1(wNumero)
 		PutMv("MV_BOL"+_cBcoBoleto,wNumero)
 		wNumero := U_DIGITO_BB()
+	ElseIf _cBcoBoleto == "021"
+		wNumero := _cSeqBol
+		wNumero := IIF( Val(wNumero) > 0, wNumero, PadL("",8,"0") )
+		wNumero := Soma1(wNumero)
+		PutMv("MV_BOL"+_cBcoBoleto,wNumero)
+		wNumero := U_DIG021()
+		wNumero := U_DIG021B()
 	Endif
 
 
@@ -2172,15 +2302,13 @@ Static Function fPesoBal()
 	private ComEnt := GetMv("MV_YCOMSAI")
 
 	if MsOpenPort(nHdll,ComEnt)
-		//if MsOpenPort(nHdll,+'"'+GetMv("MV_YCOMENT")+'"')
-		//If MsOpenPort(nHdll,"COM1:4800,E,8,2")
-		//apmsgalert('lendo peso balança')
 		Inkey(0.4)
 		IF	MSRead(nHdll,@cText)
 			nVez:=1
 			while .t.
 				nVez+=1
-				if SM0->M0_CODFIL == "21" .or. ( sm0->m0_codigo $ '02/20' .and. sm0->m0_codfil $ '01/22')
+				if sm0->m0_codigo +LEFT(SM0->M0_CODFIL,2) == "0121" .or. ( sm0->m0_codigo $ '02/20' .and. LEFT(sm0->m0_codfil,2) $ '01/22')
+					//			if LEFT(SM0->M0_CODFIL,2) == "21" .or. ( sm0->m0_codigo $ '02/20' .and. LEFT(sm0->m0_codfil,2) $ '01/22')
 					_peso_sai := VAL(alltrim(substr(cText ,at(" ",cText)+1,12)))/100  //PesoContinuo()
 				else
 					_peso_sai := VAL(alltrim(substr(cText ,at(" ",cText)+1,8)))/100  //PesoContinuo()
@@ -2708,8 +2836,11 @@ Static Function getLacre()
 				Else
 					nAliqFECP := Iif(cMV_ESTADO $"RJ|BA|RN",Iif(SB1->(FieldPos("B1_FECP")) > 0 .And.SB1->B1_FECP > 0 .Or. lFECOPRN,;
 					Iif ( !lFECOPRN, SB1->B1_FECP, SB1->B1_ALFECRN ),;
-					Iif ( cMV_ESTADO == 'BA' .Or. ( cMV_ESTADO <> 'BA' .And. cMV_ESTADO <> 'RJ' .And. cTpNf == "S" .And. cEstCliFor == "BA" )  , 0 , Iif ( cMV_ESTADO = 'RJ', 2 , 0 ) ) ) , 0 ) // MARCUS VINICIUS 27/03/15 AJUSTADO ALÍQUOTA REFERENTE AO FECP DO RJ
-					//				Iif ( cMV_ESTADO == 'BA' .Or. ( cMV_ESTADO <> 'BA' .And. cMV_ESTADO <> 'RJ' .And. cTpNf == "S" .And. cEstCliFor == "BA" )  , 0 , 1 ) ) , 0 )
+					Iif ( cMV_ESTADO == 'BA' .Or. ( cMV_ESTADO <> 'BA' .And. cMV_ESTADO <> 'RJ' .And. cTpNf == "S" .And. cEstCliFor == "BA" )  , 0 , Iif ( cMV_ESTADO = 'RJ', 2 , 0 ) ) ) , 0 )
+
+					If	cMV_ESTADO $ "PI"  // ALTERADO EM 14/01/19 - ALEXANDRO
+						nAliqFECP := 1
+					Endif
 				Endif
 
 				nAliquota := IIf( nPerIcm > 0 , nPerIcm , nMV_ICMPAD ) + nAliqFECP
@@ -2737,6 +2868,8 @@ Static Function getLacre()
 		If nAliquota == 0
 			If cMV_ESTADO $ "RJ"
 				nAliquota:=IIf(nPerIcm>0,nPerIcm,nMV_ICMPAD) + 2	// Aliquota FECP
+			ElseIf cMV_ESTADO $ "PI"
+				nAliquota:=IIf(nPerIcm>0,nPerIcm,nMV_ICMPAD) + 1	// Aliquota FECP
 			Else
 				nAliquota:=IIf(nPerIcm>0,nPerIcm,nMV_ICMPAD)
 			Endif
@@ -2858,4 +2991,4 @@ Static Function AlqLei2741(cNCM          ,cExNCM        ,cCodISS       ,cUF     
 
 	EndIF
 
-Return nPercentual
+Return nPercentual

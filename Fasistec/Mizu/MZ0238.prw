@@ -146,7 +146,7 @@ Return(Nil)
 Static Function MontaRel(aMarked)
 
 	Local oPrint
-	Local lBcoNaoOk
+	//	Local lBcoNaoOk
 	Local n := 0
 	Local aDadosEmp
 	Local aDadosTit
@@ -209,16 +209,29 @@ Static Function MontaRel(aMarked)
 			Loop
 		Endif
 
-		_cSa1Bco := Posicione("SA1",1,xFilial("SA1")+SE1->(E1_CLIENTE+E1_LOJA),"A1_BCO1")
-
-		lBcoNaoOk := .T.
-
-		If SE1->E1_PORTADO == "021" .Or. _cSa1Bco == "021"
-			lBcoNaoOk := .F.
+		Z07->(dbSetOrder(1))
+		If Z07->(dbSeek(xFilial("Z07")+SE1->E1_CLIENTE + SE1->E1_LOJA))
+			_cSa1Bco := Z07->Z07_BANCO
+		Else		
+			_cSa1Bco := Posicione("SA1",1,xFilial("SA1")+SE1->(E1_CLIENTE+E1_LOJA),"A1_BCO1")
+			_cSa1Bco := IF(!EMPTY(_cSa1Bco),_cSa1Bco,GETMV("MV_YBCOPAD"))
 		Endif
 
-		If lBcoNaoOk
-			ApMsgInfo("O código de banco informado no cadastro do cliente não é 021. Esta rotina imprime apenas boletos para o BANESTES. Altere para 021 o banco do cliente e você conseguirar imprimir por aqui.",TRBXXX->(E1_CLIENTE+E1_LOJA+"-"+E1_PREFIXO+E1_NUM+E1_PARCELA) )
+		//		lBcoNaoOk := .T.
+
+		//		If SE1->E1_PORTADO == "021" .Or. _cSa1Bco == "021"
+		//					lBcoNaoOk := .F.
+		//		Endif
+
+//		IF lBcoNaoOk
+		If  _cSa1Bco <> "021"
+			ApMsgInfo("O código de banco informado no cadastro do cliente não é 021. Esta rotina imprime apenas boletos para o BANESTES. Altere para 021 o banco do cliente e você conseguirá imprimir por aqui.",TRBXXX->(E1_CLIENTE+E1_LOJA+"-"+E1_PREFIXO+E1_NUM+E1_PARCELA) )
+			TRBXXX->(dbSkip())
+			LOOP
+		Endif
+
+		If SE1->E1_PORTADO <> "021"
+			ApMsgInfo("O código de banco informado no título não é 021. Esta rotina imprime apenas boletos para o BANESTES. Altere para 021 o banco do Título e você conseguirá imprimir por aqui.",TRBXXX->(E1_CLIENTE+E1_LOJA+"-"+E1_PREFIXO+E1_NUM+E1_PARCELA) )
 			TRBXXX->(dbSkip())
 			LOOP
 		Endif

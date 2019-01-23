@@ -581,7 +581,14 @@ Static Function MZ146E(_aTitulo,oObj2)
 			_nTitJur 	,;	//Valor Juros
 			_dTitVen 	}	//Data Vencto
 
-			_cSA1Bco := Posicione("SA1",1,xFilial("SA1")+_cCliLj,"A1_BCO1")
+			//			_cSA1Bco := Posicione("SA1",1,xFilial("SA1")+_cCliLj,"A1_BCO1")
+			Z07->(dbSetOrder(1))
+			If Z07->(dbSeek(xFilial("Z07")+_cCliLj))
+				_cSa1Bco := Z07->Z07_BANCO
+			Else		
+				_cSa1Bco := Posicione("SA1",1,xFilial("SA1")+_cCliLj,"A1_BCO1")
+				_cSa1Bco := IF(!EMPTY(_cSa1Bco),_cSa1Bco,GETMV("MV_YBCOPAD"))
+			Endif
 
 			If _cSA1Bco = '021' .Or. _aTitulo[A][20] = '021'
 				U_MZ0238(awParam)
