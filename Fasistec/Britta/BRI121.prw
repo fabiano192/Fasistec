@@ -1,26 +1,23 @@
-#include "TOTVS.ch"
-#include "TOPCONN.ch"
-#INCLUDE "TBICONN.CH"
+#INCLUDE 'TOTVS.CH'
 
+/*/{Protheus.doc} BRI121
+//Importação do arquivo de depósito identificado
+@author Fabiano
+@since 23/01/2019
+@version 1.0
 /*/
-Funçao    	³ 	BRI119
-Autor 		³ 	Fabiano da Silva
-Data 		³ 	30.11.18
-Descricao 	³ 	Importação do Arquivo EDI para realizar as baixas do Contas a Receber - REDE
-/*/
+User Function BRI121(_aParam)
 
-User Function BRI119(_aParm)
-
-	Local _lAut := .F.
+	Local _lAut	:= .F.
 	Local _nOpc := 1
-	LOCAL _oDlg := NIL
+	Local _oDlg := NIL
 
-	If ValType(_aParam) <> 'NIL'
+	If ValType( _aParam ) <> "U"
 		PREPARE ENVIRONMENT EMPRESA _aParam[1] FILIAL _aParam[2]
 		_lAut := .T.
 	Endif
 
-	Private _cRedFold	:= SuperGetMV("BRI_LOCRED",,'\EDI\REDE\')
+	Private _cRedFold	:= SuperGetMV("BRI_LOCDEP",,'\EDI\DEPOSITO\')
 	Private _cAnexo		:= ''
 	Private _cEmpresa	:= ''
 	Private _cFilial	:= ''
@@ -32,8 +29,8 @@ User Function BRI119(_aParm)
 
 		@ 004,010 TO 060,157 LABEL "" OF _oDlg PIXEL
 
-		@ 010,017 SAY "Esta rotina tem por objetivo importar os dados" 	OF _oDlg PIXEL Size 150,010
-		@ 020,017 SAY "de Compra referente ao EDI - Rede"				OF _oDlg PIXEL Size 150,010
+		@ 010,017 SAY "Esta rotina tem por objetivo importar os arquivos" 	OF _oDlg PIXEL Size 150,010
+		@ 020,017 SAY "referente ao Depósito Identificado"					OF _oDlg PIXEL Size 150,010
 
 		@ 15,165 BUTTON "OK" 		 SIZE 036,012 ACTION (_nOpc := 1,_oDlg:End()) 	OF _oDlg PIXEL
 		@ 40,165 BUTTON "Sair"       SIZE 036,012 ACTION ( _oDlg:End()) 			OF _oDlg PIXEL
@@ -43,9 +40,9 @@ User Function BRI119(_aParm)
 
 	If _nOpc = 1
 
-		LjMsgRun('Importando arquivos EDI, processando...','EDI -  REDE',{|| BRI119A()})
+		LjMsgRun('Importando arquivos, processando...','Depósito Identificado',{|| BRI121A()})
 
-		BRI119C()
+		LjMsgRun('Gerando e-mail, processando...','Depósito Identificado',{|| BRI121B()})
 
 	Endif
 
@@ -53,7 +50,7 @@ Return(Nil)
 
 
 
-Static Function BRI119A()
+Static Function BRI121A() //Importar arquivo
 
 	Local _oTMP
 	Local _aStru := {}
@@ -61,8 +58,8 @@ Static Function BRI119A()
 	Private _cCliente
 	Private _cLoja
 
-	//Criação do objeto
-	_oTMP := FWTemporaryTable():New( "BRI119" )
+	//CriaçãO de tabela temporária no banco de dados
+	_oTMP := FWTemporaryTable():New( "BRI121" )
 
 	AADD(_aStru,{"TIPO"     , "C" , 01						, 0 })
 	AADD(_aStru,{"EMPRESA"  , "C" , 02						, 0 })
@@ -78,19 +75,12 @@ Static Function BRI119A()
 	AADD(_aStru,{"ARQUIVO"  , "C" , 100, 0 })
 	AADD(_aStru,{"MSG"      , "C" , 200, 0 })
 
-	//	_cArqLOG := CriaTrab(aStru,.T.)
-	//	cIndLOG := "EMPRESA+FILIAL+CLIENTE+LOJA+PREFIXO+NUMERO+PARCELA+TIPO"
-	//	dbUseArea(.T.,,_cArqLOG,"BRI119",.F.,.F.)
-	//
-	//	dbSelectArea("BRI119")
-	//	IndRegua("BRI119",_cArqLog,cIndLog,,,"Criando Trabalho...")
-
+	//CriaçãO de indice na tabela temporária no banco de dados
 	_oTMP:SetFields( _aStru )
 	_oTMP:AddIndex("INDICE1", {"TIPO","EMPRESA","FILIAL","CLIENTE","LOJA","PREFIXO","NUMERO","PARCELA"} )
 
 	//Criação da tabela
 	_oTMP:Create()
-
 
 	_cDir := _cRedFold
 
@@ -201,147 +191,26 @@ Return(Nil)
 
 
 
-Static Function BRI119C()
+Static Function LoadBaixa(_cFile,_cPV,_cGrupo,_cContVen,_dDtEmis,_nValLiq,_dDtCred) //Baixar título
 
-	Local _oFwMsEx 		:= NIL
-	Local _cArq 			:= ""
-	Local _cWorkSheet	:= ""
-	Local _cTable 		:= ""
-	Local _lEnt 		:= .F.
-	/*
-	Indice		Descrição
-	1			Cliente não Cadastrado
-	2			Produto Não cadastrado
-	3			PO não cadastrado
-	4			Revisão Não Cadastrado
-	*/
-
-	_oFwMsEx := FWMsExcel():New()
-
-	BRI119->(dbGotop())
-
-	While !BRI119->(Eof())
-
-		_cIndice := BRI119->TIPO
-
-		_lEnt := .T.
-		If _cIndice = "0"
-			_cWorkSheet 	:= 	"Baixas_OK"
-			_cTable 		:= 	"Baixas Realizadas com sucesso"
-		Else
-			_cWorkSheet 	:= 	"Nao_Realizado"
-			_cTable 		:= 	"Baixas NÃO Realizadas"
-		Endif
-
-		_oFwMsEx:AddWorkSheet( _cWorkSheet )
-		_oFwMsEx:AddTable( _cWorkSheet, _cTable )
-
-		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Empresa"		, 1,1,.F.)
-		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Filial"			, 1,1,.F.)
-		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Cliente"   		, 1,1,.F.)
-		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Loja"			, 1,1,.F.)
-		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Nome"   		, 1,1,.F.)
-		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Prefixo"   		, 1,1,.F.)
-		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Numero"  		, 1,1,.F.)
-		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Parcela"   		, 1,1,.F.)
-		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Data Pagto"   	, 1,1,.F.)
-		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Valor"   		, 3,2,.F.)
-		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Obs"  			, 1,1,.F.)
-		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Arquivo"		, 1,1,.F.)
-
-		While !BRI119->(Eof()) //.And. _cIndice == BRI119->INDICE
-
-			_oFwMsEx:AddRow( _cWorkSheet, _cTable,{;
-			BRI119->EMPRESA	,;
-			BRI119->FILIAL	,;
-			BRI119->CLIENTE	,;
-			BRI119->LOJA	,;
-			BRI119->NOMECLI	,;
-			BRI119->PREFIXO	,;
-			BRI119->NUMERO	,;
-			BRI119->PARCELA	,;
-			BRI119->DTPGTO	,;
-			BRI119->VLRPGTO	,;
-			BRI119->ARQUIVO	,;
-			BRI119->MSG		})
-
-			BRI119->(dbSkip())
-		EndDo
-	EndDo
-
-	//Exclui a tabela
-	_oTMP:Delete()
-
-	_oFwMsEx:Activate()
-
-	_cDat1		:= GravaData(dDataBase,.f.,8)
-	_cHor1		:= Substr(Time(),1,2) + Substr(Time(),4,2) + Substr(Time(),7,2)
-
-	_cArq 		:= 'EDI_REDE_'+_cDat1+'_'+_cHor1 + ".xls"
-
-	_cAnexo 	:= "\WORKFLOW\RELATORIOS\"+_cArq
-
-	_oFwMsEx:GetXMLFile( _cAnexo )
-
-	If _lEnt
-		BRI119D() 	//Envia e-mail
-	Endif
-
-Return(Nil)
-
-
-
-Static Function BRI119D()
-
-	Local _cTo		:= SuperGetMV("BRI_MAILRE",,'fabiano@assystem.com.br')
-	Local _oProcess := TWFProcess():New( "EDI_REDE", "PO_CBL" )
-
-	_oProcess:NewTask( "EDI_REDE", "\WORKFLOW\BRI119.HTM" )
-	_oProcess:bReturn  := ""
-	_oProcess:bTimeOut := ""
-
-	_oHTML := _oProcess:oHTML
-
-	_oProcess:cSubject := "EDI-REDE - "+Dtoc(dDataBase)+" Hora : "+Substr(Time(),1,5)
-
-	_oProcess:fDesc := "EDI REDE"
-
-	Private _cTo := _cCC := ""
-
-	_oProcess:AttachFile(_cAnexo)
-
-	_oProcess:cTo := _cTo
-	_oProcess:cCC := _cCC
-
-	_oProcess:Start()
-
-	_oProcess:Finish()
-
-	FErase(_cAnexo)
-
-Return(Nil)
-
-
-
-Static Function LoadBaixa(_cFile,_cPV,_cGrupo,_cContVen,_dDtEmis,_nValLiq,_dDtCred)
-
+/*
 	ZF3->(dbSetOrder(2))
 	If !ZF3->(MsSeek(xFilial("ZF3")+Alltrim(_cPV)))
-		BR119->(RecLock("BRI119",.T.))
-		BR119->TIPO		:= '1'
-		BR119->EMPRESA	:= ''
-		BR119->FILIAL	:= ''
-		BR119->CLIENTE	:= ''
-		BR119->LOJA		:= ''
-		BR119->NOMECLI	:= ''
-		BR119->PREFIXO	:= ''
-		BR119->NUMERO	:= ''
-		BR119->PARCELA	:= ''
-		BR119->DTPGTO	:= _dDtCred
-		BR119->VLRPGTO	:= _nValLiq
-		BR119->ARQUIVO	:= _cFile
-		BR119->MSG		:= 'Não encontrado cadastro da empresa/Filial para o código apresentado: '+Alltrim(_cGrupo)
-		BR119->(MsUnLock())
+		BRI121->(RecLock("BRI121",.T.))
+		BRI121->TIPO		:= '1'
+		BRI121->EMPRESA	:= ''
+		BRI121->FILIAL	:= ''
+		BRI121->CLIENTE	:= ''
+		BRI121->LOJA		:= ''
+		BRI121->NOMECLI	:= ''
+		BRI121->PREFIXO	:= ''
+		BRI121->NUMERO	:= ''
+		BRI121->PARCELA	:= ''
+		BRI121->DTPGTO	:= _dDtCred
+		BRI121->VLRPGTO	:= _nValLiq
+		BRI121->ARQUIVO	:= _cFile
+		BRI121->MSG		:= 'Não encontrado cadastro da empresa/Filial para o código apresentado: '+Alltrim(_cGrupo)
+		BRI121->(MsUnLock())
 
 		Return(Nil)
 	Endif
@@ -361,32 +230,32 @@ Static Function LoadBaixa(_cFile,_cPV,_cGrupo,_cContVen,_dDtEmis,_nValLiq,_dDtCr
 		//		RpcSetEnv(SM0->M0_CODIGO, SM0->M0_CODFIL,'schedule','schedule','FIN',,{"ZF3","SE1","SE5","SA6","SED","SA1"})
 		RpcSetEnv(SM0->M0_CODIGO, SM0->M0_CODFIL,'schedule','schedule','FIN')
 	Else
-		CONOUT("BRI119 - Não encontrou empresa "+_cEmpresa)
+		CONOUT("BRI121 - Não encontrou empresa "+_cEmpresa)
 		SM0->(dbGoTop())
 		dbCloseAll()
 		RpcClearEnv()
 	Endif
-
-	CONOUT("BRI119 - SETADA EMPRESA : "+_cEmpresa)
-	CONOUT("ROTINA --> BRI119 :"+DTOS(DDATABASE)+" HORA: "+TIME())
+*/
+	CONOUT("BRI121 - SETADA EMPRESA : "+_cEmpresa)
+	CONOUT("ROTINA --> BRI121 :"+DTOS(DDATABASE)+" HORA: "+TIME())
 
 	SE1->(dbOrderNickName('E1XNCC'))
 	If !SE1->(MsSeek(xFilial("SE1")+Alltrim(_cContVen)))
-		BR119->(RecLock("BRI119",.T.))
-		BR119->TIPO		:= '1'
-		BR119->EMPRESA	:= cEmpAnt
-		BR119->FILIAL	:= cFilAnt
-		BR119->CLIENTE	:= ''
-		BR119->LOJA		:= ''
-		BR119->NOMECLI	:= ''
-		BR119->PREFIXO	:= ''
-		BR119->NUMERO	:= ''
-		BR119->PARCELA	:= ''
-		BR119->DTPGTO	:= _dDtCred
-		BR119->VLRPGTO	:= _nValLiq
-		BR119->ARQUIVO	:= _cFile
-		BR119->MSG		:= 'Não encontrado título para baixa: '+Alltrim(_cContVen)
-		BR119->(MsUnLock())
+		BRI121->(RecLock("BRI121",.T.))
+		BRI121->TIPO		:= '1'
+		BRI121->EMPRESA	:= cEmpAnt
+		BRI121->FILIAL	:= cFilAnt
+		BRI121->CLIENTE	:= ''
+		BRI121->LOJA		:= ''
+		BRI121->NOMECLI	:= ''
+		BRI121->PREFIXO	:= ''
+		BRI121->NUMERO	:= ''
+		BRI121->PARCELA	:= ''
+		BRI121->DTPGTO	:= _dDtCred
+		BRI121->VLRPGTO	:= _nValLiq
+		BRI121->ARQUIVO	:= _cFile
+		BRI121->MSG		:= 'Não encontrado título para baixa: '+Alltrim(_cContVen)
+		BRI121->(MsUnLock())
 
 		Return(Nil)
 	Endif
@@ -417,37 +286,163 @@ Static Function LoadBaixa(_cFile,_cPV,_cGrupo,_cContVen,_dDtEmis,_nValLiq,_dDtCr
 	MSExecAuto({|x,y| FINA070(x,y)},_aBaixa,3)
 
 	If lMsErroAuto
-		BR119->(RecLock("BRI119",.T.))
-		BR119->TIPO		:= '1'
-		BR119->EMPRESA	:= cEmpAnt
-		BR119->FILIAL	:= cFilAnt
-		BR119->CLIENTE	:= SE1->E1_CLIENTE
-		BR119->LOJA		:= SE1->E1_LOJA
-		BR119->NOMECLI	:= SE1->E1_LOJA
-		BR119->PREFIXO	:= SE1->E1_PREFIXO
-		BR119->NUMERO	:= SE1->E1_NUM
-		BR119->PARCELA	:= SE1->E1_PARCELA
-		BR119->DTPGTO	:= _dDtCred
-		BR119->VLRPGTO	:= _nValLiq
-		BR119->ARQUIVO	:= _cFile
-		BR119->MSG		:= 'Erro ao tentar realizar a baixa'
-		BR119->(MsUnLock())
+		BRI121->(RecLock("BRI121",.T.))
+		BRI121->TIPO		:= '1'
+		BRI121->EMPRESA	:= cEmpAnt
+		BRI121->FILIAL	:= cFilAnt
+		BRI121->CLIENTE	:= SE1->E1_CLIENTE
+		BRI121->LOJA		:= SE1->E1_LOJA
+		BRI121->NOMECLI	:= SE1->E1_LOJA
+		BRI121->PREFIXO	:= SE1->E1_PREFIXO
+		BRI121->NUMERO	:= SE1->E1_NUM
+		BRI121->PARCELA	:= SE1->E1_PARCELA
+		BRI121->DTPGTO	:= _dDtCred
+		BRI121->VLRPGTO	:= _nValLiq
+		BRI121->ARQUIVO	:= _cFile
+		BRI121->MSG		:= 'Erro ao tentar realizar a baixa'
+		BRI121->(MsUnLock())
 	Else
-		BR119->(RecLock("BRI119",.T.))
-		BR119->TIPO		:= '0'
-		BR119->EMPRESA	:= cEmpAnt
-		BR119->FILIAL	:= cFilAnt
-		BR119->CLIENTE	:= SE1->E1_CLIENTE
-		BR119->LOJA		:= SE1->E1_LOJA
-		BR119->NOMECLI	:= SE1->E1_LOJA
-		BR119->PREFIXO	:= SE1->E1_PREFIXO
-		BR119->NUMERO	:= SE1->E1_NUM
-		BR119->PARCELA	:= SE1->E1_PARCELA
-		BR119->DTPGTO	:= _dDtCred
-		BR119->VLRPGTO	:= _nValLiq
-		BR119->ARQUIVO	:= _cFile
-		BR119->MSG		:= 'Baixa Realizada com sucesso'
-		BR119->(MsUnLock())
+		BRI121->(RecLock("BRI121",.T.))
+		BRI121->TIPO		:= '0'
+		BRI121->EMPRESA	:= cEmpAnt
+		BRI121->FILIAL	:= cFilAnt
+		BRI121->CLIENTE	:= SE1->E1_CLIENTE
+		BRI121->LOJA		:= SE1->E1_LOJA
+		BRI121->NOMECLI	:= SE1->E1_LOJA
+		BRI121->PREFIXO	:= SE1->E1_PREFIXO
+		BRI121->NUMERO	:= SE1->E1_NUM
+		BRI121->PARCELA	:= SE1->E1_PARCELA
+		BRI121->DTPGTO	:= _dDtCred
+		BRI121->VLRPGTO	:= _nValLiq
+		BRI121->ARQUIVO	:= _cFile
+		BRI121->MSG		:= 'Baixa Realizada com sucesso'
+		BRI121->(MsUnLock())
 	Endif
 
 Return(Nil)
+
+
+
+Static Function BRI121B() //Gerar arquivo à ser enviado por e-mail
+
+	Local _oFwMsEx 		:= NIL
+	Local _cArq 			:= ""
+	Local _cWorkSheet	:= ""
+	Local _cTable 		:= ""
+	Local _lEnt 		:= .F.
+	/*
+	Indice		Descrição
+	1			Cliente não Cadastrado
+	2			Produto Não cadastrado
+	3			PO não cadastrado
+	4			Revisão Não Cadastrado
+	*/
+
+	_oFwMsEx := FWMsExcel():New()
+
+	BRI121->(dbGotop())
+
+	While !BRI121->(Eof())
+
+		_cIndice := BRI121->TIPO
+
+		_lEnt := .T.
+		If _cIndice = "0"
+			_cWorkSheet 	:= 	"Baixas_OK"
+			_cTable 		:= 	"Baixas Realizadas com sucesso"
+		Else
+			_cWorkSheet 	:= 	"Nao_Realizado"
+			_cTable 		:= 	"Baixas NÃO Realizadas"
+		Endif
+
+		_oFwMsEx:AddWorkSheet( _cWorkSheet )
+		_oFwMsEx:AddTable( _cWorkSheet, _cTable )
+
+		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Empresa"		, 1,1,.F.)
+		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Filial"			, 1,1,.F.)
+		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Cliente"   		, 1,1,.F.)
+		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Loja"			, 1,1,.F.)
+		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Nome"   		, 1,1,.F.)
+		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Prefixo"   		, 1,1,.F.)
+		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Numero"  		, 1,1,.F.)
+		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Parcela"   		, 1,1,.F.)
+		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Data Pagto"   	, 1,1,.F.)
+		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Valor"   		, 3,2,.F.)
+		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Obs"  			, 1,1,.F.)
+		_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Arquivo"		, 1,1,.F.)
+
+		While !BRI121->(Eof()) //.And. _cIndice == BRI121->INDICE
+
+			_oFwMsEx:AddRow( _cWorkSheet, _cTable,{;
+			BRI121->EMPRESA	,;
+			BRI121->FILIAL	,;
+			BRI121->CLIENTE	,;
+			BRI121->LOJA	,;
+			BRI121->NOMECLI	,;
+			BRI121->PREFIXO	,;
+			BRI121->NUMERO	,;
+			BRI121->PARCELA	,;
+			BRI121->DTPGTO	,;
+			BRI121->VLRPGTO	,;
+			BRI121->ARQUIVO	,;
+			BRI121->MSG		})
+
+			BRI121->(dbSkip())
+		EndDo
+	EndDo
+
+	//Exclui a tabela
+	_oTMP:Delete()
+
+	_oFwMsEx:Activate()
+
+	_cDat1		:= GravaData(dDataBase,.f.,8)
+	_cHor1		:= Substr(Time(),1,2) + Substr(Time(),4,2) + Substr(Time(),7,2)
+
+	_cArq 		:= 'EDI_REDE_'+_cDat1+'_'+_cHor1 + ".xls"
+
+	_cAnexo 	:= "\WORKFLOW\RELATORIOS\"+_cArq
+
+	_oFwMsEx:GetXMLFile( _cAnexo )
+
+	If _lEnt
+		BRI121C() 	//Envia e-mail
+	Endif
+
+Return(Nil)
+
+
+
+Static Function BRI121C() //Envia e-mail
+
+	Local _cTo		:= SuperGetMV("BRI_MAILRE",,'fabiano@assystem.com.br')
+	Local _oProcess := TWFProcess():New( "EDI_REDE", "PO_CBL" )
+
+	_oProcess:NewTask( "EDI_REDE", "\WORKFLOW\BRI121.HTM" )
+	_oProcess:bReturn  := ""
+	_oProcess:bTimeOut := ""
+
+	_oHTML := _oProcess:oHTML
+
+	_oProcess:cSubject := "EDI-REDE - "+Dtoc(dDataBase)+" Hora : "+Substr(Time(),1,5)
+
+	_oProcess:fDesc := "EDI REDE"
+
+	Private _cTo := _cCC := ""
+
+	_oProcess:AttachFile(_cAnexo)
+
+	_oProcess:cTo := _cTo
+	_oProcess:cCC := _cCC
+
+	_oProcess:Start()
+
+	_oProcess:Finish()
+
+	FErase(_cAnexo)
+
+Return(Nil)
+
+
+
+

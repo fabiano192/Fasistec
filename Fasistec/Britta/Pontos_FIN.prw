@@ -920,10 +920,10 @@ User Function M040SE1()
 
 		/*
 		O Código será composto de 13 caracteres
-		Filial = 2
-		Prefixo = 3
-		Número = 6
-		Parcela = 2
+		Filial	= 2
+		Prefixo	= 3
+		Número	= 6
+		Parcela	= 2
 		*/
 
 		_cNum	:= If(Len(Alltrim(SE1->E1_NUM)) = 6,Alltrim(SE1->E1_NUM),Right(SE1->E1_NUM,6))
@@ -1058,6 +1058,8 @@ User Function PF0001()
 	RestArea(_aAliOri)
 
 Return(_lRet)
+
+
 
 User function F380FIL()
 
