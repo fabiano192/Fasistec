@@ -599,7 +599,6 @@ Static Function SitCob(l1Elem)
 
 	_cSit := MvPar										 // Devolve Resultado
 
-
 Return( .T. )
 
 

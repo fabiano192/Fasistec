@@ -1,29 +1,22 @@
-#INCLUDE "PROTHEUS.CH"
+#INCLUDE "TOTVS.CH"
 #INCLUDE "TBICONN.CH"
 #INCLUDE "TOPCONN.CH"
 #INCLUDE "DBSTRUCT.CH"
 #INCLUDE "SHELL.CH"
+#INCLUDE "FILEIO.CH"
 
-#DEFINE PS_CREATE_EXCEL_FILE	1
-#DEFINE PS_ADD_LINE_EXCEL_FILE	2
-#DEFINE PS_SHOW_EXCEL_FILE	3
+#DEFINE PS_CREATE_EXCEL_FILE			1
+#DEFINE PS_ADD_LINE_EXCEL_FILE			2
+#DEFINE PS_SHOW_EXCEL_FILE				3
+#DEFINE PS_COPY_EXCEL_SRV_LOCAL_FILE	4
 
-#DEFINE MAX_TOP_SELECT	"50"
+#DEFINE MAX_TOP_SELECT					"50"
 
-//Criar gráfico
-//https://codewala.net/2016/09/23/how-to-create-excel-chart-using-powershell-part-2/
+Static __cCRLF := CRLF
 
+User Function T2PSExcel()
 
-/*/
-Funcao:	U_T2PSExcel
-Autor:	Marinaldo de Jesus (Sharing the Experience)
-Data:	19/09/2011
-Descricao:	Exemplo de Integracao Totvs/Protheus vs PowerShell & Excel via WaitRun
-Sintaxe:
-/*/
-User Function PSHELL()
-
-	Local lPrepEnv	:= ( IsBlind() .or. ( Select( "SM0" ) == 0 ) )
+	Local lPrepEnv		:= ( IsBlind() .or. ( Select( "SM0" ) == 0 ) )
 	Local lSetCentury	:= .F.
 
 	IF ( lPrepEnv )
@@ -31,9 +24,9 @@ User Function PSHELL()
 	EndIF
 
 	SetsDefault()
-	lSetCentury	:= __SetCentury( "ON" )
+	lSetCentury			:= __SetCentury( "ON" )
 
-	MsgRun( "Aguarde...." , "Gerando Planilha Excel...." , { || T2PSExcel() } )
+	MsgRun( "Aguarde...." , "Gerando Planilha Excel no Client" , { || GeraExcel() } )
 
 	IF ( lPrepEnv )
 		RESET ENVIRONMENT
@@ -43,99 +36,43 @@ User Function PSHELL()
 
 Return( NIL )
 
-/*/
-Funcao:	T2PSExcel
-Autor:	Marinaldo de Jesus (Sharing the Experience)
-Data:	19/09/2011
-Descricao:	Exemplo de Integracao Totvs/Protheus vs PowerShell & Excel via WaitRun
-Sintaxe:
-/*/
-Static Function T2PSExcel()
-
-	Local aDbStruct
-
-	Local cPath	:= GetTempPath()
-	Local cQuery	:= ""
-	Local cExcelFile
-
-	Local cNextAlias	:= GetNextAlias()
-
-	Local nLine
 
 
-	Local cExcelFile	:= ( CriaTrab( NIL , .F. ) + ".xlsx" )
-	Local cNewExcelFile	:= ""
+
+Static Function GeraExcel()
+
+//		cWaitRunCmd	:= "PowerShell -NonInteractive -WindowStyle Hidden -File " + cNewPsFile + ""
+		cWaitRunCmd	:= "PowerShell -NonInteractive -WindowStyle "
+
+		lStatus		:= ( WaitRun( cWaitRunCmd , SW_HIDE ) == 0 )
 
 
-	Local cPsFile	:= ( CriaTrab( NIL , .F. ) + ".ps1" )
-	Local cStrLine	:= ""
-	Local cPsScript	:= ""
-	Local cNewPsFile	:= ""
-	Local cWaitRunCmd	:= ""
+	cWaitRunCmd += "# -----------------------------------------------------" +CRLF 
+	cWaitRunCmd += "function Release-Ref ($ref) { " +CRLF
+	cWaitRunCmd += "([System.Runtime.InteropServices.Marshal]::ReleaseComObject(" +CRLF 
+	cWaitRunCmd += "[System.__ComObject]$ref) -gt 0) " +CRLF
+	cWaitRunCmd += "[System.GC]::Collect() " +CRLF
+	cWaitRunCmd += "[System.GC]::WaitForPendingFinalizers()" +CRLF 
+	cWaitRunCmd += "} " +CRLF
+	cWaitRunCmd += "# -----------------------------------------------------" +CRLF 
 
-	Local lStatus	:= .F.
-
-
-//	cPsScript := "Powershell -noexit $excel = New-Object -ComObject excel.application" + CRLF
-	cPsScript += "$excel.Application.Visible = $true " + CRLF
-	cPsScript += "$excel.DisplayAlerts = $false " + CRLF
-
-	cPsScript += "$book = $excel.Workbooks.Add() " + CRLF
-	cPsScript += "$sheet = $book.Worksheets.Item(1) " + CRLF
-	cPsScript += "$sheet.name = 'Computer Information'"  + CRLF
-
-	cPsScript += "$sheet.Cells.Item(1,1)= 'Coluna 1'" + CRLF
-	cPsScript += "$sheet.Cells.Item(1,2)= 30" + CRLF
-	cPsScript += "$sheet.Cells.Item(2,1)= 'Linha 1'" + CRLF
-	cPsScript += "$sheet.Cells.Item(2,2)= 80" + CRLF
-/*
-	cPsScript += "#merging a few cells on the top row to make the title look nicer;" + CRLF
-	cPsScript += "$MergeCells = $sheet.Range('A5:G5')" + CRLF
-	cPsScript += "$MergeCells.Select() " + CRLF
-	cPsScript += "$MergeCells.MergeCells = $true " + CRLF
-	cPsScript += "$sheet.Cells(5, 1).HorizontalAlignment = -4108" + CRLF
-	cPsScript += "$dummy = Release-Ref($oExcel)	| Out-Null" + CRLF
-
-	cPsScript += "$sheet.Cells.Item(5,1).Font.Size = 18 " + CRLF
-	cPsScript += "$sheet.Cells.Item(5,1).Font.Bold=$True " + CRLF
-	cPsScript += "$sheet.Cells.Item(5,1).Font.Name = 'Cambria' " + CRLF
-	cPsScript += "$sheet.Cells.Item(5,1).Font.ThemeFont = 1 " + CRLF
-	cPsScript += "$sheet.Cells.Item(5,1).Font.ThemeColor = 4 " + CRLF
-	cPsScript += "$sheet.Cells.Item(5,1).Font.ColorIndex = 55 " + CRLF
-	cPsScript += "$sheet.Cells.Item(5,1).Font.Color = 8210719 " + CRLF
-
-	cPsScript += "$sheet.Cells.Item(5,1)= 'Teste Merge' " + CRLF
-*/
-	cPsScript += "#adjusting the column width so all datas properly visible " + CRLF
-	cPsScript += "$usedRange = $sheet.UsedRange	" + CRLF
-	cPsScript += "$usedRange.EntireColumn.AutoFit() | Out-Null" + CRLF
+	cWaitRunCmd += "$objExcel = new-object -comobject excel.application  " +CRLF
+	cWaitRunCmd += "$objExcel.Visible = $True  " +CRLF
+	cWaitRunCmd += "$objWorkbook = $objExcel.Workbooks.Open("C:\Pasta1.xls")" +CRLF 
+	cWaitRunCmd += "$objWorksheet = $objWorkbook.Worksheets.Item(1) " +CRLF
+	cWaitRunCmd += "$intRow = 2 " +CRLF
+	cWaitRunCmd += "Do { " +CRLF
+	cWaitRunCmd += ""Codigo: " + $objWorksheet.Cells.Item($intRow, 1).Value()" +CRLF 
+	cWaitRunCmd += ""Descricao: " + $objWorksheet.Cells.Item($intRow,2).Value() " +CRLF
+	cWaitRunCmd += ""Valor: " + $objWorksheet.Cells.Item($intRow,3).Value() " +CRLF
+	cWaitRunCmd += "$intRow++ " +CRLF
+	cWaitRunCmd += "} " +CRLF
+	cWaitRunCmd += "While ($objWorksheet.Cells.Item($intRow,1).Value() -ne $null)" +CRLF 
+	cWaitRunCmd += "$objExcel.Quit() " +CRLF
+	cWaitRunCmd += "$a = Release-Ref($objWorksheet)" +CRLF 
+	cWaitRunCmd += "$a = Release-Ref($objWorkbook) " +CRLF
+	cWaitRunCmd += "$a = Release-Ref($objExcel)" +CRLF
 
 
-	cPsScript += "#$sheet.activate() " + CRLF
-	cPsScript += "$DataforFirstChart = $sheet.Range('A1').CurrentRegion " + CRLF
-	cPsScript += "$firstChart = $sheet.Shapes.AddChart().Chart " + CRLF
-	cPsScript += "$firstChart.chartType = 60 " + CRLF
-//	cPsScript += "$firstChart.chartType = xlCylinderColClustered " + CRLF
-	cPsScript += "# Providing the source data " + CRLF
-	cPsScript += "$firstChart.SetSourceData($DataforFirstChart) " + CRLF
-	cPsScript += "$firstChart.HasTitle = $true " + CRLF
-	cPsScript += "# Providing the Title for the chart " + CRLF
-	cPsScript += "#$firstChart.ChartTitle.Text = 'Domain controllers usage- Bar Chart' " + CRLF
 
-	cPsScript += "$sheet.shapes.item('Chart 1').top = 100 " + CRLF
-	cPsScript += "$sheet.shapes.item('Chart 1').left = 0 " + CRLF
-
-	cPsScript += "$book.Worksheets.Add() " + CRLF
-	cPsScript += "$sheet2 = $book.Worksheets.Item(1) " + CRLF
-	cPsScript += "$sheet2.name = 'Teste'"  + CRLF
-
-
-	cPsScript += "#$excel.Quit()" + CRLF
-	cPsScript += "$dummy = Release-Ref($oExcel)	| Out-Null " + CRLF
-
-	cPsScript += "Exit " + CRLF
-
-	WaitRun( cPsScript , SW_HIDE )
-
-Return( lStatus )
-
+Return(Nil)

@@ -39,7 +39,7 @@ User Function MZ0239(_cTable,_cTitle,_l1Elem)
 		CursorArrow()
 	Endif
 
-	IF f_Opcoes(@_cVar,_cTitle,_aTipo,_cVarDef,12,49,_l1Elem,2)  // Chama funcao f_Opcoes (padrão Protheus)
+	IF f_Opcoes(@_cVar,_cTitle,_aTipo,_cVarDef,12,49,_l1Elem,2,28)  // Chama funcao f_Opcoes (padrão Protheus)
 		&_cVarRet := _cVar										 // Devolve Resultado
 	EndIF
 
