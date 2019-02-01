@@ -45,6 +45,8 @@ User Function MZ0239(_cTable,_cTitle,_l1Elem)
 
 	VAR_IXB := &_cVarRet //variável de retorno da consulta padrão (SXB)
 
-	dbSelectArea(_cAlias) // Retorna Alias
+	If !Empty(_cAlias)
+		dbSelectArea(_cAlias) // Retorna Alias
+	Endif
 
 Return(.T.)

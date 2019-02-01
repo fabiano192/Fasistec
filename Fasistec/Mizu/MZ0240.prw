@@ -824,6 +824,7 @@ Return(_aRet)
 
 
 
+
 Static Function SitTit(_cPort,_cAgen,_cConta,_cSituaca)
 
 	Local _cSituac := Left(_cSituaca,1)
