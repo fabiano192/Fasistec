@@ -106,19 +106,25 @@
  ***
 */
 
-#INCLUDE "PROTHEUS.CH"
-#INCLUDE "TBICONN.CH"
+//#INCLUDE "PROTHEUS.CH"
+//#INCLUDE "TBICONN.CH"
+//#INCLUDE "TOPCONN.CH"
+//#INCLUDE "DBSTRUCT.CH"
+//#INCLUDE "SHELL.CH"
+//#INCLUDE "FILEIO.CH"
+
+#include "RWMAKE.CH"
 #INCLUDE "TOPCONN.CH"
-#INCLUDE "DBSTRUCT.CH"
-#INCLUDE "SHELL.CH"
-#INCLUDE "FILEIO.CH"
+#include "PROTHEUS.CH"
+#include "shell.ch"
+#include "FILEIO.CH"
 
 #DEFINE PS_CREATE_EXCEL_FILE			1
 #DEFINE PS_ADD_LINE_EXCEL_FILE			2
 #DEFINE PS_SHOW_EXCEL_FILE				3
 #DEFINE PS_COPY_EXCEL_SRV_LOCAL_FILE	4
 
-#DEFINE MAX_TOP_SELECT					"50"
+#DEFINE MAX_TOP_SELECT	"50"
 
 Static __cCRLF := CRLF
 
@@ -134,22 +140,20 @@ User Function T2PSExcel()
 	Local lPrepEnv		:= ( IsBlind() .or. ( Select( "SM0" ) == 0 ) )
 	Local lSetCentury	:= .F.
 
-	IF ( lPrepEnv )
-		PREPARE ENVIRONMENT EMPRESA "01" FILIAL "01"
-	EndIF
-
 	SetsDefault()
 	lSetCentury			:= __SetCentury( "ON" )
 
 	MsgRun( "Aguarde...." , "Gerando Planilha Excel no Client" , { || T2PSExcel() } )
 
-	IF ( lPrepEnv )
-		RESET ENVIRONMENT
-	EndIF
+
 
 	__SetCentury( IF( lSetCentury , "ON" , "OFF" ) )
 
 Return( NIL )
+
+
+
+
 /*/
 	Funcao:		T2PSExcel
 	Autor:		Marinaldo de Jesus (Sharing the Experience)
@@ -419,6 +423,9 @@ Static Function CSVAddExcelLine( nfhCSVFile , aDbStruct , nFields , lHeader , cF
 
 Return( NIL )
 
+
+
+
 /*/
 	Funcao:		PsNewExcelFile
 	Autor:		Marinaldo de Jesus (Sharing the Experience)
@@ -602,7 +609,7 @@ Static Function PsExecute( nScript , cExcelFile , cSrvPath , cLocalPath , cCSVFi
 
 	IF ( lWriteOk .and. File( cNewPsFile ) )
 
-		cWaitRunCmd	:= "PowerShell -NonInteractive -WindowStyle Hidden -File " + cNewPsFile + ""
+		cWaitRunCmd	:= 'PowerShell -NonInteractive -WindowStyle Hidden -File ' + cNewPsFile
 
 		lStatus		:= ( WaitRun( cWaitRunCmd , SW_HIDE ) == 0 )
 
