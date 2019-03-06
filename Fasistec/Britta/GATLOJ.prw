@@ -112,7 +112,8 @@ User Function GLOJ002()
 
 	_nLin += 20
 
-	_oTBut1	:= TButton():New( _nLin,_nCol	 , "Capturar peso"		,_oDlg,{|| LoadPeso(@_nPBruto,@_nTara,@_nPLiq,@_nPrUnit,@_nVlTot) }	, 40,12,,,.F.,.T.,.F.,,.F.,,,.F. )	
+	//	_oTBut1	:= TButton():New( _nLin,_nCol	 , "Capturar peso"		,_oDlg,{|| LoadPeso(@_nPBruto,@_nTara,@_nPLiq,@_nPrUnit,@_nVlTot) }	, 40,12,,,.F.,.T.,.F.,,.F.,,,.F. )	
+	_oTBut1	:= TButton():New( _nLin,_nCol	 , "Capturar peso"		,_oDlg,{|| u_BALS(@_nPBruto,@_nTara,@_nPLiq,@_nPrUnit,@_nVlTot) }	, 40,12,,,.F.,.T.,.F.,,.F.,,,.F. )	
 	_oTBut2	:= TButton():New( _nLin,_nCol+50 , "OK"					,_oDlg,{|| _nOptExp := 1,_oDlg:End()}	, 40,12,,,.F.,.T.,.F.,,.F.,,,.F. )
 	_oTBut3	:= TButton():New( _nLin,_nCol+100, "Cancelar"			,_oDlg,{|| _nOptExp := 0,_oDlg:End()}	, 40,12,,,.F.,.T.,.F.,,.F.,,,.F. )
 
@@ -176,7 +177,7 @@ Static Function VldFld(_cOpc)
 Return(_lRet)
 
 
-
+/*
 Static function LoadPeso(_nPBruto,_nTara,_nPLiq,_nPrUnit,_nVlTot)
 
 	Local	nQtdBal		:= SuperGetMV("MV_YSMQTBL",,1)
@@ -234,3 +235,4 @@ Static function LoadPeso(_nPBruto,_nTara,_nPLiq,_nPrUnit,_nVlTot)
 	oDlg:Activate()
 
 Return
+*/
