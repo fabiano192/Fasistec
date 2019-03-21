@@ -3,8 +3,8 @@
 
 /*
 Programa	:	BRI124
-Autor			:	Fabiano da Silva
-Data			:	06/03/19
+Autor		:	Fabiano da Silva
+Data		:	06/03/19
 Descrição	:	Cadastro Empresa - Controle de Portaria
 */
 User Function BRI124()

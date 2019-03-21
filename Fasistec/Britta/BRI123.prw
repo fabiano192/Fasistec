@@ -39,7 +39,7 @@ Static Function MenuDef()
 	ADD OPTION aMenu TITLE 'Pesquisar'  ACTION 'PesqBrw'       	OPERATION 1 ACCESS 0
 	ADD OPTION aMenu TITLE 'Visualizar' ACTION 'VIEWDEF.BRI123'	OPERATION 2 ACCESS 0
 	ADD OPTION aMenu TITLE 'Entrada'    ACTION 'VIEWDEF.BRI123'	OPERATION 3 ACCESS 0
-	ADD OPTION aMenu TITLE 'Saída'      ACTION 'U_CR114PESO()' OPERATION 4 ACCESS 0
+	ADD OPTION aMenu TITLE 'Saída'      ACTION 'U_BRI123SAIDA()' OPERATION 4 ACCESS 0
 	ADD OPTION aMenu TITLE 'Excluir'    ACTION 'VIEWDEF.BRI123'	OPERATION 5 ACCESS 0
 	ADD OPTION aMenu TITLE 'Imprimir'   ACTION 'VIEWDEF.BRI123'	OPERATION 8 ACCESS 0
 
@@ -96,46 +96,106 @@ Return(oView)
 
 
 
-User Function CR114PESO()
+User Function BRI123SAIDA()
 
 	Local _oDlg		:= Nil
 	Local _nOpt		:= 0
 	Local _oGrup	:= Nil
-	Local _cProd	:= SB1->B1_COD
-	Local _nPesAt	:= SB1->B1_PESO
-	Local _nNewPes	:= 0
-	Local _nLin		:= 12
+	Local _cObs		:= ''
+	Local _nLin		:= 10
+	Local _cHist	:= MSMM(ZPY->ZPY_CODHIS,80)//ZPY->ZPY_HISTVI
 
-	DEFINE MSDIALOG _oDlg FROM 0,0 TO 220,315 TITLE "Peso Produto" OF _oDlg PIXEL
+	Private _dSaida	:= Date()
+	Private _cHora	:= StrTran(Left(Time(),5),":","")
+	Private _oHora	:= Nil
 
-	_oGrup	:= TGroup():New( 005,005,100,155,"",_oDlg,CLR_HRED,CLR_WHITE,.T.,.F. )
+	If Empty(ZPY->ZPY_DATAS)
 
-	@ _nLin,010 SAY "Esta rotina ajusta o peso do cadastro de Produto" OF _oGrup PIXEL Size 150,010
+		DEFINE MSDIALOG _oDlg FROM 0,0 TO 210,630 TITLE "Saída" OF _oDlg PIXEL
 
-	_nLin += 18
-	@ _nLin,010 SAY "Produto: "					Size 50,010 OF _oGrup PIXEL
-	@ _nLin,060 MsGet _cProd		When .F.	Size 70,010 OF _oGrup PIXEL
+		_oGrup	:= TGroup():New( 005,005,100,310,"",_oDlg,CLR_HRED,CLR_WHITE,.T.,.F. )
 
-	_nLin += 15
-	@ _nLin,010 SAY "Peso Atual: "											Size 50,010 OF _oGrup PIXEL
-	@ _nLin,060 MsGet _nPesAt		When .F. Picture "@e 999,999,999.9999"	Size 70,010 OF _oGrup PIXEL
+		@ _nLin,010 SAY "Confirme abaixo a data e hora da saída:" OF _oGrup PIXEL Size 150,010
 
-	_nLin += 15
-	@ _nLin,010 SAY "Novo Peso: "											Size 50,010 OF _oGrup PIXEL
-	@ _nLin,060 MsGet _nNewPes		When .T. Picture "@e 999,999.9999"	Size 70,010 OF _oGrup PIXEL
+		@ _nLin,210 BUTTON "OK" 			SIZE 040,012 ACTION {||_nOpt := 1,_oDlg:END()} OF _oGrup PIXEL
+		@ _nLin,260 BUTTON "Sair"			SIZE 040,012 ACTION {||_nOpt := 2,_oDlg:End()} OF _oGrup PIXEL
 
-	_nLin += 20
-	@ _nLin,015 BUTTON "OK" 			SIZE 036,012 ACTION {||_nOpt := 1,_oDlg:END()} OF _oGrup PIXEL
-	@ _nLin,109 BUTTON "Sair"			SIZE 036,012 ACTION {||_nOpt := 2,_oDlg:End()} OF _oGrup PIXEL
+		_nLin += 15
+		@ _nLin,010 SAY "Data Saída: "														Size 50,010 OF _oGrup PIXEL
+		@ _nLin,060 MsGet _dSaida		When .T.	Valid ValidData()						Size 70,010 OF _oGrup PIXEL
 
-	ACTIVATE MSDIALOG _oDlg CENTERED
+		_nLin += 15
+		@ _nLin,010 SAY "Hora Saída: "														Size 50,010 OF _oGrup PIXEL
+		@ _nLin,060 MsGet _oHora VAR _cHora	Picture "@R 99:99" When .T.	 Valid ValidHora()	Size 70,010 OF _oGrup PIXEL
 
-	If _nOpt = 1
-//		SB1->(RecLock("SB1",.F.))
-//		SB1->B1_PESO := _nNewPes
-//		SB1->(MsUnlock())
+		_nLin += 15
+		@ _nLin,010 SAY "Observações: "								Size 50,010 OF _oGrup PIXEL
+		_oObs := tMultiget():new( _nLin, 060, {| u | if( pCount() > 0, _cObs := u, _cObs ) }, _oGrup, 240, 35, , , , , , .T. )
 
-		MsgInfo('Peso alterado com sucesso!')
+		ACTIVATE MSDIALOG _oDlg CENTERED
+
+		If _nOpt = 1
+			ZPY->(RecLock("ZPY",.F.))
+			ZPY->ZPY_DATAS := _dSaida
+			ZPY->ZPY_SAIDA := Val(Left(_cHora,2)+'.'+Right(_cHora,2))
+			If !Empty(_cObs)
+				If !Empty(_cHist)
+					_cHist += CRLF
+					_cHist += Replicate('*',100)
+					_cHist += CRLF
+					_cHist += _cObs
+				Else
+					_cHist := _cObs
+				Endif
+				MSMM(ZPY->ZPY_CODHIS ,,,_cHist                         ,1,,,"ZPY","ZPY_CODHIS")
+			Endif
+			ZPY->(MsUnlock())
+
+			MsgInfo('Saída efetuada com sucesso!')
+		Endif
+	Else
+		ShowHelpDlg("BRI123_4", {'Visita já está encerrada.'},1,{'Não se aplica.'},1)
 	Endif
 
 Return(Nil)
+
+
+
+Static Function ValidHora(  )
+
+	Local _lRet		:= .T.
+	Local _nHoras	:= 0
+	Local _nMinutos := 0
+
+	_cHora := PadL(Alltrim(_cHora),4,"0")
+
+	_nVal := Val(Left(_cHora,2)+'.'+Right(_cHora,2))
+
+	_nHoras		:= Val(Left (StrZero(_nVal,5,2),2))
+	_nMinutos	:= Val(Right(StrZero(_nVal,5,2),2))
+
+	If _nHoras < 0 .Or. _nHoras > 23 .Or. _nMinutos < 0 .Or. _nMinutos > 59
+		_lRet := .F.
+		ShowHelpDlg("BRI123_1", {'Hora Inválida.'},1,{'Digite uma hora válida.'},1)
+	Else
+		If _nVal <= ZPY->ZPY_ENTRAD .And. _dSaida = ZPY->ZPY_DATAE 
+			_lRet := .F.
+			ShowHelpDlg("BRI123_2", {'Hora digitada na Saída é menor que a hora de Entrada.'},1,{'Digite uma hora válida.'},1)
+		Endif
+	EndIf
+
+	_oHora:Refresh()
+
+Return(_lRet)
+
+
+Static Function ValidData(  )
+
+	Local _lRet		:= .T.
+
+	If _dSaida < ZPY->ZPY_DATAE 
+		_lRet := .F.
+		ShowHelpDlg("BRI123_3", {'Data digitada na Saída é menor que a data de Entrada.'},1,{'Digite uma data válida.'},1)
+	Endif
+
+Return(_lRet)
