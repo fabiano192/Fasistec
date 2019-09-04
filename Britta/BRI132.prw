@@ -106,7 +106,7 @@
 #DEFINE VL_JUROS			16
 #DEFINE ATRASO				17
 #DEFINE HISTORICO			18
-//#DEFINE VL_SOMA				18
+#DEFINE OBS					19
 
 Static __lFWCodFil		:= .T.
 Static __lTempLOT
@@ -212,7 +212,7 @@ Static Function ReportDef()
 	Local oReport	:= NIL
 	Local oSection1	:= NIL
 	Local oSection2	:= NIL
-	Local _oHistSA1	:= NIL
+	// Local _oHistSA1	:= NIL
 	Local cPictTit	:= ""
 	Local nTamVal 	:= 0
 	Local nTamCli	:= 0
@@ -314,9 +314,11 @@ Static Function ReportDef()
 	//Secao 1 --> Analitico
 	oSection1 := TRSection():New(oReport,STR0079,{"SE1","SA1"},;
 	{STR0008,STR0009,STR0010,STR0011,STR0012,STR0013,STR0014,STR0015,STR0016,STR0047})
-	//Secao 2 --> Histórico
-	_oHistSA1 := TRSection():New(oReport,'Historico Cliente')
-	//Secao 3 --> Sintetico
+
+    //Secao 2 --> Histórico
+	// _oHistSA1 := TRSection():New(oReport,'Historico Cliente')
+
+    //Secao 3 --> Sintetico
 	oSection2 := TRSection():New(oReport,STR0081)
 
 	_nTamPag := 0
@@ -354,19 +356,17 @@ Static Function ReportDef()
 	_nTamPag += 10
 	TRCell():New(oSection1,"E1_HIST" ,"SE1",STR0077,,25,.F.,,,,,,,.T.)  //"Historico" 19
 	_nTamPag += 25
-	//	TRCell():New(oSection1,"VAL_SOMA",,STR0078,cPictTit,38,.F.,,,,,,,.T.)  //"(Vencidos+Vencer)"
+	TRCell():New(oSection1,"OBS",,'Obs.',,,.F.,,,,,,,.T.)  //"(Vencidos+Vencer)"
 
 
 	_nTamPag -= 200
-//	TRCell():New(_oHistSA1,"HISTSA1",,'',,_nTamPag,.F.,,,.T.,,,,.T.)
-	TRCell():New(_oHistSA1,"HISTSA1",,'',,,.F.,,,.T.,,,,.T.)
+	// TRCell():New(_oHistSA1,"HISTSA1",,'',,,.F.,,,.T.,,,,.T.)
 	
 	TRCell():New(oSection2,"QUEBRA",,STR0008,,nTamQueb-nTamVal,.F.,,,,,,,.T.)
 	TRCell():New(oSection2,"TOT_NOMI",,STR0068+CRLF+STR0069,cPictTit,nTamVal,.F.,,,,,,,.T.)
 	TRCell():New(oSection2,"TOT_CORR",,STR0068+CRLF+STR0070,cPictTit,nTamVal,.F.,,,,,,,.T.)
 	TRCell():New(oSection2,"TOT_VENC",,STR0071+CRLF+STR0069,cPictTit,nTamVal,.F.,,,,,,,.T.)
 	TRCell():New(oSection2,"TOT_JUROS",,STR0073+CRLF+STR0074,cPictTit,nTamVal,.F.,,,,,,,.T.)
-	//	TRCell():New(oSection2,"TOT_SOMA",,STR0078,cPictTit,nTamVal,.F.,,,,,,,.T.)
 
 	oSection1:Cell("BANCO")   :SetHeaderAlign("CENTER")
 	oSection1:Cell("SITUACA") :SetHeaderAlign("LEFT")
@@ -378,7 +378,7 @@ Static Function ReportDef()
 	oSection1:Cell("JUROS")   :SetHeaderAlign("CENTER")
 	oSection1:Cell("DIA_ATR") :SetHeaderAlign("LEFT")
 	oSection1:Cell("E1_HIST") :SetHeaderAlign("CENTER")
-	//	oSection1:Cell("VAL_SOMA"):SetHeaderAlign("LEFT")
+	oSection1:Cell("OBS")     :SetHeaderAlign("LEFT")
 
 Return oReport
 
@@ -404,15 +404,15 @@ Return oReport
 */
 Static Function ReportPrint(oReport)
 	Local oSection1  	:= oReport:Section(1)
-	Local _oHistSA1  	:= oReport:Section(2)
-	Local oSection2  	:= oReport:Section(3)
+	// Local _oHistSA1  	:= oReport:Section(2)
+	Local oSection2  	:= oReport:Section(2)
 	Local nOrdem 		:= oSection1:GetOrder()
 	Local oBreak
 	Local oBreak2
 	Local oTotVenc
 	Local oTotCorr
 
-	Local aDados[18]
+	Local aDados[19]
 	Local nRegEmp 		:= SM0->(RecNo())
 	Local nRegSM0 		:= SM0->(Recno())
 	Local nAtuSM0 		:= SM0->(Recno())
@@ -647,11 +647,7 @@ Static Function ReportPrint(oReport)
 	oSection1:Cell("E1_TIPO"   ):SetBlock( { || aDados[TIPO]      			})
 	oSection1:Cell("E1_NATUREZ"):SetBlock( { || MascNat(aDados[NATUREZA]) 	})
 	oSection1:Cell("E1_EMISSAO"):SetBlock( { || aDados[EMISSAO]   			})
-	If(cPaisLoc == "BRA")
-
-		oSection1:Cell("E1_VENCTO" ):SetBlock( { || aDados[VENCTO]    		})
-
-	EndIf
+	oSection1:Cell("E1_VENCTO" ):SetBlock( { || aDados[VENCTO]    			})
 	oSection1:Cell("E1_VENCREA"):SetBlock( { || aDados[VENCREA]   			})
 	oSection1:Cell("BANCO"     ):SetBlock( { || aDados[BANC]      			})
 	oSection1:Cell("SITUACA"   ):SetBlock( { || aDados[SITUACA]   			})
@@ -663,9 +659,7 @@ Static Function ReportPrint(oReport)
 	oSection1:Cell("JUROS"     ):SetBlock( { || aDados[VL_JUROS]  			})
 	oSection1:Cell("DIA_ATR"   ):SetBlock( { || aDados[ATRASO]    			})
 	oSection1:Cell("E1_HIST"   ):SetBlock( { || aDados[HISTORICO] 			})
-	//	oSection1:Cell("VAL_SOMA"  ):SetBlock( { || aDados[VL_SOMA]   			})
-
-	//	oSection1:Cell("VAL_SOMA"):Enable()
+	oSection1:Cell("OBS"	   ):SetBlock( { || aDados[OBS]   				})
 
 	//Cabecalho do Relatorio sintetico
 	If mv_par19 == 2 //1 = Analitico - 2 = Sintetico
@@ -811,7 +805,7 @@ Static Function ReportPrint(oReport)
 	//oReport:NoUserFilter()  
 
 	oSection1:Init()
-	_oHistSA1:Init()
+	// _oHistSA1:Init()
 	oSection2:Init()
 
 	aFill(aDados,nil)
@@ -1994,11 +1988,14 @@ Static Function ReportPrint(oReport)
 				If mv_par19 == 1 //1 = Analitico - 2 = Sintetico 18
 					aDados[HISTORICO] := IIf(lDvc,SE1->E1_HIST,SubStr(SE1->E1_HIST,1,25)) + IIF(E1_TIPO $ MVPROVIS,"*"," ")+ ;
 					Iif(nSaldo == xMoeda(E1_VALOR,E1_MOEDA,mv_par15,dDataReaj,ndecs+1,If(cPaisLoc=="BRA",SE1->E1_TXMOEDA,0))," ","P")
+					
+					If oReport:nDevice = 4
+						aDados[OBS] := ImpHistSA1(SE1->E1_CLIENTE,SE1->E1_LOJA)
+					Else
+						aDados[OBS] := ''
+					Endif
 
-					//					aDados[HISTORICO] := IIf(lDvc,SE1->E1_HIST,SubStr(SE1->E1_HIST,1,25)) + IIF(E1_TIPO $ MVPROVIS,"*"," ") + ;
-					//					Iif(Str(xMoeda(SE1->E1_SALDO,SE1->E1_MOEDA,mv_par15,dDataReaj,ndecs+1,Iif(MV_PAR39==2,Iif(!Empty(SE1->E1_TXMOEDA),SE1->E1_TXMOEDA,RecMoeda(SE1->E1_EMISSAO,SE1->E1_MOEDA)),0)),17,2) ==Str(xMoeda(SE1->E1_VALOR,SE1->E1_MOEDA,mv_par15,dDataReaj,ndecs+1,Iif(MV_PAR39==2,Iif(!Empty(SE1->E1_TXMOEDA),SE1->E1_TXMOEDA,RecMoeda(SE1->E1_EMISSAO,SE1->E1_MOEDA)),0)),17,2)," ","P")
-
-					//realiza a troca de alias da query que está como SE1 para a tabela SE1 original
+						//realiza a troca de alias da query que está como SE1 para a tabela SE1 original
 					// pois se cliente customizar relatorio com campo memo, o conteudo nðo é exibido				
 
 					nRecnoSE1 := SE1->(R_E_C_N_O_)
@@ -2074,9 +2071,9 @@ Static Function ReportPrint(oReport)
 				cCarAnt2 := Situcob(SubStr(cCarAnt,__nTamPort+1,1))
 			EndIf
 			
-			If (nOrdem == 1 .Or. nOrdem == 8) .And. nTit5 > 0 
-				ImpHistSA1(oReport,_oHistSA1,_cClie,_cLoja)
-			Endif
+			// If (nOrdem == 1 .Or. nOrdem == 8) .And. nTit5 > 0 
+			// 	ImpHistSA1(oReport,_oHistSA1,_cClie,_cLoja)
+			// Endif
 
 			IF nTit5 > 0 .And. nOrdem != 2 .And. nOrdem != 10 .And. mv_par19 == 2 //1 = Analitico - 2 = Sintetico
 				oReport:SkipLine()
@@ -2340,28 +2337,29 @@ Static Function f_SubTot130R(nTit0,nTit1,nTit2,nTit3,nTit4,nOrdem,cCarAnt,nTotJu
 Return .T.
 
 
-Static Function ImpHistSA1(_oReport,_oSection,_cCliente,_cLojaCli)
+Static Function ImpHistSA1(_cCliente,_cLojaCli)
 
-	_AliasSA1 := SA1->(GetArea())
+	Local _AliasSA1 := SA1->(GetArea())
+	Local _cObs	:= ''
 
 	SA1->(dbSetOrder(1))
 	If SA1->(MsSeek(xFilial("SA1")+_cCliente+_cLojaCli))
 
 		If !Empty(SA1->A1_PDHIST)
-			_cHist := Alltrim(SA1->A1_PDHIST)
-			_oSection:Cell("HISTSA1"   ):SetBlock({|| _cHist})
+			_cObs := Alltrim(SA1->A1_PDHIST)
+			// _oSection:Cell("HISTSA1"   ):SetBlock({|| _cObs})
 
-			_oSection:SetHeaderSection(.F.)
+			// _oSection:SetHeaderSection(.F.)
 
-			_oReport:SkipLine()
-			_oSection:PrintLine()
-			_oReport:SkipLine()
+			// _oReport:SkipLine()
+			// _oSection:PrintLine()
+			// _oReport:SkipLine()
 		Endif
 	Endif
 
 	RestArea(_AliasSA1)
 
-Return(.T.)
+Return(_cObs)
 
 
 /*/
@@ -2511,7 +2509,7 @@ Static Function HabiCel(oReport, lMultNat)
 			oSection1:Cell("SITUACA"   ):Hide()
 			oSection1:Cell("DIA_ATR"   ):Hide()
 			oSection1:Cell("E1_HIST"   ):Disable()
-			//			oSection1:Cell("VAL_SOMA"  ):Enable()
+			oSection1:Cell("OBS"       ):Disable()
 
 			oSection1:Cell("CLIENTE"   ):HideHeader()
 			oSection1:Cell("E1_TIPO"   ):HideHeader()
