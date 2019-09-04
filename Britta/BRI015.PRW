@@ -107,7 +107,8 @@ Static Function BRI14_01(_lFim)
 
 		IncProc()
 
-		nTamLin := 204
+		nTamLin := 262
+		// nTamLin := 204
 		cLin    := Space(nTamLin)+cEOL
 		_nCont  := 0
 
@@ -134,8 +135,10 @@ Static Function BRI14_01(_lFim)
 				_cStat		:= "Status"
 				_cGrav		:= "Gravação"
 				_cFil		:= "Filial"
+				_cEmp		:= "Empresa"
+				_cMesAno	:= "Mes/Ano"
 
-				_lPare := GeraLine(_cDoc,_cCusto,_cCaixa,_cOrigem,_cData,_cTipo,_cClas,_cValor,_cHist,_cDocBx,_cTrCaixa,_cTrCusto,_cTrOrigem,_cStat,_cGrav,_cFil)
+				_lPare := GeraLine(_cDoc,_cCusto,_cCaixa,_cOrigem,_cData,_cTipo,_cClas,_cValor,_cHist,_cDocBx,_cTrCaixa,_cTrCusto,_cTrOrigem,_cStat,_cGrav,_cFil,_cEmp,_cMesAno)
 
 				If _lPare
 					Return(Nil)
@@ -155,9 +158,14 @@ Static Function BRI14_01(_lFim)
 			_cCusto   := Alltrim(ZZ->ZF_CTABANC)
 			_cOrigem  := Alltrim(ZZ->ED_YCOD)
 			_cData    := DTOC(ZZ->E5_DTDISPO)
+			_cMesAno  := Capital(MesExtenso(Month(ZZ->E5_DTDISPO)))+'/'+cValToChar(Year(ZZ->E5_DTDISPO))
 			_cTrCaixa := ""
 			_cTrCusto := ""
 			_cTrOrigem:= ""
+
+			_cBanco   := ZZ->E5_BANCO
+			_cAgencia := ZZ->E5_AGENCIA
+			_cConta   := ZZ->E5_CONTA
 
 			If ZZ->E5_MOEDA = "TB"
 				_cTipo    := "TRF"
@@ -197,7 +205,7 @@ Static Function BRI14_01(_lFim)
 			Endif
 
 			_lRateio := .F.
-			If Empty(ZZ->E5_TIPO) .And. !Empty(ZZ->E5_MOEDA)
+			If Empty(ZZ->E5_TIPO) .And. !Empty(ZZ->E5_MOEDA) .And. Empty(ZZ->E5_NUMCHEQ)
 				_cHist  := Lower(Alltrim(ZZ->E5_HISTOR))
 			ElseIf !Empty(ZZ->E5_CLIENTE)
 
@@ -249,10 +257,12 @@ Static Function BRI14_01(_lFim)
 							_lRateio := .T.
 						Endif
 					Endif
-//					If ZZ->E5_FORNECE  = '003360'
-//						_lRateio := .T.
-//					Endif
-
+				Endif
+			ElseIf !Empty(ZZ->E5_NUMCHEQ)
+				IF ZZ->E5_TIPODOC =='CH'
+					_cHist := Lower("CHEQUE_"+Alltrim(ZZ->E5_NUMCHEQ)+"-"+ZZ->E5_BENEF)
+				ELSE
+					_cHist  := Lower(Alltrim(ZZ->E5_HISTOR))
 				Endif
 			Endif
 
@@ -276,33 +286,6 @@ Static Function BRI14_01(_lFim)
 								_cFilCC := Alltrim(CTT->CTT_YEMFIL)
 							Endif
 						Endif
-//						If SD1->D1_CC = '0104'
-//							_cFilCC := '01'
-//						ElseIf SD1->D1_CC = '0110'
-//							_cFilCC := '02'
-//						ElseIf SD1->D1_CC = '0111'
-//							_cFilCC := '03'
-//						ElseIf SD1->D1_CC = '0112'
-//							_cFilCC := '04'
-//						ElseIf SD1->D1_CC = '0113'
-//							_cFilCC := '05'
-//						ElseIf SD1->D1_CC = '0114'
-//							_cFilCC := '06'
-//						ElseIf SD1->D1_CC = '0115'
-//							_cFilCC := '07'
-//						ElseIf SD1->D1_CC = '0117'
-//							_cFilCC := '08'
-//						ElseIf SD1->D1_CC = '0118'
-//							_cFilCC := '09'
-//						ElseIf SD1->D1_CC = '0120'
-//							_cFilCC := '10'
-//						ElseIf SD1->D1_CC = '0122'
-//							_cFilCC := '10'
-//						ElseIf SD1->D1_CC = '0123'
-//							_cFilCC := '12'
-//						ElseIf SD1->D1_CC = '0128'
-//							_cFilCC := '13'
-//						Endif
 
 						_nTot += SD1->D1_TOTAL
 
@@ -315,9 +298,7 @@ Static Function BRI14_01(_lFim)
 
 						SD1->(dbSkip())
 					EndDo
-
 				Endif
-
 			Endif
 
 			_cDocBx:= Space(09)
@@ -337,7 +318,22 @@ Static Function BRI14_01(_lFim)
 					_cValor := Str(_nValor*_nPerc,17,02)
 					_cValor := StrTran(_cValor, ".",",")
 
-					_lPare := GeraLine(_cDoc,_cCusto,_cCaixa,_cOrigem,_cData,_cTipo,_cClas,_cValor,_cHist,_cDocBx,_cTrCaixa,_cTrCusto,_cTrOrigem,_cStat,_cGrav,Right(_aRateio[_nRat][1],2))
+					SZF->(dbSetOrder(1))
+					If SZF->(dbSeek(Right(_aRateio[_nRat][1],2) + _cBanco + _cAgencia + _cConta))
+						_cCaixa   := Alltrim(SZF->ZF_CTACAIX)
+						_cCusto   := Alltrim(SZF->ZF_CTABANC)
+					Endif
+
+					_cEmp		:= ''
+					_aAreaSM0  	:= SM0->(GetArea())
+					SM0->(dbSetOrder(1))
+					If SM0->(MsSeek(cEmpAnt+Right(_aRateio[_nRat][1],2)))
+						_cEmp := SM0->M0_FILIAL
+					Endif
+					RestArea(_aAreaSM0)
+
+					_lPare := GeraLine(_cDoc,_cCusto,_cCaixa,_cOrigem,_cData,_cTipo,_cClas,_cValor,_cHist,_cDocBx,_cTrCaixa,_cTrCusto,_cTrOrigem,_cStat,_cGrav,Right(_aRateio[_nRat][1],2),_cEmp,_cMesAno)
+
 					If _lPare
 						Exit //Sair do For...Next
 					Endif
@@ -346,7 +342,15 @@ Static Function BRI14_01(_lFim)
 
 			Else
 
-				_lPare := GeraLine(_cDoc,_cCusto,_cCaixa,_cOrigem,_cData,_cTipo,_cClas,_cValor,_cHist,_cDocBx,_cTrCaixa,_cTrCusto,_cTrOrigem,_cStat,_cGrav,_cFil)
+				_cEmp		:= ''
+				_aAreaSM0  	:= SM0->(GetArea())
+				SM0->(dbSetOrder(1))
+				If SM0->(MsSeek(cEmpAnt+_cFil))
+					_cEmp := SM0->M0_FILIAL
+				Endif
+				RestArea(_aAreaSM0)
+
+				_lPare := GeraLine(_cDoc,_cCusto,_cCaixa,_cOrigem,_cData,_cTipo,_cClas,_cValor,_cHist,_cDocBx,_cTrCaixa,_cTrCusto,_cTrOrigem,_cStat,_cGrav,_cFil,_cEmp,_cMesAno)
 
 			Endif
 
@@ -392,7 +396,7 @@ Static Function ATUSX1()
 Return
 
 
-Static Function GeraLine(_xDoc,_xCusto,_xCaixa,_xOrigem,_xData,_xTipo,_xClass,_xValor,_xHist,_xDocBx,_xTrfCx,_xTrfCu,_xTrfOr,_xStatus,_xGrava,_xFili)
+Static Function GeraLine(_xDoc,_xCusto,_xCaixa,_xOrigem,_xData,_xTipo,_xClass,_xValor,_xHist,_xDocBx,_xTrfCx,_xTrfCu,_xTrfOr,_xStatus,_xGrava,_xFili,_xEmp,_xMesAno)
 
 	Local _lExit := .F.
 
@@ -443,6 +447,12 @@ Static Function GeraLine(_xDoc,_xCusto,_xCaixa,_xOrigem,_xData,_xTipo,_xClass,_x
 
 	cCpo := PADR(_xFili,10)+";"
 	cLin := Stuff(cLin,195,11,cCpo)
+
+	cCpo := PADR(_xEmp,40)+";"
+	cLin := Stuff(cLin,206,41,cCpo)
+
+	cCpo := PADR(_xMesAno,15)+";"
+	cLin := Stuff(cLin,247,16,cCpo)
 
 	If fWrite(nHdl,cLin,Len(cLin)) != Len(cLin)
 		If !MsgYesNo("Ocorreu um erro na gravacao do arquivo. Continua?")

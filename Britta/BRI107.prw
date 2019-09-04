@@ -296,7 +296,7 @@ Static Function BRI107B(_lFim)
 				dbSelectArea( (_cAlias) )
 				DbGotop()
 
-				SM0->(dbSetOrder(1))
+
 				If SM0->(dbSeek("80"))
 
 					_cChav := SM0->M0_CODIGO
