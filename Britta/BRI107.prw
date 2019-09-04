@@ -185,21 +185,19 @@ Static Function BRI107A(_lFim)
 		_cArqNew := "\FISCAL\BRITTA\"+_cTabela+".DTC"
 
 		dbSelectArea("ZZALE")
-		COPY ALL TO &_cArqNew  VIA "DBFCDXADS"
+		COPY ALL TO &_cArqNew  //VIA "DBFCDXADS"
 
 		ZZALE->(dbCloseArea())
 
 	Next AX
 
-
 Return
+
 
 
 Static Function BRI107B(_lFim)
 
 	_aTabela := {"CT1","CTT","CVB","SA1","SA2","SA3","SA4","SAH","SB1","SD1","SD2","SE4","SE6","SED","SF1","SF2","SF3","SF4","SFQ","SFT"}
-
-	_aFiliais := { {"00101","31"} }
 
 	ProcRegua(Len(_aTabela))
 
@@ -207,7 +205,6 @@ Static Function BRI107B(_lFim)
 
 		(_cAlias) := _aTabela[AX]
 		_cEmp     := "13"
-		_cEmpNew  := "80"
 
 		IncProc("Processando Empresa : "+_cEmp+" TABELA : "+(_cAlias))
 
@@ -368,6 +365,8 @@ Static Function BRI107B(_lFim)
 
 Return
 
+
+
 Static Function BRI107C(_lFim) // EXPORTANDO MOVIMENTO DA IRO - PXA
 
 	TCConType("TCPIP")
@@ -492,15 +491,12 @@ Static Function BRI107D(_lFim)
 
 	_aTabela := {"CT1","CTT","CVB","SA1","SA2","SA3","SA4","SAH","SB1","SD1","SD2","SE4","SE6","SED","SF1","SF2","SF3","SF4","SFQ","SFT"}
 
-	_aFiliais := { {"00101","31"} }
-
 	ProcRegua(Len(_aTabela))
 
 	For AX:= 1 To Len(_aTabela)
 
 		(_cAlias) := _aTabela[AX]
 		_cEmp     := "01"
-		_cEmpNew  := "80"
 
 		IncProc("Processando Empresa : "+_cEmp+" TABELA : "+(_cAlias))
 
