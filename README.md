@@ -1,2 +1,0 @@
-# Fasistec
-Fontes ADVPL
