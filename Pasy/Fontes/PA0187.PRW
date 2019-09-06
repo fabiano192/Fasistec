@@ -1,0 +1,1632 @@
+#include "rwmake.ch"
+#INCLUDE "PROTHEUS.CH"
+#DEFINE _ENTER CHR(13)+CHR(10)
+
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ PA0187   ³ Autor ³ Eveli Morasco         ³ Data ³ 11/03/92 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Gera requisicoes e devolucoes para acertar estoque de acor-³±±
+±±³          ³ do com a digitacao do inventario                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ ATUALIZACOES SOFRIDAS DESDE A CONSTRUCAO INICIAL.                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ PROGRAMADOR  ³ DATA   ³ BOPS ³  MOTIVO DA ALTERACAO                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Rodrigo Sart.³07/08/98³16465A³Acerto na gravacao da data do inventario³±±
+±±³ Fernando Joly³01/02/99³19590A³Acerto na Impress„o do Relatorio.       ³±±
+±±³Rodrigo Sart. ³22/04/99³XXXXXX³Incluido tratamento p/ INTERNET         ³±±
+±±³Rodrigo Sart. ³13/05/99³21692A³Alterado programa para tratar corretamen³±±
+±±³              ³        ³      ³te saldos por Lote e Localizacao Fisica ³±±
+±±³Rodrigo Sart. ³01/07/99³22290A³Alterada chamada da funcao CalcEstL     ³±±
+±±³Fernando Joly ³04/08/99³23131A³Cria‡ao do Ponto de Entrada MT340D3     ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+User Function PA0187(lBatch,cCodInv)
+
+Local nOpca    := 0
+Local lOk      := .T.
+Local cPerg    := "MTA340"
+Local cTexto   := ""
+Local bProcess := { |oSelf|A340Exec(oSelf,.F.) }
+Local oTProces
+Local oDlg
+
+PRIVATE nHdlPrv		// Endereco do arquivo de contra prova dos lanctos cont.
+PRIVATE cLoteEst 	// Numero do lote para lancamentos do estoque
+PRIVATE lLocCQ:=.T.	// Flag usado para indicar se criou IndRegua no SD7
+PRIVATE cNomArq		// Nome do arquivo temporario criado pela IndRegua
+PRIVATE nNewOrd
+
+TCInternal(5,"*OFF")   // Desliga Refresh no Lock do Top
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Array contendo as Rotinas a executar do programa      ³
+//³ ----------- Elementos contidos por dimensao ------------     ³
+//³ 1. Nome a aparecer no cabecalho                              ³
+//³ 2. Nome da Rotina associada                                  ³
+//³ 3. Usado pela rotina                                         ³
+//³ 4. Tipo de Transa‡„o a ser efetuada                          ³
+//³    1 -Pesquisa e Posiciona em um Banco de Dados              ³
+//³    2 -Simplesmente Mostra os Campos                          ³
+//³    3 -Inclui registros no Bancos de Dados                    ³
+//³    4 -Altera o registro corrente                             ³
+//³    5 -Estorna registro selecionado gerando uma contra-partida³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE aRotina := { {"Processar","MATA340" ,0 ,1 ,19}} 
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Ajusta Perguntas                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+AjustaSX1()
+
+If lBatch
+	nOpca := 1
+EndIf
+
+If __cInternet != Nil
+	lBatch := .T.
+EndIf
+
+If !lBatch
+	If SubStr(cAcesso,19,1) == " "
+		Help ( " ", 1, "SEMPERM" )
+		Return .F.
+	EndIf
+	If GetRpoRelease()=="R1.1"
+		cTexto := OemToAnsi("Este programa ir  gerar movimenta‡”es de ajuste para corrigir o saldo do estoque.") +_ENTER        
+		cTexto += OemToAnsi("Estas movimenta‡”es ser„o baseadas nas contagens realizadas e cadastradas na Rotina Invent rio.") +_ENTER        
+		cTexto += OemToAnsi("O programa dever  gerar uma Requisi‡„o ou uma Devolu‡„o autom tica, dependendo da diferen‡a encontrada.") +_ENTER        
+		cTexto += OemToAnsi("Nota: Ser  considerado apenas o estoque inventariado na data da sele‡„o (parƒmetros).") +_ENTER       
+		cTexto += OemToAnsi("facilitando o controle e o uso.") +_ENTER+_ENTER 
+		cTexto += OemToAnsi("Se o almoxarifado inventariado for o almoxarifado do CQ, sera considerada como quantidade em estoque ") +_ENTER      
+		cTexto += OemToAnsi("a quantidade rejeitada.")         
+		oTProces := tNewProcess():New( "MATA340",OemToAnsi("Acerto do Invent rio"),bProcess,cTexto,cPerg ) 	
+	Else
+		DEFINE MSDIALOG oDlg FROM  96,4 TO 355,625 TITLE OemToAnsi("Acerto do Invent rio") PIXEL	
+		@ 18, 9 TO 99, 300 LABEL "" OF oDlg  PIXEL
+		@ 29, 15 Say OemToAnsi("Este programa ir  gerar movimenta‡”es de ajuste para corrigir o saldo do estoque.") SIZE 275, 10 OF oDlg PIXEL	
+		@ 38, 15 Say OemToAnsi("Estas movimenta‡”es ser„o baseadas nas contagens realizadas e cadastradas na Rotina Invent rio.") SIZE 275, 10 OF oDlg PIXEL	
+		@ 48, 15 Say OemToAnsi("O programa dever  gerar uma Requisi‡„o ou uma Devolu‡„o autom tica, dependendo da diferen‡a encontrada.") SIZE 275, 10 OF oDlg PIXEL	
+		@ 58, 15 Say OemToAnsi("Nota: Ser  considerado apenas o estoque inventariado na data da sele‡„o (parƒmetros).") SIZE 255, 10 OF oDlg PIXEL
+		@ 68, 15 Say OemToAnsi("Caso algum produto apresente divergˆncias, ser  gerado um relat¢rio.") SIZE 255, 10 OF oDlg PIXEL	
+		@ 78, 15 Say OemToAnsi("")      SIZE 275, 10 OF oDlg PIXEL	
+		@ 88, 15 Say OemToAnsi("")      SIZE 100, 10 OF oDlg PIXEL	
+
+		DEFINE SBUTTON FROM 108,209 TYPE 5 ACTION Pergunte(cPerg,.T.) ENABLE OF oDlg
+		DEFINE SBUTTON FROM 108,238 TYPE 1 ACTION (nOpca:=1,oDlg:End()) ENABLE OF oDlg
+		DEFINE SBUTTON FROM 108,267 TYPE 2 ACTION oDlg:End() ENABLE OF oDlg
+		ACTIVATE MSDIALOG oDlg
+	EndIf
+EndIf
+
+If (nOpca==1) .And. (oTProces==Nil)
+	A340Exec(oTProces,lBatch,cCodInv)
+EndIf
+
+If !lLocCQ
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Devolve as ordens originais do arquivo                       ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	RetIndex("SD7")
+	dbClearFilter()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Apaga indice de trabalho                                     ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	cNomArq += OrdBagExt()
+	Delete File &(cNomArq)
+EndIf
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A340Exec    ³ Autor ³ Felipe Nunes de Toledo³ Data ³14/12/07³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Inicializa o Processamento do Acerto de Inventario         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA340                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function A340Exec(oTProces,lBatch,cCodInv)
+
+Local lOk := .T.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Template acionando Ponto de Entrada                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ExistTemplate("MT340IN")	
+	lOk := ExecTemplate("MT340IN",.F.,.F.)
+	If !(ValType(lOk) == "L")
+		lOk := .T.
+	EndIf
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ P.E. utilizado para validar Inicio do Processamento          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If (ExistBlock( "MT340IN" ) )
+	lOK := ExecBlock("MT340IN",.F.,.F.)
+	If !(ValType(lOk) == "L")
+		lOk := .T.
+	EndIf
+EndIf
+
+If lOk
+	If lBatch
+		MA340Process(lBatch,cCodInv)
+	ElseIf (oTProces<>Nil) //-- Release 1.1
+		MA340Process(lBatch,Nil,oTProces)
+	Else
+		Processa({|lend| MA340Process(lBatch)},"Acerto do Invent rio","Efetuando Acerto do Inventario...",.F.)	
+	EndIf
+EndIf
+
+Return Nil
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³MA340Process³ Autor ³ Rodrigo de A. Sartorio³ Data ³28/11/95³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Processa o Acerto do Inventario.                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA340                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function MA340Process(lBatch,cCodInv,oTProces)
+
+Local lOpca,cCod,cLocal,dData,nQuant,nQtSegUm
+Local lPassou,cApropri,cNumSeq,i,z
+Local lDigita,lAglutina,nAchou
+
+Local aSaldo	:=Array(7)
+Local aSaldoAtu	:=Array(7)
+
+Local lOkLote   :=.F.
+Local lLoteInv  :=.T.
+Local lGeraCQ0  :=.F.
+
+Local cAliasSql	:="SB7"
+Local lQuery    :=.F.
+Local aStruSB7	:= {}
+Local lOK
+
+
+Local dDataFec	:= GetMV("MV_ULMES")
+Local cAliasCC 	:= If(CtbInUse(), "CTT", "SI3")
+Local lContagem	:= (SB7->(FieldPos("B7_CONTAGE")) > 0) .And. (SB7->(FieldPos("B7_ESCOLHA")) > 0) .And. (SB7->(FieldPos("B7_OK")) > 0) .And. SuperGetMv('MV_CONTINV',.F.,.F.)
+Local cCusMed 	:= GetMV("MV_CUSMED")
+Local cLocalCQ	:= GetMV("MV_CQ")
+Local lEstNeg   := If(GetMV('MV_ESTNEG')=='N',.F.,.T.)
+Local lCEmpInv	:= SuperGetMv("MV_CEMPINV",.F.,.T.) //Considera empenho na analise de divergencia entre SB2 e SBF
+Local lMT340B2	:= ExistBlock("MT340B2")
+Local l340SB7 	:= ExistBlock("MT340SB7")
+Local lT340SB7	:= ExistTemplate("MT340SB7")
+Local lExistNF  := SB7->(FieldPos("B7_NUMDOC")) <> 0
+
+Local nDiferenca:= 0
+Local nTotEnd 	:= 0
+Local nX        := 0
+Local nCampo    := 0
+Local nEmpenho	:= 0
+
+Local aLogs     :={{}}
+Local aCM       := {}
+Local aCM1      := {}
+Local aCusto    := {}
+Local aAreaSD5 	:= {}
+Local aRecCele  := {}
+Local aEnvCele  := {} 
+
+Local cLog      := "" 
+Local cLote     := ""
+Local cLoteCtl  := ""
+Local dDtValid  := ""
+Local cNumSerie := ""
+Local cLocaliza := ""
+Local cEstFis   := ""
+Local cQuery    := ""
+Local cDocOri 	:= "" 
+Local cLotCtlQie:= ""
+Local cNumLotQie:= ""
+Local cNumDoc   := ""
+Local cSerie    := ""
+Local cFornece  := ""
+Local cLoja     := ""
+
+
+A710GrvTm(oTProces, "Inicio Processamento")
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Inicializa a gravacao dos lancamentos do SIGAPCO          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PcoIniLan("000153")
+
+Do While .T.
+	dbSelectArea("SB2")
+	If lBatch
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ mv_par01 - Data a ser considerada                              ³
+		//³ mv_par02 - Em qual centro de custo sera' jogada a diferenca    ³
+		//³ mv_par03 - Se deve mostrar os lancamentos contabeis            ³
+		//³ mv_par04 - Se deve aglutinar os lancamentos contabeis          ³
+		//³ mv_par05 - De  Produto                                         ³
+		//³ mv_par06 - Ate Produto                                         ³
+		//³ mv_par07 - De  Local                                           ³
+		//³ mv_par08 - Ate Local                                           ³
+		//³ mv_par09 - De  Grupo                                           ³
+		//³ mv_par10 - Ate Grupo                                           ³
+		//³ mv_par11 - De  Documento                                       ³
+		//³ mv_par12 - Ate Documento                                       ³
+		//³ mv_par13 - Considerar empenhos                                 ³
+		//³ mv_par14 - Atualiza Saldo do Fechamento                        ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		Pergunte("MTA340",.F.)
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Carrega as perguntas selecionadas                            ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If cCodInv#NIL
+			mv_par01 := SB7->B7_DATA
+			mv_par03 := 2
+			mv_par05 := SB7->B7_COD
+			mv_par06 := SB7->B7_COD
+			mv_par07 := SB7->B7_LOCAL
+			mv_par08 := SB7->B7_LOCAL
+			mv_par09 := Posicione('SB1',1, xFilial('SB1')+SB7->B7_COD,"B1_GRUPO")
+			mv_par10 := mv_par09
+			mv_par11 := cCodInv
+			mv_par12 := cCodInv
+		EndIf
+	Else
+		Pergunte("MTA340",.F.)
+		lOpca:=.T.
+	EndIf
+	If mv_par01 <= dDataFec
+		Help (' ', 1, 'FECHTO')
+		Return
+	EndIf
+	If !Empty(mv_par02)
+		(cAliasCC)->(dbSetOrder(1))
+		If !(cAliasCC)->((dbSeek(xFilial(cAliasCC)+mv_par02)))
+			mv_par02:=""
+		EndIf
+	EndIf
+	If lBatch
+		lOpca := .T.
+	EndIf
+
+	If !lOpca
+		Exit
+	Else
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Posiciona numero do Lote para Lancamentos do Faturamento     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		dbSelectArea("SX5")
+		dbSeek(xFilial("SX5")+"09EST")
+		cLoteEst:=IIf(Found(),Trim(X5Descri()),"EST ")
+		PRIVATE nTotal := 0 	// Total dos lancamentos contabeis
+		PRIVATE cArquivo		// Nome do arquivo contra prova
+		dbSelectArea("SB7")
+		#IFDEF TOP
+			If ( TcSrvType()!="AS/400" ) .And. !lT340SB7
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Totaliza registros de digitacao de inventario                          ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				lQuery   :=.T.
+				cAliasSQL:= "SB7SQL"
+				aStruSB7 := SB7->(dbStruct())
+				cQuery := "SELECT SUM(SB7.B7_QUANT) TOTQUANT, SUM(SB7.B7_QTSEGUM) TOTQUANT2,"
+				cQuery	 += " B7_FILIAL,B7_DATA,B7_COD,B7_LOCAL,B7_TPESTR,B7_LOCALIZ,B7_NUMSERI,B7_LOTECTL,B7_NUMLOTE,B7_DTVALID"
+				If lContagem
+					cQuery += ",B7_CONTAGE,B7_ESCOLHA "
+				EndIf
+				If lExistNF
+					cQuery += ",B7_NUMDOC,B7_SERIE,B7_FORNECE,B7_LOJA "
+				EndIf
+				cQuery += " FROM "
+				cQuery += RetSqlName("SB7")+" SB7 ,"
+				cQuery += RetSqlName("SB1")+" SB1 ,"
+				cQuery += " WHERE SB7.B7_FILIAL='"+xFilial("SB7")+"' AND"
+				cQuery += " SB7.B7_DATA='"+DTOS(mv_par01)+"' AND"
+				cQuery += " SB7.B7_COD>='"+mv_par05+"' AND SB7.B7_COD<='"+mv_par06+"' AND"
+				cQuery += " SB7.B7_LOCAL>='"+mv_par07+"' AND SB7.B7_LOCAL<='"+mv_par08+"' AND"
+				cQuery += " SB7.B7_DOC>='"+mv_par11+"' AND SB7.B7_DOC<='"+mv_par12+"' AND"
+				If lContagem
+					cQuery += " SB7.B7_ESCOLHA = 'S' AND"
+				EndIf
+				cQuery += " SB7.D_E_L_E_T_<>'*' AND"
+				cQuery += " SB1.B1_FILIAL='"+xFilial("SB1")+"' AND"
+				cQuery += " SB1.B1_COD=SB7.B7_COD AND"
+				cQuery += " SB1.B1_GRUPO>='"+mv_par09+"' AND SB1.B1_GRUPO<='"+mv_par10+"' AND"
+				cQuery += " SB1.D_E_L_E_T_<>'*' GROUP BY B7_FILIAL,B7_DATA,B7_COD,B7_LOCAL,B7_TPESTR,B7_LOCALIZ,B7_NUMSERI,B7_LOTECTL,B7_NUMLOTE,B7_DTVALID"
+				If lContagem
+					cQuery += ",B7_CONTAGE,B7_ESCOLHA"
+				EndIf 
+				If lExistNF
+					cQuery += ",B7_NUMDOC,B7_SERIE,B7_FORNECE,B7_LOJA"
+				EndIf
+				cQuery := ChangeQuery(cQuery)
+				dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasSQL,.F.,.T.)
+				For nX := 1 To Len(aStruSB7)
+					If aStruSB7[nX][2]<>"C" .And. FieldPos(aStruSB7[nX][1])<>0
+						TcSetField(cAliasSQL,aStruSB7[nX][1],aStruSB7[nX][2],aStruSB7[nX][3],aStruSB7[nX][4])
+					EndIf
+				Next nX
+			Else
+				cFilSB7 := 'DTOS(B7_DATA)=="'+dtos(mv_par01)+'".And.'
+				cFilSB7 += 'B7_DOC>="'+mv_par11+'".And.B7_DOC<="'+mv_par12+'"'
+				MsFilter(cFilSB7)
+				dbSetOrder(1)
+				dbSeek(xFilial("SB7")+dtos(mv_par01))
+			EndIf
+		#ELSE
+			dbSetOrder(1)
+			dbSeek(xFilial("SB7")+dtos(mv_par01))
+		#ENDIF
+		If !lBatch
+			If (oTProces<>Nil)
+	            oTProces:SetRegua1( LastRec() )
+			Else
+				ProcRegua(LastRec(),21,6)
+			EndIf
+		EndIf
+		While !EOF() .And. If(lQuery,.T.,B7_FILIAL+dtos(B7_DATA) == xFilial("SB7")+dtos(mv_par01))
+			If !lBatch
+				If (oTProces<>Nil)
+					oTProces:IncRegua1("Efetuando Acerto do Inventario...")
+				Else
+					IncProc()
+				EndIf
+			EndIf
+			If !lQuery
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Filtra pelo documento digitado                               ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				If B7_DOC < mv_par11 .Or. B7_DOC > mv_par12
+					dbSkip()
+					Loop
+				EndIf
+
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Filtra pelo codigo do produto                                ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				If B7_COD < mv_par05 .Or. B7_COD > mv_par06
+					dbSkip()
+					Loop
+				EndIf
+
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Filtra pelo almoxarifado inventariado                        ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				If B7_LOCAL < mv_par07 .Or. B7_LOCAL > mv_par08
+					dbSkip()
+					Loop
+				EndIf
+
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Caso utilize contagem so considera a contagem escolhida      ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				If lContagem .And. B7_ESCOLHA <> 'S'
+					dbSkip()
+					Loop
+				EndIf
+
+			EndIf
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Template acionando Ponto de Entrada para validar SB7            ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If lT340SB7
+				lOK := ExecTemplate("MT340SB7",.F.,.F.)
+				If (ValType(lOk) == "L")
+					If !lOK
+						dbSkip()
+						Loop
+					EndIf
+				EndIf
+			EndIf
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Ponto de Entrada para Validar o SB7                          ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If l340SB7
+				lOK := ExecBlock("MT340SB7",.F.,.F.)
+				If (ValType(lOk) == "L")
+					If !lOK
+						dbSkip()
+						Loop
+					EndIf
+				EndIf
+			EndIf
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Filtra itens com digitacao incorreta rastreabilidade         ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If Rastro(B7_COD) .And. Empty(B7_LOTECTL) .Or. (Rastro(B7_COD,"S") .And. Empty(B7_NUMLOTE))
+				dbSkip()
+				Loop
+			EndIf
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Filtra itens com digitacao incorreta localizacao fisica      ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If Localiza(B7_COD) .And. Empty(B7_LOCALIZ+B7_NUMSERI)
+				dbSkip()
+				Loop
+			EndIf
+
+			cCod     := B7_COD
+			cLocal   := B7_LOCAL
+			dData    := B7_DATA
+			cLote	 := B7_NUMLOTE
+			cLoteCtl := B7_LOTECTL
+			dDtValid := B7_DTVALID
+			nQuant   := 0
+			nQtSegUm := 0
+			nEmpenho := 0
+			cLocaliza:=B7_LOCALIZ
+			cNumSerie:=B7_NUMSERI
+			cEstFis  :=B7_TPESTR
+			cContagem:=If(lContagem,B7_CONTAGE,"")
+			cLog     :=""
+			If lExistNF
+				cNumDoc  := B7_NUMDOC
+				cSerie   := B7_SERIE
+				cFornece := B7_FORNECE
+				cLoja    := B7_LOJA
+			EndIf
+
+			SB1->(dbSeek(xFilial("SB1")+cCod))
+
+			If !lQuery
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Filtra pelo grupo do produto                                 ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				If SB1->B1_GRUPO < mv_par09 .Or. SB1->B1_GRUPO > mv_par10
+					dbSkip()
+					Loop
+				EndIf
+
+				Do While !Eof() .And. B7_FILIAL+dtos(B7_DATA)+B7_COD+B7_LOCAL+B7_LOCALIZ+B7_NUMSERI+B7_LOTECTL+B7_NUMLOTE+If(lContagem,B7_CONTAGE,"");
+						== xFilial("SB7")+dtos(mv_par01)+cCod+cLocal+cLocaliza+cNumSerie+cLoteCtl+cLote+cContagem
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³ Caso utilize contagem so considera a contagem escolhida      ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					If lContagem .And. B7_ESCOLHA <> 'S'
+						dbSkip()
+						Loop
+					EndIf
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³ Filtra pelo documento digitado                               ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					If B7_DOC >= mv_par11 .And. B7_DOC <= mv_par12
+						nQuant	+=B7_QUANT
+						nQtSegum+=B7_QTSEGUM
+					EndIf
+					dbSKip()
+				EndDo
+			Else
+				nQuant   := (cAliasSQL)->TOTQUANT
+				nQtSegum := (cAliasSQL)->TOTQUANT2
+				(cAliasSQL)->(dbSkip())
+			EndIf
+
+			cApropri := "0"
+			dbSelectArea("SB2")
+			dbSetOrder(1)
+			If !dbSeek(xFilial("SB2")+cCod+cLocal)
+				CriaSB2(cCod,cLocal)
+			EndIf
+			If Localiza(cCod)
+				nTotEnd := SaldoSBF(cLocal,"",cCod)
+				If !lCEmpInv .And. Empty(SaldoSBF(cLocal,"",cCOD,NIL,NIL,NIL,.T.))
+					If QtdComp(SB2->B2_QATU)-QtdComp(SB2->B2_QACLASS) #QtdComp(nTotEnd)
+						cLog     := 'B2BF'
+					EndIf
+				Else
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³Verifica se deve considerar somente os empenhos de todos ³
+					//³os empenhos da tabela de "Requisicoes empenhadas" (SD4). ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					If (mv_par13==2)
+						If Empty(nTotEnd) 
+							nTotEnd := SaldoSBF(cLocal,"",cCOD,NIL,NIL,NIL,.T.)
+						Else
+							nTotEnd += SaldoSBF(cLocal,"",cCOD,NIL,NIL,NIL,.T.)
+						EndIf
+						nTotEnd -= SldEmpSD4(cCod,cLocal)
+					EndIf
+
+					If QtdComp(SB2->B2_QATU)-QtdComp(SB2->B2_QACLASS)-QtdComp(SB2->B2_QEMP) #QtdComp(nTotEnd)
+						cLog     := 'B2BF'
+					EndIf
+				EndIf
+			EndIf
+			//-- Validar o saldo do lote e nao permitir inventariar produtos com lotes bloqueados
+			If Empty(cLog) .And. A340ValBloq(cCod,cLocal,cLoteCtl,cLote)
+				If QtdComp(0) == QtdComp(SaldoLote(cCod, cLocal,cLoteCtl,cLote,/*lBaixaEmp*/ Nil, /*lConsVenc*/ Nil, /*lConsClas*/ Nil, /*dDataRef*/ Nil))
+					cLog := 'B2B8'
+				EndIf
+			EndIf
+			If Empty(cLog)
+				If Rastro(cCod) .Or. Localiza(cCod)
+					aSaldo:=CalcEstL(cCod,cLocal,mv_par01+1,cLoteCtl,cLote,cLocaliza,cNumSerie)
+					If IntDl(cCod)
+						nEmpenho := SB2->B2_RESERVA
+						cLog     := 'SB2E'
+					Else
+						If Localiza(cCod)
+							nEmpenho:=EmpLocLz(cCod,cLocal,cLoteCTL,cLote,cLocaliza,cNumSerie)
+							cLog:="SBF"
+							aSaldo[7]:=ConvUm(SB1->B1_COD, aSaldo[1], aSaldo[7], 2)
+						ElseIf Rastro(cCod)
+							nEmpenho:=EmpLote(cCod,cLocal,cLoteCTL,cLote)
+							cLog:="SB8"
+						EndIf
+					EndIf
+					If Rastro(cCod) .And. cLocal == cLocalCQ
+						lLoteInv := .T.
+						lLoteInv := A340InvCQ(cCod,cLocal,cLoteCTL,cLote,cLocaliza,cNumSerie,mv_par01+1,nQuant,@aLogs,@lGeraCQ0)
+					EndIf
+				Else
+					If cLocal == cLocalCQ
+						aSaldo := A340QtdCQ(cCod,cLocal,mv_par01+1,"")
+					Else
+						aSaldo := CalcEst(cCod,cLocal,mv_par01+1)
+						If !lEstNeg
+							nEmpenho:=SB2->B2_RESERVA
+							cLog:="SB2E"
+						EndIf
+					EndIf
+				EndIf
+				//--> Verifica se o saldo do produto no armazem esta disponivel
+				If SB2->B2_STATUS $ "2"
+					cLog := "SB2I"
+				EndIf
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Verifica se deve gravar a data do inventario    ³
+				//³ independentemente do saldo em estoque           ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				Begin Transaction
+					If SB2->B2_DINVENT <= mv_par01 .And. SB2->B2_STATUS #"2"
+						dbSelectArea("SB2")
+						RecLock("SB2",.F.)
+						Replace B2_DINVENT With mv_par01
+						MsUnlockAll()
+					EndIf
+					If (QtdComp(aSaldo[1]) != QtdComp(nQuant) .Or. QtdComp(aSaldo[7]) != QtdComp(nQtSegum)) .And. B2_DINVENT <= mv_par01 .And. QtdComp(nQuant-aSaldo[1]) != QtdComp(0) .And. lLoteInv
+						// Calcula o saldo por lote / enderecamento quando inventaria para uma quantidade menor
+						If !Empty(cLoteCtl+cLote+cLocaliza+cNumSerie) .And. (Qtdcomp(aSaldo[1]) > QtdComp(nQuant))
+							aSaldoAtu:=CalcEstL(cCod,cLocal,CTOD("31/12/49","ddmmyy"),cLoteCtl,cLote,cLocaliza,cNumSerie)
+							nDiferenca:=QtdComp(aSaldo[1])-QtdComp(nQuant)
+							If nDiferenca  > QtdComp(aSaldoAtu[1])
+								lOkLote:=.F.
+							Else
+								lOkLote:=.T.
+							EndIf
+							// Caso nao informe sobre lote / endereco
+						Else
+							lOkLote:=.T.
+						EndIf
+						If lOkLote
+
+							If Rastro(cCod) .And. SB2->B2_STATUS #"2"
+								nSomaSDD := 0
+								nSaldSDD := 0
+								aRecnSDD := {}
+								SDD->(dbSetOrder(2))
+								If SDD->(MsSeek(xFilial("SDD")+cCod+cLocal+cLoteCtl+cLote))
+									While SDD->(!Eof()) .And. SDD->(DD_FILIAL+DD_PRODUTO+DD_LOCAL+DD_LOTECTL+DD_NUMLOTE) == xFilial("SDD")+cCod+cLocal+cLoteCtl+cLote
+										If SDD->DD_QUANT > 0
+											nSomaSDD += SDD->DD_QUANT
+											AADD(aRecnSDD,SDD->(Recno()))
+										EndIf
+										SDD->(dbSkip())
+									EndDo
+									If QtdComp(nSomaSDD) == QtdComp(nEmpenho)
+										nSaldSDD := nQuant/Len(aRecnSDD)
+										For nX:= 1 To Len(aRecnSDD)
+											SDD->(dbGoto(aRecnSDD[nX]))
+											ProcSDD(.T.)
+										Next
+										For nX:= 1 To Len(aRecnSDD)
+											aDados   := {}
+											SDD->(dbGoto(aRecnSDD[nX]))
+											For nCampo := 1 To SDD->(FCount())
+												Aadd(aDados, SDD->(FieldGet(nCampo)))
+											Next
+											// Checa campo para chave
+											dbSelectArea("SDD")
+											cDocOri:=SDD->DD_DOC
+											dbSetOrder(1)
+											While dbSeek(xFilial("SDD")+cDocOri)
+												cDocOri:=Soma1(cDocOri,Len(SDD->DD_DOC))
+											End
+											Reclock("SDD",.T.)
+											For nCampo := 1 To SDD->(FCount())
+												FieldPut(nCampo, aDados[nCampo])
+											Next
+											SDD->DD_DOC     := cDocOri
+											SDD->DD_QUANT   := nSaldSDD
+											SDD->DD_SALDO   := nSaldSDD
+											SDD->DD_OBSERVA := "Registro Manipulado Inventario"
+											MsUnLock()
+											ProcSDD(.F.)
+										Next
+										nEmpenho := 0
+									EndIf
+								EndIf
+							EndIf
+
+							If QtdComp(nEmpenho) <= If(IntDl(cCod),QtdComp(0),QtdComp(nQuant)) .And. SB2->B2_STATUS #"2"
+
+								If nHdlPrv == NIL
+									//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+									//³ Cria o cabecalho do arquivo de prova        ³
+									//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+									nHdlPrv := HeadProva(cLoteEst,"MATA340",Subs(cUsuario,7,6),@cArquivo)
+								EndIf
+								//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+								//³ Pega o numero sequencial do movimento      ³
+								//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+								cNumseq := ProxNum()
+								dbSelectArea("SD3")
+								RecLock("SD3",.T.)
+								Replace	D3_FILIAL  With xFilial("SD3"),	D3_COD     With cCod,;
+										D3_DOC     With "INVENT" ,	D3_EMISSAO With mv_par01,;
+										D3_CC      With mv_par02 ,	D3_GRUPO   With SB1->B1_GRUPO,;
+										D3_LOCAL   With cLocal   ,	D3_UM      With SB1->B1_UM,;
+										D3_NUMSEQ  With cNumSeq  ,	D3_SEGUM   With SB1->B1_SEGUM,;
+										D3_CONTA   With SB1->B1_CONTA,;
+										D3_QUANT   With Abs(nQuant - aSaldo[1]),;
+										D3_QTSEGUM With Abs(nQtSegUm - aSaldo[7]),;
+										D3_TIPO    With SB1->B1_TIPO,;
+										D3_LOCALIZ With cLocaliza,;
+										D3_TPESTR  With cEstFis,;
+										D3_NUMSERI With cNumSerie,;
+										D3_LOTECTL With cLoteCtl,;
+										D3_NUMLOTE With cLote,;
+										D3_USUARIO With CUSERNAME,;
+										D3_DTVALID With dDtValid
+										If aSaldo[1] > nQuant
+											Replace D3_TM With "999",D3_CF With "RE"+cApropri
+										Else
+											Replace D3_TM With "499",D3_CF With "DE"+cApropri
+										EndIf
+										Replace D3_CHAVE With SubStr(D3_CF,2,1)+IIF(D3_CF=="DE4","9","0")
+
+								//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+								//³Template acionando Ponto de Entrada                  ³
+								//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+								If ExistTemplate("MT340D3")
+									ExecTemplate("MT340D3",.F.,.F.)
+								EndIf
+								If ExistBlock("MT340D3")
+									ExecBlock("MT340D3",.F.,.F.)
+								EndIf
+								//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+								//³ Atualiza o CQ dos Modulos de Materiais (SD7)          ³
+								//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+								If lGeraCQ0
+									fGeraCQ0('SD3', SD3->D3_COD, 'IN')
+								EndIf
+								If cCusMed == "O"
+									//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+									//³ Pega os custos medios atuais               ³
+									//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+									aCM := PegaCMAtu(SD3->D3_COD,SD3->D3_LOCAL)
+								Else
+									//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+									//³ Pega os custos medios finais               ³
+									//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+									aCM := PegaCMFim(SD3->D3_COD,SD3->D3_LOCAL)
+								EndIf
+								//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+								//³ Grava o custo da movimentacao              ³
+								//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+								aCusto := GravaCusD3(aCM)
+								//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+								//³ Atualiza o saldo atual do estoque com os dados do SD3 ³
+								//³ e caso retorne .T. grava o registro para log de saldo ³
+								//³ negativo.                                             ³
+								//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+								If	B2AtuComD3(aCusto,,.F.,,,,,,,,,,,,,,,,,,,,,.F.)
+									If !lEstNeg
+										For i:=1 to Len(aLogs)
+											nAchou:=ASCAN(aLogs[i],{|x| x[1] == "SB2" .And. x[2]+x[3] == SD3->D3_COD+SD3->D3_LOCAL})
+											If nAchou > 0
+												Exit
+											EndIf
+										Next i
+										If nAchou == 0
+											//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+											//³ Adiciona registro em array p/ baixar empenho.  ³
+											//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+											If Len(aLogs[Len(aLogs)]) > 4095
+												AADD(aLogs,{})
+											EndIf
+											AADD(aLogs[Len(aLogs)],{"SB2",SD3->D3_COD,SD3->D3_LOCAL,"","","",""})
+										EndIf
+									EndIf
+								EndIf
+
+								//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+								//³ Atualiza o saldo final do estoque com os dados do SD3 ³
+								//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+								If mv_par14 == 1
+									//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+									//³ Atualiza o saldo final do estoque com os dados do SD3 ³
+									//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+									B2FimComD3(aCusto)
+								EndIf
+
+								//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+								//³ Cria inspeção para produto inventariado maior q saldo ³
+								//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+								If lGeraCQ0
+									If aSaldo[1] < nQuant .And. RetFldProd(SB1->B1_COD,"B1_TIPOCQ")=="Q" .And. lExistNF
+										aAreaSD5 := SD5->(GetArea())
+										SD5->(dbSetOrder(3))
+										If SD5->(dbSeek(xFilial('SD5')+SD3->D3_NUMSEQ+SD3->D3_COD+SD3->D3_LOCAL+SD3->D3_LOTECTL, .F.))
+											cLotCtlQie := SD5->D5_LOTECTL
+											cNumLotQie := SD5->D5_NUMLOTE
+										EndIf
+										SD5->(dbSetOrder(aAreaSD5[2]))
+										SD5->(dbGoto(aAreaSD5[3]))
+
+										//Posiciona SD1 de acordo com a nota fiscal informada no SB7
+										SD1->(dbSetOrder(2))
+										If SD1->(dbSeek(xFilial("SD1")+SD3->D3_COD+cNumDoc+cSerie+cFornece+cLoja))
+
+											//Quando a quantidade do saldo for menor que a quantidade inventariada e produto do tipo quality
+											//gerar registro para inspeção.
+											aEnvCele := {	cNumDoc							,; //Numero da Nota Fiscal
+															cSerie							,; //Serie da Nota Fiscal
+															"N" 							,; //Tipo da Nota Fiscal
+															SD1->D1_EMISSAO					,; //Data de Emissao da Nota Fiscal
+															SD1->D1_DTDIGIT					,; //Data de Entrada da Nota Fiscal
+															"IN"							,; //Tipo de Documento
+															SD1->D1_ITEM    				,; //Item da Nota Fiscal
+															Space(TamSX3("D1_REMITO")[1])	,; //Numero do Remito (Localizacoes)
+															SD1->D1_PEDIDO					,; //Numero do Pedido de Compra
+															SD1->D1_ITEMPC	 				,; //Item do Pedido de Compra
+															cFornece						,; //Codigo Fornecedor/Cliente
+															cLoja							,; //Loja Fornecedor/Cliente
+															SD1->D1_LOTEFOR					,; //Numero do Lote do Fornecedor
+															Space(6)						,; //Codigo do Solicitante
+															SD3->D3_COD						,; //Codigo do Produto
+															SD3->D3_LOCAL					,; //Local Origem
+															cLotCtlQie  					,; //Numero do Lote
+															cNumLotQie						,; //Sequencia do Sub-Lote
+															SD3->D3_NUMSEQ					,; //Numero Sequencial
+															SD7->D7_NUMERO					,; //Numero do CQ
+															SD3->D3_QUANT					,; //Quantidade
+															0			   					,; //Preco
+															0								,; //Dias de atraso
+															" "								,; //TES
+															AllTrim(FunName())				,; //Origem
+															" "								,; //Origem TXT
+															PadR(SD3->D3_QUANT,15)}	  		   //Tamanho do lote original
+
+											//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+											//³ Realiza a integracao Materiais x Inspecao de Entradas		 ³
+											//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+											aRecCele := qAtuMatQie(aEnvCele,1) 
+										EndIf
+									EndIf
+								EndIf
+
+								If nHdlPrv != NIL .And. (Valtype(nHdlPrv) == "N" .And. nHdlPrv > 0)
+									//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+									//³ Gera o lancamento no arquivo de prova           ³
+									//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+									If SD3->D3_TM <= "500"
+										nTotal+=DetProva(nHdlPrv,"676","MATA340",cLoteEst)
+									Else
+										nTotal+=DetProva(nHdlPrv,"674","MATA340",cLoteEst)
+									EndIf
+								EndIf
+								//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+								//³ Grava os lancamentos nas contas orcamentarias SIGAPCO    ³
+								//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+								If SD3->D3_TM <= "500"
+									PcoDetLan("000153","01","MATA340")
+								Else
+									PcoDetLan("000153","02","MATA340")
+								EndIf
+								aSaldo := CalcEst(SD3->D3_COD,SD3->D3_LOCAL,Ctod("31/12/49","ddmmyy"))
+								RecLock("SB2")
+								Replace B2_QATU  With aSaldo[1]
+								Replace B2_VATU1 With aSaldo[2]
+								Replace B2_VATU2 With aSaldo[3]
+								Replace B2_VATU3 With aSaldo[4]
+								Replace B2_VATU4 With aSaldo[5]
+								Replace B2_VATU5 With aSaldo[6]
+								MsUnlockAll()
+								//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+								//³Ponto de entrada para atualização da tabela SB2        ³
+								//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+								If lMT340B2
+									ExecBlock("MT340B2",.F.,.F.)
+								EndIf
+								//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+								//³Atualiza o custo unificado ON-LINE                     ³
+								//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+								If FindFunction("B2AtuUnif")
+									B2AtuUnif(SB2->B2_COD)
+								EndIf
+							Else
+								For i:=1 to Len(aLogs)
+									nAchou:=ASCAN(aLogs[i],{|x| x[1] == cLog .And. x[2]+x[3]+x[4]+x[5]+x[6]+x[7] == cCod+cLocal+cLoteCtl+cLote+cLocaliza+cNumSerie})
+									If nAchou > 0
+										Exit
+									EndIf
+								Next i
+								If nAchou == 0
+									//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+									//³ Adiciona registro em array p/ baixar empenho.  ³
+									//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+									If Len(aLogs[Len(aLogs)]) > 4095
+										AADD(aLogs,{})
+									EndIf
+									AADD(aLogs[Len(aLogs)],{cLog,cCod,cLocal,cLoteCtl,cLote,cLocaliza,cNumSerie})
+								EndIf
+							EndIf
+						Else
+							cLog:="SLD"
+							For i:=1 to Len(aLogs)
+								nAchou:=ASCAN(aLogs[i],{|x| x[1] == cLog .And. x[2]+x[3]+x[4]+x[5]+x[6]+x[7] == cCod+cLocal+cLoteCtl+cLote+cLocaliza+cNumSerie})
+								If nAchou > 0
+									Exit
+								EndIf
+							Next i
+							If nAchou == 0
+								//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+								//³ Adiciona registro em array p/ baixar empenho.  ³
+								//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+								If Len(aLogs[Len(aLogs)]) > 4095
+									AADD(aLogs,{})
+								EndIf
+								AADD(aLogs[Len(aLogs)],{cLog,cCod,cLocal,cLoteCtl,cLote,cLocaliza,cNumSerie})
+							EndIf
+						EndIf
+					EndIf
+				End Transaction
+			Else
+				For i:=1 to Len(aLogs)
+					nAchou:=ASCAN(aLogs[i],{|x| x[1] == cLog .And. x[2]+x[3]+x[4]+x[5]+x[6]+x[7] == cCod+cLocal+cLoteCtl+cLote+cLocaliza+cNumSerie})
+					If nAchou > 0
+						Exit
+					EndIf
+				Next i
+				If nAchou == 0
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³ Adiciona registro em array p/ baixar empenho.  ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					If Len(aLogs[Len(aLogs)]) > 4095
+						AADD(aLogs,{})
+					EndIf
+					AADD(aLogs[Len(aLogs)],{cLog,cCod,cLocal,cLoteCtl,cLote,cLocaliza,cNumSerie})
+				EndIf
+			EndIf
+			dbSelectArea(cAliasSql)
+		EndDo
+		Exit
+	EndIf
+EndDo
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Se ele criou o arquivo de prova ele deve gravar o rodape'    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If nHdlPrv != NIL .And. (Valtype(nHdlPrv) == "N" .And. nHdlPrv > 0)
+	Pergunte("MTA340",.F.)
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ mv_par01 - Data a ser considerada                              ³
+	//³ mv_par02 - Em qual centro de custo sera' jogada a diferenca    ³
+	//³ mv_par03 - Se deve mostrar os lancamentos contabeis            ³
+	//³ mv_par04 - Se deve aglutinar os lancamentos contabeis          ³
+	//³ mv_par05 - De  Produto                                         ³
+	//³ mv_par06 - Ate Produto                                         ³
+	//³ mv_par07 - De  Local                                           ³
+	//³ mv_par08 - Ate Local                                           ³
+	//³ mv_par09 - De  Grupo                                           ³
+	//³ mv_par10 - Ate Grupo                                           ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	lDigita   := Iif(mv_par03 == 1,.T.,.F.)
+	lAglutina := Iif(mv_par04 == 1,.T.,.F.)
+	RodaProva(nHdlPrv,nTotal)
+	cA100Incl(cArquivo,nHdlPrv,3,cLoteEst,lDigita,lAglutina)
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Finaliza a gravacao dos lancamentos do SIGAPCO            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PcoFinLan("000153")
+
+MsUnlockAll()
+
+If lQuery
+	dbSelectArea(cAliasSQL)
+	dbCloseArea()
+	dbSelectArea("SB7")
+Else
+	RETINDEX("SB7")
+	dbClearFilter()
+EndIf
+
+If Len(aLogs[1]) > 0
+	For i:=1 to Len(aLogs)
+		For z:=1 to Len(aLogs[i])
+			// Verifica saldo em estoque
+			If aLogs[i,z,1] == "SB2"
+				dbSelectArea("SB2")
+				dbSetOrder(1)
+				If dbSeek(xFilial("SB2")+aLogs[i,z,2]+aLogs[i,z,3])
+					If B2_QATU > 0 .And. B2_STATUS #"2"
+						aLogs[i,z,1] := "OK"
+					EndIf
+				EndIf
+			EndIf
+		Next z
+	Next i
+	A340LstNeg(aLogs)
+EndIf
+
+A710GrvTm(oTProces, "Fim Processamento")
+Return NIL
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A340LstNeg³ Autor ³Rodrigo de A. Sartorio ³ Data ³ 10/01/97 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Relatorio de Produtos que ficaram com o saldo negativo     ³±±
+±±³          ³ ou tiveram itens que nao podem ser inventariados           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ SIGAEST/SIGAPCP                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function A340LstNeg(aLogs)
+
+
+LOCAL titulo   := "Itens nao Inventariados"
+LOCAL cDesc1   := "O relatorio lista os produtos que nao puderam ser inventariados por "
+LOCAL cDesc2   := "alguma situacao que impede a correta contagem de seus saldos e lista "
+LOCAL cDesc3   := "tb produtos que continuam com saldo divergente apos o processamento."
+LOCAL cString  := "SB2"
+LOCAL wnrel    := "MATA340"
+
+PRIVATE aReturn:= {"Zebrado",1,"Administracao", 2, 2, 1, "",1 }	
+PRIVATE nLastKey:= 0
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Envia controle para a funcao SETPRINT                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+wnrel:=	SetPrint(cString,wnrel,,@titulo,cDesc1,cDesc2,cDesc3,.F.,,,,,.F.)
+If nLastKey = 27
+	dbClearFilter()
+	Return
+EndIf
+
+SetDefault(aReturn,cString)
+
+If nLastKey = 27
+	dbClearFilter()
+	Return
+EndIf
+
+RptStatus({|lEnd| C340Imp(@lEnd,wnRel,titulo,aLogs)},titulo)
+
+Return NIL
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ C340IMP  ³ Autor ³ Rodrigo de A. Sartorio³ Data ³ 10/01/97 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Chamada do Relatorio                                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA340                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function C340Imp(lEnd,WnRel,titulo,aLogs)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis locais exclusivas deste programa                   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+LOCAL Tamanho  := "P"
+LOCAL nTipo    := 0
+LOCAL cRodaTxt := "REGISTRO(S)"
+LOCAL nCntImpr := 0
+LOCAL i,z
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Inicializa variaveis para controlar cursor de progressao     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+SetRegua(Len(aLogs))
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Inicializa os codigos de caracter Comprimido/Normal da impressora ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nTipo  := IIF(aReturn[4]==1,15,18)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Contadores de linha e pagina                                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE li := 80 ,m_pag := 1
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Cria o cabecalho.                                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cabec1 := "OCOR PRODUTO         DESCRICAO       LOCAL   QUANTIDADE     LOTE      SUB-LOTE"
+cabec2 := "                                            LOCALIZACAO     NUMERO DE SERIE   "
+//                   1234 123456789012345 12345678901234545 12   12345678901234  1234567890 123456
+//                                                               123456789012345 12345678901234567890
+//                   0         1         2         3         4         5         6         7         8
+//                   012345678901234567890123456789012345678901234567890123456789012345678901234567890
+
+SB1->(dbSetOrder(1))
+SB2->(dbSetOrder(1))
+
+For i:=1 to Len(aLogs)
+	IncRegua()
+	For z:=1 to Len(aLogs[i])
+		If aLogs[i,z,1] != "OK"
+			If li > 58
+				cabec(titulo,cabec1,cabec2,wnrel,Tamanho,nTipo)
+			EndIf
+			SB1->(dbSeek(xFilial("SB1")+aLogs[i,z,2]))
+			SB2->(dbSeek(xFilial("SB2")+aLogs[i,z,2]+aLogs[i,z,3]))
+			@ li,000 PSay aLogs[i,z,1]
+			@ li,005 PSay aLogs[i,z,2] Picture PesqPict("SD3","D3_COD",15)
+			@ li,021 PSay Left(SB1->B1_DESC,15) Picture PesqPict("SB1","B1_DESC",15)
+			@ li,039 PSay aLogs[i,z,3] Picture PesqPict("SD3","D3_LOCAL",2)
+			@ li,044 PSay SB2->B2_QATU	Picture PesqPictQt("B2_QATU",14)
+			@ li,060 PSay aLogs[i,z,4]	Picture PesqPict("SB7","B7_LOTECTL",10)
+			@ li,071 PSay aLogs[i,z,5]	Picture PesqPict("SB7","B7_NUMLOTE",8)
+			If !Empty(aLogs[i,z,6]+aLogs[i,z,7])
+				li++
+				@ li,044 PSay aLogs[i,z,6]	Picture PesqPict("SB7","B7_LOCALIZ",15)
+				@ li,060 PSay aLogs[i,z,7]	Picture PesqPict("SB7","B7_NUMSERI",20)
+			EndIf
+			li++
+		EndIf
+	Next z
+Next i
+
+
+If li != 80
+	If li >= 50
+		cabec(titulo,cabec1,cabec2,wnrel,Tamanho,nTipo)
+	Else
+		li++
+	EndIf
+	@ li,10 PSay "Legenda das Ocorrencias"
+	li++
+	@ li,10 PSay "SB2  - > Itens com saldo negativo nos Saldos em estoque."
+	li++
+	@ li,10 PSay "SLD  - > O inventario comprometeria o saldo atual do produto"
+	li++
+	@ li,10 PSay "SB2E/SB8/SBF - > Itens empenhados / reservados no arquivo SB2/SB8/SBF"
+	li++
+	@ li,10 PSay "SB2I - > Itens com saldo Indisponivel nos Saldos em Estoque"
+	li++
+	@ li,10 PSay "B2BF - > Itens com saldo desbalanceado entre o SB2 e o SBF, favor"
+	li++
+	@ li,10 PSay "         verificar todos os processos pendentes para a tabela SBF "
+	li++
+	@ li,10 PSay "         como por exemplo: enderecamentos pendentes e empenhos para"
+	li++
+	@ li,10 PSay "         producao com enderecos pendentes."
+	li++
+	@ li,10 PSay "B2B8 - > Itens sem saldo para este lote / sub-lote, favor"
+	li++
+	@ li,10 PSay "         verificar todos os processos pendentes para a tabela SB8 "
+	li++
+	@ li,10 PSay "         como por exemplo: lotes vencidos e/ou bloqueados."
+	li++
+	@ li,10 PSay "INV   - > Itens com movimentacoes de C.Q."
+	li++
+	Roda(nCntImpr,cRodaTxt,Tamanho)
+EndIf
+
+Set Device to Screen
+
+If aReturn[5] = 1
+	Set Printer To
+	dbCommitAll()
+	OurSpool(wnrel)
+EndIf
+
+MS_FLUSH()
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³A340QtdCQ ³ Autor ³ Rodrigo de A. Sartorio³ Data ³ 05/05/97 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Calcula o saldo rejeitado do produto no almoxarifado de CQ. ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³MATA340                                                     ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function A340QtdCQ(cProduto,cLocal,dData,cLote)
+Local cAlias:= Alias(), nOrdem := IndexOrd()
+Local cCond
+Local aQtd:={0,0,0,0,0,0,0}
+Local cLocDest := ""
+dbSelectArea("SD7")
+If lLocCQ
+	cNomArq:= CriaTrab("",.F.)
+	cCond:='D7_ESTORNO != "S" .And. D7_TIPO == 2 .And. DTOS(D7_DATA) < "'+DTOS(dData)+'"'
+	IndRegua("SD7",cNomArq,"D7_FILIAL+D7_PRODUTO+D7_LOCAL+D7_NUMLOTE",,cCond,"Selecionando Registros...")	
+	nNewOrd:=RetIndex("SD7")
+	DbSelectArea("SD7")
+	#IFNDEF TOP
+		DbSetIndex(cNomArq+OrdBagExt())
+	#ENDIF
+	lLocCQ:=.F.
+	DbSetOrder(nNewOrd+1)
+EndIf
+dbGotop()
+If Empty(cLote)
+	dbSeek(xFilial("SD7")+cProduto+cLocal)
+	Do While !Eof() .And. D7_FILIAL+D7_PRODUTO+D7_LOCAL == xFilial("SD7")+cProduto+cLocal
+		aQtd[1] += SD7->D7_QTDE
+		cLocDest:= SD7->D7_LOCDEST
+		dbSkip()
+	EndDo
+Else
+	dbSeek(xFilial("SD7")+cProduto+cLocal+cLote)
+	Do While !Eof() .And. D7_FILIAL+D7_PRODUTO+D7_LOCAL+D7_NUMLOTE == xFilial("SD7")+cProduto+cLocal+cLote
+		aQtd[1] += SD7->D7_QTDE
+		cLocDest:= SD7->D7_LOCDEST		
+		dbSkip()
+	EndDo
+EndIf
+
+If aQtd[1] > 0
+	// Subtraio qtd. j  devolvida
+	dbSelectArea("SD2")
+	dbSetOrder(1)
+	dbSeek(xFilial("SD2")+cProduto+cLocDest)
+	Do While !Eof() .And. D2_FILIAL+D2_COD+D2_LOCAL == xFilial("SD2")+cProduto+cLocDest
+		If D2_TIPO != "D"
+			dbSkip()
+			Loop
+		EndIf
+		dbSelectArea("SF4")
+		dbSetOrder(1)
+		If dbSeek(xFilial("SF4")+SD2->D2_TES) .And. F4_ESTOQUE == "S"
+			aQtd[1] -= SD2->D2_QUANT
+		EndIf
+		dbSelectArea("SD2")
+		dbSkip()
+	EndDo
+	dbSelectArea("SB1")
+	dbSetOrder(1)
+	If dbSeek(xFilial("SB1")+cProduto)
+		aQtd[7]:= ConvUm(SB1->B1_COD,aQtd[1],aQtd[7],2)
+	EndIf
+EndIf
+dbSelectArea(cAlias)
+dbSetOrder(nOrdem)
+Return aQtd
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³A340InvCQ ³ Autor ³ Nereu Humberto Junior ³ Data ³ 13/06/05 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Calcula o saldo do produto no almoxarifado de CQ.           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³MATA340                                                     ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function A340InvCQ(cCod,cLocal,cLoteCTL,cLote,cLocaliza,cNumSerie,dData,nQtdInv,aLogs,lGeraCQ0)
+
+Local aArea    := GetArea()
+Local cCond    := ""
+Local cLog     := ""
+Local aMov     := {}
+Local aSaldoCQ := {}
+Local aStruSD7 := {}
+Local nQtde    := 0
+Local nSaldo   := 0
+Local nRecSD7  := 0,i:=0,nX:=0
+Local lRet     := .T.
+Local lQuery   := .F.
+Local cAliasSD7:= "SD7"
+lGeraCQ0 := .F.
+
+dbSelectArea("SD7")
+#IFDEF TOP
+	If ( TcSrvType()!="AS/400" )
+		lQuery   :=.T.
+		cAliasSD7:= "SD7SQL"
+		aStruSD7 := SD7->(dbStruct())
+		cQuery := "SELECT D7_NUMERO, D7_PRODUTO, D7_LOCAL, D7_TIPO, D7_DATA, D7_LOTECTL, D7_NUMLOTE, R_E_C_N_O_ RECNOSD7"
+		cQuery += " FROM "
+		cQuery += RetSqlName("SD7")+" SD7 "
+		cQuery += " WHERE D7_FILIAL='"+xFilial("SD7")+"' AND"
+		cQuery += " D7_PRODUTO ='"+cCod+"' AND "
+		cQuery += " D7_LOCAL ='"+cLocal+"' AND "
+		cQuery += " D7_TIPO = 0 AND "
+		cQuery += " D7_DATA <'"+DTOS(dData)+"' AND"
+		cQuery += " D7_LOTECTL ='"+cLoteCTL+"' AND "
+		If Rastro(cCod,"S")
+			cQuery += " D7_NUMLOTE ='"+cLote+"' AND "
+		EndIf
+		cQuery += " D_E_L_E_T_<>'*' "
+		cQuery := ChangeQuery(cQuery)
+		dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasSD7,.F.,.T.)
+		For nX := 1 To Len(aStruSD7)
+			If aStruSD7[nX][2]<>"C" .And. FieldPos(aStruSD7[nX][1])<>0
+				TcSetField(cAliasSD7,aStruSD7[nX][1],aStruSD7[nX][2],aStruSD7[nX][3],aStruSD7[nX][4])
+			EndIf
+		Next nX
+	Else
+#ENDIF
+	cNomArq:= CriaTrab("",.F.)
+	cCond:='D7_PRODUTO == "'+cCod+'" .And. D7_LOCAL == "'+cLocal+'" .And. D7_TIPO == 0'
+	cCond+=' .And. DTOS(D7_DATA) < "'+DTOS(dData)+'"  .And. D7_LOTECTL == "'+cLoteCTL+'"'
+	If Rastro(cCod,"S")
+		cCond+=' .And. D7_NUMLOTE == "'+cLote+'"'
+	EndIf
+
+	IndRegua(cAliasSD7,cNomArq,"D7_FILIAL+D7_PRODUTO+D7_LOCAL+D7_NUMLOTE",,cCond,"Selecionando Registros...")	
+	nNewOrd:=RetIndex("SD7")
+	DbSelectArea("SD7")
+	DbSetIndex(cNomArq+OrdBagExt())
+	dbSetOrder(nNewOrd+1)
+	#IFDEF TOP
+	EndIf
+	#ENDIF
+
+dbSelectArea(cAliasSD7)
+dbGotop()
+
+While (cAliasSD7)->(!Eof())
+	aSaldoCQ := A175CalcQt((cAliasSD7)->D7_NUMERO,(cAliasSD7)->D7_PRODUTO,(cAliasSD7)->D7_LOCAL)
+	nQtde  += aSaldoCQ[1]
+	nSaldo += aSaldoCQ[6]
+	If lQuery
+		nRecSD7 := (cAliasSD7)->RECNOSD7
+	Else
+		nRecSD7 := (cAliasSD7)->(Recno())
+	EndIf
+	(cAliasSD7)->(dbSkip())
+EndDo
+
+If ( QtdComp(nQtde) == QtdComp(nSaldo) )
+	If nRecSD7 #0
+		If QtdComp(nQtdInv) < QtdComp(nSaldo)
+			dbSelectArea("SD7")
+			SD7->(dbGoTo(nRecSD7))
+
+			aAdd(aMov, {})
+			aAdd(aMov[Len(aMov)], 2)
+			aAdd(aMov[Len(aMov)], nSaldo-nQtdInv )
+			aAdd(aMov[Len(aMov)], SD7->D7_LOCAL )
+			aAdd(aMov[Len(aMov)], dDatabase )
+			aAdd(aMov[Len(aMov)], "" )
+			aAdd(aMov[Len(aMov)], "FH" )
+			aAdd(aMov[Len(aMov)], "Registro Manipulado Inventario" )
+			aAdd(aMov[Len(aMov)], ConvUm(SD7->D7_PRODUTO,(nSaldo-nQtdInv),0,2) )
+			aAdd(aMov[Len(aMov)], cLocaliza )
+			aAdd(aMov[Len(aMov)], cNumSerie )
+
+			fGravaCQ(SD7->D7_PRODUTO, SD7->D7_NUMERO, .F., aMov, PegaCMD3(), Nil,0)
+		ElseIf QtdComp(nQtdInv) > QtdComp(nSaldo)
+			lGeraCQ0 := .T.
+		EndIf
+	EndIf
+Else
+	lRet := .F.
+	cLog := "INV"
+	For i:=1 to Len(aLogs)
+		nAchou:=ASCAN(aLogs[i],{|x| x[1] == cLog .And. x[2]+x[3]+x[4]+x[5] == cCod+cLocal+cLoteCtl+cLote})
+		If nAchou > 0
+			Exit
+		EndIf
+	Next i
+	If nAchou == 0
+		If Len(aLogs[Len(aLogs)]) > 4095
+			AADD(aLogs,{})
+		EndIf
+		AADD(aLogs[Len(aLogs)],{cLog,cCod,cLocal,cLoteCtl,cLote,"",""})
+	EndIf
+	cLog := ""
+EndIf
+
+If lQuery
+	dbSelectArea(cAliasSD7)
+	dbCloseArea()
+Else
+	dbSelectArea("SD7")
+	RetIndex("SD7")
+	dbClearFilter()
+	Ferase(cNomArq+OrdBagExt())
+EndIf
+
+RestArea(aArea)
+
+Return(lRet)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³SldEmpSD4 ºAutor  ³Erike Yuri da Silva º Data ³  05/23/06   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Calcula o saldo empenhado do produto no SD4                 º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ MATA340                                                    º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function SldEmpSD4(cProd,cLocal,cLocaliz,cNumSerie,cLoteCtl,cNumLote)
+
+Local cAlias:=Alias(),nRecno:=Recno(),nOrder:=IndexOrd()
+Local cAliasSD4	:= "SD4"
+Local cSD4FilOld:= ""
+Local cQuery	:= ""
+Local nSaldo	:= 0
+Local aSD4		:= {}
+Local aTam		:= {}
+
+cLocaliz	:= If(cLocaliz	== Nil .Or. Empty(cLocaliz)		, CriaVar('BF_LOCALIZ', .F.), cLocaliz)
+cNumSerie	:= If(cNumSerie	== Nil .Or. Empty(cNumSerie)	, CriaVar('BF_NUMSERI', .F.), cNumSerie)
+cLoteCtl	:= If(cLoteCtl	== Nil .Or. Empty(cLoteCtl)		, CriaVar('BF_LOTECTL', .F.), cLoteCtl)
+cNumLote	:= If(cNumLote	== Nil .Or. Empty(cNumLote)		, CriaVar('BF_NUMLOTE', .F.), cNumLote)
+
+DbSelectArea("SD4")
+aSD4 := GetArea("SD4")
+SD4->(DbSetOrder(3))
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Para ambiente TOP nao sera usado filtro(MSFILTER) para ganho ³
+//³de performance utilizando os recursos do banco para soma.    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+#IFDEF TOP
+	cAliasSD4	:= "SALDOSD4"
+	cQuery		:= "SELECT SUM(SD4.D4_QUANT) QTDSD4 FROM "+RetSqlName("SD4")+" SD4 "
+	cQuery		+= " WHERE SD4.D4_FILIAL ='"+xFilial("SD4")+"' AND "
+	cQuery		+= " SD4.D4_QUANT > 0 AND "
+	// Considera endereco e numero de serie no filtro
+	If !Empty(cLocaliz+cNumSerie)
+		cQuery	+= "SD4.D4_LOCALIZ ='"+cLocaliza+"' AND SD4.D4_NUMSERI='"+cNumSerie+"' AND "
+	EndIf
+	// Considera Lote no filtro
+	If !Empty(cLoteCtl)
+		cQuery	+= "SD4.D4_LOTECTL ='"+cLoteCtl+"' AND "
+	EndIf
+	// Considera sub-lote no filtro
+	If !Empty(cNumLote)
+		cQuery	+= "SD4.D4_NUMLOTE ='"+cNumLote+"' AND "
+	EndIf
+	cQuery	+= "SD4.D4_COD ='"+cProd+"' AND SD4.D4_LOCAL='"+cLocal+"' AND SD4.D_E_L_E_T_=' '"
+	cQuery	:= ChangeQuery(cQuery)
+	dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasSD4,.T.,.T.)
+	aEval(SD4->(dbStruct()), {|x| If(x[2] <> "C", TcSetField(cAliasSD4,x[1],x[2],x[3],x[4]),Nil)})
+
+	aTam := TamSx3("D4_QUANT")
+	TCSetField( cAliasSD4, "QTDSD4", "N",aTam[1] , aTam[2] )
+
+	nSaldo := (cAliasSD4)->QTDSD4
+	(cAliasSD4)->( DbCloseArea() )
+
+#ELSE
+	//Guarda Filtro caso exista
+	cSD4FilOld := SD4->(DbFilter())
+
+	cQuery	:= "D4_FILIAL=='" + xFilial( "SD4" ) + "' .And. "
+	// Considera endereco e numero de serie no filtro
+	If !Empty(cLocaliz+cNumSerie)
+		cQuery	+= "D4_LOCALIZ =='"+cLocaliza+"' .And. D4_NUMSERI=='"+cNumSerie+"' .And. "
+	EndIf
+	// Considera Lote no filtro
+	If !Empty(cLoteCtl)
+		cQuery	+= "D4_LOTECTL =='"+cLoteCtl+"' .And. "	
+	EndIf
+	// Considera sub-lote no filtro
+	If !Empty(cNumLote)
+		cQuery	+= "D4_NUMLOTE =='"+cNumLote+"' .And. "	
+	EndIf
+	cQuery += "D4_COD=='" + cProd + "' .And. D4_LOCAL='"+cLocal+"'"
+
+	If !Empty(cSD4FilOld)
+		SD4->(DbClearFilter())
+	EndIf
+
+	//Filtra os dados
+	SD4->(DbSetFilter( {|| &cQuery }, cQuery ))
+
+	dbGotop()
+	While SD4->(!Eof())
+		nSaldo += SD4->D4_QUANT
+		SD4->(DbSkip())
+	EndDo
+
+	//Restaura Filtro caso exista
+	If Empty(cSD4FilOld)
+		SD4->(DbClearFilter())
+	Else
+		SD4->(DbClearFilter())
+		SD4->(DbSetFilter( {|| &cSD4FilOld }, cSD4FilOld ))
+	EndIf
+#ENDIF
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Restaura Ambiente³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+SD4->( RestArea(aSD4) )
+dbSelectArea(cAlias)
+dbSetOrder(nOrder)
+dbGoto(nRecno)
+
+Return nSaldo
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³AjustaSX1 ³ Autor ³ Marcos V. Ferreira    ³ Data ³ 03/08/2006 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Ajusta Perguntas SX1                                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA340                                                      ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function AjustaSX1()
+
+Local nTamSX1	:= Len(SX1->X1_GRUPO)
+
+PutSx1( "MTA340", "13","Considerar os Empenhos?","¿Considerar las Reservas?","Consider allocations?","mv_chd","N",1,0,1,"C","","","","",;
+		"mv_par13","Firmes","Firmes","Done/Executed","","Todos","Todos","All","","","","","","","","","",;
+		{'Na checagem de desbalanciamento entre B2','e BF, considera os empenhos somente dos',;
+		'produtos empenhados da tabela de "Saldos' ,'por Endereço" (Firmes), ou todos os empe',;
+		'nhos da tabela de "Requisições empenhada' ,'s" (Firmes e Planejadas).'},;
+		{'Al verificar la diferencia de saldos '   ,'reservados entre B2 y BF, considera sola-',;
+		'mente las reservas de los productos '     ,'reservados de la tabla de "Saldos por ',;
+		'Ubicación" (Firmes) o todas las reservas' ,'de la tabla de "Solicitudes reservadas" ',;
+		'(Firmes y Planificadas).'},;
+		{'While conciliating the difference of the','allocated balances between B2 and BF, ',;
+		'only consider the allocations from the '  ,'allocated products found in table “Bala-',;
+		'nces by Address” (Done/Executed), or all' ,'the allocations found in table "Requests',;
+		'Allocated" (Done/Executed and Planned).' })
+
+PutSx1( "MTA340", "14","Atualiza Saldo do Fechamento ?","Actualiza Saldo de Cierre ?","Update the Closing Balance ?","mv_che","N",1,0,1,"C","","","","",;
+		"mv_par14","Sim","Si","Yes","","Não","No" ,"No","","","","","","","","","",;
+		{'Pergunta utilizada para verificar se    ','deseja atualizar o saldo de fechamento, ',;
+		 'atualizando os campos B2_QFIM e B2_VFIM' ,'para os movimentos de inventario gerados ',;
+		 'pela rotina de acerto de inventario.'    , '(Somente para produtos que utilizam ',;
+		 'Controle de Rastreabilidade)'},;
+		{'Pregunta utilizada para verificar si    '  ,'desea actualizar el saldo de cierre, ',;
+		 'actualizando los campos B2_QFIM y B2_VFIM' ,'para los movimientos de inventario generados ',;
+		 'por la rutina de ajuste de inventario.'    , '(Solamente para productos que utilizan ',;
+		 'Control de Trazabilidad)'},;
+		{'Query used to check whether    '         ,'you want to update the closing balance, ',;
+		 'updating the fields B2_QFIM and B2_VFIM' ,'for the inventory operations generated ',;
+		 'by the inventory conciliation routine.'  , '(Only used for products that are under ',;
+		 'Traceability Control)'} )
+		 
+If cPaisLoc == "BRA"
+	SX1->(dbSetOrder(1))
+	If SX1->(DbSeek(PADR("MTA340",nTamSX1)+"11")) 
+		If SX1->X1_TAMANHO == 6
+			RecLock("SX1",.F.)
+			SX1->X1_TAMANHO := 9
+			MsUnLock()
+		Endif	
+		If Empty(SX1->X1_GRPSXG)
+			RecLock("SX1",.F.)
+			SX1->X1_GRPSXG := "018"
+			MsUnLock()
+		Endif		
+	EndIf		 
+	If SX1->(DbSeek(PADR("MTA340",nTamSX1)+"12")) 
+		If SX1->X1_TAMANHO == 6
+			RecLock("SX1",.F.)
+			SX1->X1_TAMANHO := 9
+			MsUnLock()
+		Endif	
+		If Empty(SX1->X1_GRPSXG)
+			RecLock("SX1",.F.)
+			SX1->X1_GRPSXG := "018"
+			MsUnLock()
+		Endif				
+	EndIf		 
+Endif	
+
+Return Nil
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³A340ValBloq ³ Autor ³ Microsiga S/A       ³ Data ³ 22/11/07 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Verifica se o lote esta bloqueado na tabela SDD             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³cCod     - Codigo do produto                                ³±±
+±±³          ³cLocal   - Armazem do produto                               ³±±
+±±³          ³cLoteCtl - Lote do produto                                  ³±±
+±±³          ³cNumLote - Sub-Lote do produto                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³MATA340                                                     ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function A340ValBloq(cCod,cLocal,cLoteCtl,cNumlote)
+Local lRet      := .F.
+Local cSeek     := ""
+Local nSaldoBlq :=0
+Local aAreaAnt  := GetArea()
+Local aAreaSDD  := SDD->(GetArea())
+
+Default cCod     := ""
+Default cLocal   := ""
+Default cLoteCtl := ""
+Default cNumLote := ""
+
+If Rastro(cCod)
+	If !(SuperGetMV('MV_LOTVENC', .F., 'N')=='S')
+		dbSelectArea("SDD")
+		dbSetOrder(2)
+		dbSeek(cSeek:=xFilial("SDD")+cCod+cLocal+cLoteCtl+cNumLote)
+		Do While !Eof() .And. cSeek == SDD->(DD_FILIAL+DD_PRODUTO+DD_LOCAL+DD_LOTECTL+DD_NUMLOTE)
+	        nSaldoBlq += SDD->DD_SALDO
+			SDD->(dbSkip())
+		EndDo
+		If QtdComp(nSaldoBlq) > QtdComp(0)
+			lRet := .T.
+		EndIf
+	EndIf	
+EndIf
+RestArea(aAreaSDD)
+RestArea(aAreaAnt)
+Return lRet

@@ -1,0 +1,2148 @@
+#INCLUDE "RWMAKE.CH"
+#INCLUDE "COLORS.CH"
+#INCLUDE "TBICONN.CH"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ NS0034   ³ Autor ³ Alexandro da Silva        ³ Data ³29/10/2009³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Emissao de Nota Fiscal                                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+*/
+
+User Function PA0208()
+
+ATUSX1()
+
+_nOpc := 0
+@ 150,1 TO 380,450 DIALOG oDlg TITLE OemToAnsi("Rotina Para Gerar Arquivo Txt (SEFAZ) ")
+@ 02,10 TO 080,220
+@ 10,18 SAY "Rotina Para Gerar Arquivo Txt conform Layout da SEFAZ "    SIZE 160,7
+@ 18,18 SAY "Plano de Contingencia Nordsee, será gerado o arquivo  "     SIZE 160,7
+@ 26,18 SAY "Txt no C:\SPED com o nome conforme o numero da NF     "     SIZE 160,7
+@ 34,18 SAY "Programa PA0208.PRW                                   "     SIZE 160,7
+
+@ 85,128 BMPBUTTON TYPE 5 ACTION Pergunte("PA0208")
+@ 85,158 BMPBUTTON TYPE 1 ACTION (_nOpc:=1,oDlg:END())
+@ 85,188 BMPBUTTON TYPE 2 ACTION oDlg:END()
+
+ACTIVATE DIALOG oDlg Centered
+
+If _nOpc == 1
+	Private _cMsg01    := ''
+	Private _lFim      := .F.
+	Private _lAborta01 := .T.
+	Private _bAcao01   := {|_lFim| NS34_01(@_lFim) }
+	Private _cTitulo01 := 'Selecionando Registros !!!!'
+	Processa( _bAcao01, _cTitulo01, _cMsg01, _lAborta01 )
+Endif
+
+Return
+
+
+Static Function NS34_01()
+
+Private xBASE_PIS := 0
+Private xBASE_COF := 0
+Private xVAL_PIS  := 0
+Private xVAL_COF  := 0
+Private xVAL_DES  := 0
+Private xBASE_II  := 0
+Private xVAL_II   := 0
+Private _cNFisc   := ""
+
+pergunte("PA0208",.F.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                         ³
+//³ mv_par01        //  Da Nota Fiscal                           ³
+//³ mv_par02        //  Ate a Nota Fiscal                        ³
+//³ mv_par03        //  Serie                                    ³
+//³ mv_par04        //  Nota Fiscal de Entrada/Saida             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+cNotaDe   := mv_par01
+cNotaAte  := mv_par02
+cSerie    := mv_par03
+cTipoNF   := mv_par04
+_PVLib    := .T.
+
+cAcha := .T.
+cCond := " "
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Posicionamento das bases principais                          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+If cTipoNF == 1
+	dbSelectArea("SF1")                           &&Cabecalho NF Entrada
+	dbSetOrder(1)
+	
+	If !SF1->(dbSeek(xFilial("SF1") + cNotaDe+cSerie))
+		cAcha := .F.
+	EndIf
+	
+	cCond := "SF1->F1_DOC >= cNotaDe .AND. SF1->F1_DOC <= cNotaAte .AND. SF1->F1_SERIE == cSerie .AND. !SF1->(Eof())"
+Else
+	dbSelectArea("SF2")
+	dbSetOrder(1)                                 &&Cabecalho NF Saida
+	
+	If !SF2->(dbSeek(xFilial("SF2") + cNotaDe+cSerie))
+		cAcha := .F.
+	EndIf
+	
+	cCond := "SF2->F2_DOC >= cNotaDe .AND. SF2->F2_DOC <= cNotaAte .AND. SF2->F2_SERIE == cSerie .AND. !SF2->(Eof())"
+EndIf
+
+_lMensC     := _lMensF := .F.
+
+If cNotaDe == cNotaAte .AND. !cAcha
+	Return
+EndIf
+
+While &cCond
+	
+	cPesq1     := ""
+	xTipo      := ""
+	xLinha07_1 := ""
+	xTipoES    := ""
+	xCod_FC    := ""
+	xCodCli    := ""
+	xTpFrete   := ""
+	xTransp    := ""
+	xxTpFrete  := ""
+	xVolume    := ""
+	xEspecie   := ""
+	xPesoB     := ""
+	xPesoL     := ""
+	xPedido    := ""
+	xCF        := ""
+	xCodFis    := ""
+	xOP        := ""
+	xVEndedor  := ""
+	xCodPro    := ""
+	txt1       := ""
+	xPAnt      := ""
+	xDescri    := ""
+	xItem      := ""
+	xLote      := ""
+	xEndEnt    := ""
+	xEndCob    := ""
+	xAjustDt   := ""
+	mTipoES    := {}
+	mDuplic    := {}
+	mProdut    := {}
+	mTexto     := {}
+	mCodMen    := {}
+	mMenPad    := {}
+	
+	// Variaveis do Sefaz
+	_CRLF       := chr(13)+chr(10)
+	_cMensSefaz := ""       // Mensagens de erro em caso de inconsistencias
+	_nCont		:= 0
+	_lNFRefer 	:= .F.
+	lContr  	:=  .T.
+	aInfAdProd  := {} // Adicionado por ASoares em 11/03/09
+	
+	_aSefaz   	:= {} 		// Matriz contendo os dados para o Arquivo de Exportacao do Sefaz
+	_aBlocoB	:= {}
+	_aBlocoG	:= {}
+	_aBlocoH	:= {}
+	_aBlocoI	:= {}
+	_aBlocoNXX	:= {}
+	_aBlocoO	:= {}
+	_aBlocoOXX	:= {}
+	_aBlocoO10	:= {}
+	_aBlocoO11	:= {}
+	_aBlocoQXX	:= {}
+	_aBlocoSXX	:= {}
+	_aBlocoW02	:= {}
+	_aBlocoW23	:= {}
+	_aBlocoX03	:= {}
+	_aBlocoX18	:= {}
+	_aBlocoX22	:= {}
+	
+	_aBlocoX26	:= {}
+	aScan		:= {}
+	cScan		:= ""
+	cEspecie	:= ""
+	nScan		:= 0
+	
+	_aBlocoY07	:= {}
+	cMV_LJTPNFE := SuperGetMV("MV_LJTPNFE", ," ")
+	cMensCli    := ""
+	cMensFis	:= ""
+	
+	_aBlocoZB  	:= {}
+	
+	_cBlocoB13	:= ""
+	_cBlocoI	:= ""
+	_cBlocoNXX	:= ""
+	_cBlocoOXX	:= ""
+	_cBlocoO10	:= ""
+	_cBlocoO11	:= ""
+	_cBlocoQXX	:= ""
+	_cBlocoSXX	:= ""
+	
+	_aICMS     := {}
+	_aICMSST   := {}
+	_aIPI      := {}
+	_aPIS      := {}
+	_aCOFINS   := {}
+	_aPISST    := {}
+	_aCOFINSST := {}
+	_aISSQN    := {}
+	_aISS      := {}
+	_aCST      := {}
+	WNFORI     := ""
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Definicao de Cliente/Fornecedor de acordo com tipo de Nota   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If cTipoNF == 1 //ENTRADA
+		
+		If SF1->F1_FORMUL <> "S"
+			SF1->(dbSkip())
+			Loop
+		EndIf
+		
+		_cNfisc  := SF1->F1_DOC
+		xTipo    := SF1->F1_TIPO
+		xCod_FC  := SF1->F1_FORNECE
+		xLoja    := SF1->F1_LOJA
+		xTransp  := SF1->F1_TRANSP
+		xBASE_II := SF1->F1_BASIMP1
+		xVAL_II  := SF1->F1_VALIMP1   
+		xBASE_PIS:= SF1->F1_BASIMP6
+		xBASE_COF:= SF1->F1_BASIMP5
+		xVAL_PIS := SF1->F1_VALIMP6
+		xVAL_COF := SF1->F1_VALIMP5
+
+		
+		// Sefaz Bloco B
+		aadd(_aBlocoB,Substr(SM0->M0_CODMUN,1,2))												 										   	// _aBlocoB[1] - Codigo IBGE da UF
+		aadd(_aBlocoB,IIf(SF1->F1_COND == "001", "0", "1")) 			   				     												// _aBlocoB[2] - Condicao de Pagamento
+		aadd(_aBlocoB,alltrim(str(val(SF1->F1_DOC)))) 				   																		// _aBlocoB[3] - Numero da NF
+		aadd(_aBlocoB,substr(dtos(SF1->F1_EMISSAO),1,4)+"-"+substr(dtos(SF1->F1_EMISSAO),5,2)+"-"+substr(dtos(SF1->F1_EMISSAO),7,2)) 	// _aBlocoB[4] - Emissao
+		aadd(_aBlocoB,substr(dtos(ddatabase),1,4)+"-"+substr(dtos(ddatabase),5,2)+"-"+substr(dtos(ddatabase),7,2))						// _aBlocoB[5] - Data Base
+		aadd(_aBlocoB,SM0->M0_CODMUN) 																										// _aBlocoB[6] - Municipio
+		aadd(_aBlocoB,IIf(SF1->F1_TIPO $ "N#B#D", "1", "2")) 																				// _aBlocoB[7] - Tipo da Nota
+		
+		_cBlocoB13 := ""
+		
+		aadd(_aBlocoW02,_fTransform(SF1->F1_BASEICM,15,2)) 		    // _aBlocoW02[1] - vBC
+		IF SF2->F2_TIPO == "I"
+			aadd(_aBlocoW02,_fTransform(SF1->F1_VALMERC,15,2)) 		// _aBlocoW02[2] - vICMS
+		ELSE
+			aadd(_aBlocoW02,_fTransform(SF1->F1_VALICM,15,2)) 	    // _aBlocoW02[2] - vICMS
+		ENDIF
+		aadd(_aBlocoW02,"")								 			// _aBlocoW02[3] - vBCST
+		aadd(_aBlocoW02,"") 										// _aBlocoW02[4] - vST
+		aadd(_aBlocoW02,_fTransform(SF1->F1_VALMERC,15,2)) 		    // _aBlocoW02[5] - vProd
+		aadd(_aBlocoW02,_fTransform(SF1->F1_FRETE,15,2)) 			// _aBlocoW02[6] - vFrete
+		aadd(_aBlocoW02,_fTransform(SF1->F1_SEGURO,15,2)) 			// _aBlocoW02[7] - vSeg
+		aadd(_aBlocoW02,_fTransform(SF1->F1_DESCONT,15,2)) 		    // _aBlocoW02[8] - vDesc
+		aadd(_aBlocoW02,"")								 			// _aBlocoW02[9] - vII
+		aadd(_aBlocoW02,_fTransform(SF1->F1_VALIPI,15,2)) 			// _aBlocoW02[10] - vIPI
+		aadd(_aBlocoW02,_fTransform(SF1->F1_VALIMP4,15,2)) 			// _aBlocoW02[11] - vPIS
+		aadd(_aBlocoW02,_fTransform(SF1->F1_VALIMP5,15,2)) 		    // _aBlocoW02[12] - vCOFINS
+		aadd(_aBlocoW02,_fTransform(SF1->F1_DESPESA,15,2)) 		    // _aBlocoW02[13] - vOutro
+		aadd(_aBlocoW02,_fTransform(SF1->F1_VALBRUT,15,2)) 			// _aBlocoW02[14] - vNF
+		
+		// Bloco W23 - Impostos de Retencao
+		aadd(_aBlocoW23,_fTransform(0,15,2)) 			// _aBlocoW23[1] - vRetPIS
+		aadd(_aBlocoW23,_fTransform(0,15,2)) 		    // _aBlocoW23[2] - vRetCOFINS
+		aadd(_aBlocoW23,_fTransform(0,15,2)) 		    // _aBlocoW23[3] - vRetCSLL
+		aadd(_aBlocoW23,_fTransform(0,15,2))			// _aBlocoW23[4] - vBCIRRF
+		aadd(_aBlocoW23,_fTransform(0,15,2)) 		    // _aBlocoW23[5] - vIRRF
+		aadd(_aBlocoW23,_fTransform(0,15,2)) 		    // _aBlocoW23[6] - vBCRetPrev
+		aadd(_aBlocoW23,_fTransform(0,15,2)) 		    // _aBlocoW23[7] - vBCPrev
+		
+		If !Empty(xTransp)
+			dbSelectArea("SA4")
+			dbSetOrder(1)
+			
+			If SA4->(dbSeek(xfilial()+xTransp))
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Sefaz Bloco X03 - Transportadora                                       ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				
+				aadd(_aBlocoX03,AllTrim(SA4->A4_CGC))
+				aadd(_aBlocoX03,AllTrim(SA4->A4_NOME))
+				aadd(_aBlocoX03,AllTrim(SA4->A4_INSEST))
+				aadd(_aBlocoX03,AllTrim(SA4->A4_END))
+				aadd(_aBlocoX03,AllTrim(SA4->A4_MUN))
+				aadd(_aBlocoX03,AllTrim(Upper(SA4->A4_EST)))
+				aadd(_aBlocoX03,AllTrim(SA4->A4_COD))
+				
+			EndIf
+		EndIf
+		
+		cPesq1 := "xfilial()+SF1->F1_SERIE+SF1->F1_DUPL"
+		
+		dbSelectArea("SD1")                         &&Itens NF Entrada
+		dbSetOrder(1)
+		
+		If SD1->(dbSeek(xfilial()+SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA))
+			
+			WOK:= .F.
+			
+			_aGrpMen2 := {}
+			_aMens     := {}
+			
+			While SD1->D1_DOC == SF1->F1_DOC .AND. SD1->D1_SERIE == SF1->F1_SERIE .AND. ;
+				SD1->D1_FORNECE == SF1->F1_FORNECE .AND. SD1->D1_LOJA == SF1->F1_LOJA
+				      
+				If !Empty(SD1->D1_NFORI)
+					WNFORI := SD1->D1_NFORI+" Serie: "+SD1->D1_SERIORI
+				Endif
+				
+				xCodFis := IIf(ALLTRIM(SD1->D1_CF) $ xCodFis,xCodFis,xCodFis+ ALLTRIM(SD1->D1_CF))
+				xTem := ASCAN(mTipoES, SD1->D1_TES)
+				
+				If xTem == 0 .AND. !Empty(SD1->D1_TES)
+					aadd(mTipoES,SD1->D1_TES)
+				EndIf
+				
+				dbSelectArea("SB1")                     && Cad.Produtos
+				dbSetOrder(1)
+				
+				If !SB1->(dbSeek(xfilial()+SD1->D1_COD))
+					ALERT("ERRO GRAVE. AVISE O ADMINISTRADOR !!! ")
+					SD1->(dbSkip())
+					Loop
+				EndIf
+				
+				_VlrUnit := SD1->D1_VUNIT
+				_VlrTot  := SD1->D1_TOTAL
+				
+				xipi := IIf(int(SD1->D1_IPI)=SD1->D1_IPI,TRANSFORM(SD1->D1_IPI,"99"),TRANSFORM(SD1->D1_IPI,"99.9"))
+				aadd(mTexto,{"","","", "",""})
+				
+				// Informacoes Bloco H - Sefaz
+				aadd(_aBlocoH,"H|"+alltrim(str(val(SD1->D1_ITEM)))+"|")
+				
+				// Informacoes Bloco I - Sefaz
+				_vUncom  := alltrim(Transform(IIF(!SD1->D1_TIPO$"IP",SD1->D1_VUNIT,SD1->D1_TOTAL),"@R 9999999999999999.9999"))
+				_vProd	 := _fTransform(IIF(!SD1->D1_TIPO$"IP",Iif(!SD1->D1_TIPO$"D",SD1->D1_TOTAL,SD1->D1_TOTAL),SD1->D1_TOTAL),15,2)
+				_uTrib	 := alltrim(SB1->B1_UM)
+				_qTrib	 := _fTransform(IIF(Empty(POSICIONE("SB5",1,xFilial("SB5")+SD2->D2_COD, "B5_CONVDIPI")),SD1->D1_QUANT,POSICIONE("SB5",1,xFilial("SB5")+SD1->D1_COD, "B5_CONVDIPI")*SD1->D1_QUANT),12,4)
+				IF val(_qTrib) == 0
+					_qTrib := _fTransform(1,12,4)
+				ENDIF
+				_vUnTrib := _fTransform(val(_vProd)/val(_qTrib),16,4)
+				IF val(_vUnTrib) == 0
+					_vUnTrib := _fTransform(SD1->D1_TOTAL,16,4)
+				ENDIF
+				
+				TRANSFORM(SA1->A1_CGC,"@R 99.999.999/9999-99")
+				xProdImp := SD1->D1_COD
+				xDescri  := SB1->B1_DESC
+				_cBlocoI := "I"                                						// Bloco I
+				_cBlocoI += "|"+alltrim(xprodimp) 									// cProd
+				_cBlocoI += "|" 					            					// cEAN
+				_cBlocoI += "|"+alltrim(xDescri)									// xProd
+				_cBlocoI += "|"+alltrim(SB1->B1_POSIPI)								// NCM
+				_cBlocoI += "|"+alltrim(SB1->B1_EX_NCM)								// EXTIPI
+				_cBlocoI += "|"														// genero
+				_cBlocoI += "|"+alltrim(SD1->D1_CF)									// CFOP
+				_cBlocoI += "|"+alltrim(SB1->B1_UM)									// uCom
+				IF SD2->D2_QUANT == 0
+					_cBlocoI += "|"+ALLTRIM(_fTRANSFORM(1,15,4)) //para casos de compl. de icms e ipi
+				ELSE
+					_cBlocoI += "|"+ALLTRIM(_fTRANSFORM(SD1->D1_QUANT,15,4)) //alltrim(str(SD2->D2_QUANT))						// qCom
+				ENDIF
+				_cBlocoI += "|"+_vUncom                        						// vUncom
+				_cBlocoI += "|"+_vProd												// vProd
+				_cBlocoI += "|"														// cEANTrib
+				_cBlocoI +=	"|"+_uTrib												// uTrib
+				_cBlocoI += "|"+_qTrib												// qTrib
+				_cBlocoI += "|"+_vUnTrib											// vUnTrib
+				_cBlocoI += "|"+_fTransform(SD1->D1_VALFRE,15,2)					// vFrete
+				_cBlocoI += "|"+_fTransform(SD1->D1_SEGURO,15,2)					// vSeg
+				IF WOK
+					_cBlocoI += "|"+_fTransform(0,15,2)	// vDesc
+				ELSE
+					_cBlocoI += "|"+_fTransform(SF1->F1_DESCONT,15,2)	// vDesc
+					WOK := .T.
+				ENDIF
+				aadd(_aBlocoI,_cBlocoI)
+				
+				
+				// Impostos
+				_aCST := {IIF(!Empty(SD1->D1_CLASFIS),SubStr(SD1->D1_CLASFIS,2,2),'50'),;
+				IIF(!Empty(SD1->D1_CLASFIS),SubStr(SD1->D1_CLASFIS,1,1),'0')}
+				
+				dbSelectArea("CD2")
+				If SD1->D1_TIPO $ "DB"
+					dbSetOrder(1)
+				Else
+					dbSetOrder(2)
+				EndIf
+				If !MsSeek(xFilial("CD2")+"E"+SF1->F1_SERIE+SF1->F1_DOC+SF1->F1_FORNECE+SF1->F1_LOJA+PadR(SD1->D1_ITEM,4)+SD1->D1_COD)
+					
+				EndIf
+				
+				While !Eof() .And. xFilial("CD2") == CD2->CD2_FILIAL .And.;
+					"E" == CD2->CD2_TPMOV .And.;
+					SF1->F1_SERIE == CD2->CD2_SERIE .And.;
+					SF1->F1_DOC == CD2->CD2_DOC .And.;
+					SF1->F1_FORNECE == IIF(SD1->D1_TIPO $ "DB",CD2->CD2_CODCLI,CD2->CD2_CODFOR) .And.;
+					SF1->F1_LOJA == IIF(SD1->D1_TIPO $ "DB",CD2->CD2_LOJCLI,CD2->CD2_LOJFOR) .And.;
+					SD1->D1_ITEM == SubStr(CD2->CD2_ITEM,1,Len(SD1->D1_ITEM)) .And.;
+					SD1->D1_COD == CD2->CD2_CODPRO
+					
+					Do Case
+						Case AllTrim(CD2->CD2_IMP) == "ICM"
+							IF SF2->F2_TIPO == "I"
+								_aICMS := {CD2->CD2_ORIGEM,CD2->CD2_CST,CD2->CD2_MODBC,CD2->CD2_PREDBC,CD2->CD2_VLTRIB,CD2->CD2_ALIQ,CD2->CD2_VLTRIB,0,CD2->CD2_QTRIB,CD2->CD2_PAUTA}
+							ELSE
+								_aICMS := {CD2->CD2_ORIGEM,CD2->CD2_CST,CD2->CD2_MODBC,CD2->CD2_PREDBC,CD2->CD2_BC,CD2->CD2_ALIQ,CD2->CD2_VLTRIB,0,CD2->CD2_QTRIB,CD2->CD2_PAUTA}
+							ENDIF
+						Case AllTrim(CD2->CD2_IMP) == "SOL"
+							_aICMSST := {CD2->CD2_ORIGEM,CD2->CD2_CST,CD2->CD2_MODBC,CD2->CD2_PREDBC,CD2->CD2_BC,CD2->CD2_ALIQ,CD2->CD2_VLTRIB,CD2->CD2_MVA,CD2->CD2_QTRIB,CD2->CD2_PAUTA}
+							lCalSol := .T.
+						Case AllTrim(CD2->CD2_IMP) == "IPI"
+							_aIPI := {"","",0,"999",CD2->CD2_CST,CD2->CD2_BC,CD2->CD2_QTRIB,CD2->CD2_PAUTA,CD2->CD2_ALIQ,CD2->CD2_VLTRIB,CD2->CD2_MODBC,CD2->CD2_PREDBC}
+						Case AllTrim(CD2->CD2_IMP) == "PS2"
+							If SD2->D2_VALISS==0
+								_aPIS := {CD2->CD2_CST,CD2->CD2_BC,CD2->CD2_ALIQ,CD2->CD2_VLTRIB,CD2->CD2_QTRIB,CD2->CD2_PAUTA}
+							Else
+								If Empty(_aISS)
+									_aISS := {0,0,0,0,0}
+								EndIf
+								_aISS[04]+= CD2->CD2_VLTRIB
+							EndIf
+						Case AllTrim(CD2->CD2_IMP) == "CF2"
+							If SD2->D2_VALISS==0
+								_aCOFINS := {CD2->CD2_CST,CD2->CD2_BC,CD2->CD2_ALIQ,CD2->CD2_VLTRIB,CD2->CD2_QTRIB,CD2->CD2_PAUTA}
+							Else
+								If Empty(_aISS)
+									_aISS := {0,0,0,0,0}
+								EndIf
+								_aISS[05] += CD2->CD2_VLTRIB
+							EndIf
+						Case AllTrim(CD2->CD2_IMP) == "PS3" .And. SD2->D2_VALISS==0
+							_aPISST := {CD2->CD2_CST,CD2->CD2_BC,CD2->CD2_ALIQ,CD2->CD2_VLTRIB,CD2->CD2_QTRIB,CD2->CD2_PAUTA}
+						Case AllTrim(CD2->CD2_IMP) == "CF3" .And. SD2->D2_VALISS==0
+							_aCOFINSST := {CD2->CD2_CST,CD2->CD2_BC,CD2->CD2_ALIQ,CD2->CD2_VLTRIB,CD2->CD2_QTRIB,CD2->CD2_PAUTA}
+						Case AllTrim(CD2->CD2_IMP) == "ISS"
+							If Empty(_aISS)
+								_aISS := {0,0,0,0,0}
+							EndIf
+							_aISS[01] += SD1->D1_TOTAL
+							_aISS[02] += CD2->CD2_BC
+							_aISS[03] += CD2->CD2_VLTRIB
+							cMunISS := ConvType(aUF[aScan(aUF,{|x| x[1] == aDest[09]})][02]+aDest[07])
+							_aISSQN := {CD2->CD2_BC,CD2->CD2_ALIQ,CD2->CD2_VLTRIB,cMunISS,SD2->D2_CODISS}
+					EndCase
+					
+					dbSelectArea("CD2")
+					dbSkip()
+				EndDo
+				
+				// Informacoes Blocos N02 ao N10 (ICMS) - Sefaz
+				If Len(_aIcms)>0
+					
+					_cBlocoNXX := _fTribICMS(alltrim(_aICMS[02])) 		// Bloco N02 a N10
+					_cBlocoNXX += "|"+alltrim(_aICMS[01])				// orig
+					_cBlocoNXX += "|"+alltrim(_aICMS[02])				// CST
+					If !(alltrim(_aICMS[02]) $ "40#41#50#")
+						_cBlocoNXX += "|"+alltrim(_aICMS[03])			// modBC
+						If alltrim(_aICMS[02]) $ "51#90"
+							_cBlocoNXX += "|"+alltrim(_aICMS[04])		// pRedBC
+						Endif
+						_cBlocoNXX += "|"+_fTransform(_aICMS[05],15,2)	// vBC
+						_cBlocoNXX += "|"+_fTransform(_aICMS[06],5,2)	// pICMS
+						_cBlocoNXX += "|"+_fTransform(_aICMS[07],15,2)	// vICMS
+						If alltrim(_aICMS[02]) == "90"
+							_cBlocoNXX += "||||||"						// Outros - ST
+						Endif
+					Endif
+				Else
+					_cBlocoNXX := _fTribICMS(alltrim(_aCST[01]))		// Bloco N02 a N10
+					_cBlocoNXX += "|"+alltrim(_aCST[02])				// orig
+					_cBlocoNXX += "|"+alltrim(_aCST[01])				// CST
+					If !(alltrim(_aCST[01]) $ "40#41#50#")
+						_cBlocoNXX += "|"+"3"							// modBC
+						If alltrim(_aCST[01]) $ "51#90"
+							_cBlocoNXX += "|"							// pRedBC
+						Endif
+						_cBlocoNXX += "|"+"0"							// vBC
+						_cBlocoNXX += "|"+"0"							// pICMS
+						_cBlocoNXX += "|"+"0"							// vICMS
+						If alltrim(_aCST[01]) == "90"
+							_cBlocoNXX += "||||||"						// Outros - ST
+						Endif
+					Endif
+				Endif
+				
+				aadd(_aBlocoNXX,_cBlocoNXX)
+				
+				
+				// Informacoes Bloco O, O07, O08, O10 e O11 (IPI) - Sefaz
+				If Len(_aIPI) > 0
+					
+					_cBlocoO := "O" 								// Bloco O
+					_cBlocoO += "|"+alltrim(_aIPI[01])				// clEnq
+					_cBlocoO += "|"									// CNPJProd
+					_cBlocoO += "|"+alltrim(_aIPI[02])				// cSelo
+					_cBlocoO += "|"+_fTransform(_aIPI[03],12,0)	// qSelo
+					_cBlocoO += "|"+alltrim(_aIPI[04])				// cEnq
+					
+					aadd(_aBlocoO,_cBlocoO)
+					
+					If alltrim(_aIPI[05]) $ "00#49#50#99"
+						_cBlocoOXX := "O07"								//Bloco O07
+						_cBlocoOXX += "|"+alltrim(_aIPI[05])			// CST
+						_cBlocoOXX += "|"+_fTransform(_aIPI[10],15,2)	// vIPI
+						
+						aadd(_aBlocoOXX,_cBlocoOXX)
+						
+						_cBlocoO10 := "O10"								//Bloco O10
+						_cBlocoO10 += "|"+_fTransform(_aIPI[06],15,2)	// vBC
+						_cBlocoO10 += "|"+_fTransform(_aIPI[09],5,2)	// pIPI
+						
+						aadd(_aBlocoO10,_cBlocoO10)
+						
+						_cBlocoO11 := "O11"								//Bloco O11
+						_cBlocoO11 += "|"+_fTransform(_aIPI[08],15,4)	// vUnid
+						_cBlocoO11 += "|"+_fTransform(_aIPI[07],15,4)	// qUnid
+						
+						aadd(_aBlocoO11,_cBlocoO11)
+						
+					ElseIf alltrim(_aIPI[05]) $ "01#02#03#04#05#51#52#53#54#55"
+						_cBlocoOXX := "O08"							//Bloco O08
+						_cBlocoOXX += "|"+alltrim(_aIPI[05])		// CST
+						
+						aadd(_aBlocoOXX,_cBlocoOXX)
+						aadd(_aBlocoO10,"")
+						aadd(_aBlocoO11,"")
+						
+					Else
+						aadd(_aBlocoOXX,"")
+						aadd(_aBlocoO10,"")
+						aadd(_aBlocoO11,"")
+						
+						_cMensSefaz := ("Tipo de Tributacao do IPI não está preenchido corretamente!")
+						
+					Endif
+					
+				Else
+					aadd(_aBlocoO,"")
+					aadd(_aBlocoOXX,"")
+					aadd(_aBlocoO10,"")
+					aadd(_aBlocoO11,"")
+				Endif
+				
+				// Informacoes Bloco Q02, Q03, Q04, Q05, Q07 e Q10 (PIS) - Sefaz
+				If Len(_aPIS) > 0
+					If alltrim(_aPIS[01]) $ "01#02"
+						_cBlocoQXX := "Q02"								// Bloco Q02
+						_cBlocoQXX += "|"+alltrim(_aPIS[01])			// CST
+						_cBlocoQXX += "|"+_fTransform(_aPIS[02],15,2)	// vBC
+						_cBlocoQXX += "|"+_fTransform(_aPIS[03],5,2)	// pPIS
+						_cBlocoQXX += "|"+_fTransform(_aPIS[04],15,2)	// vPIS
+					ElseIf alltrim(_aPIS[01]) == "03"
+						_cMensSefaz := ("Não trabalhamos com tributação do PIS por Qtde!")
+					Elseif alltrim(_aPIS[01]) $ "04#06#07#08#09"
+						_cBlocoQXX := "Q04" 								// Bloco Q04
+						_cBlocoQXX += "|"+alltrim(_aPIS[01])				// CST
+					Elseif alltrim(_aPIS[01]) == "99"
+						_cMensSefaz := ("Outras operações do PIS não está habilitada!")
+					Else
+						_cMensSefaz := ("Tributação do PIS não está preenchida adequadamente!")
+					Endif
+					
+					If alltrim(_aPIS[01]) $ "01#02#04#06#07#08#09"
+						aadd(_aBlocoQXX,_cBlocoQXX)
+					Else
+						aadd(_aBlocoQXX,"")
+					Endif
+					
+				Else
+					_cBlocoQXX := "Q04"		// Bloco Q04
+					_cBlocoQXX += "|08"		// CST
+					
+					aadd(_aBlocoQXX,_cBlocoQXX)
+					
+				Endif
+				
+				If Len(_aCofins) > 0
+					If alltrim(_aCofins[01]) $ "01#02"
+						_cBlocoSXX := "S02"									// Bloco S02
+						_cBlocoSXX += "|"+alltrim(_aCofins[01])				// CST
+						_cBlocoSXX += "|"+_fTransform(_aCofins[02],15,2)	// vBC
+						_cBlocoSXX += "|"+_fTransform(_aCofins[03],5,2)		// pCofins
+						_cBlocoSXX += "|"+_fTransform(_aCofins[04],15,2)	// vCofins
+					ElseIf alltrim(_aCofins[01]) == "03"
+						_cMensSefaz := ("Não trabalhamos com tributação do Cofins por Qtde!")
+					Elseif alltrim(_aCofins[01]) $ "04#06#07#08#09"
+						_cBlocoSXX := "S04" 								// Bloco S04
+						_cBlocoSXX += "|"+alltrim(_aCofins[01])				// CST
+					Elseif alltrim(_aCofins[01]) == "99"
+						_cMensSefaz := ("Outras operações do Cofins não está habilitada!")
+					Else
+						_cMensSefaz := ("Tributação do Cofins não está preenchida adequadamente!")
+					Endif
+					
+					If alltrim(_aCofins[01]) $ "01#02#04#06#07#08#09"
+						aadd(_aBlocoSXX,_cBlocoSXX)
+					Else
+						aadd(_aBlocoSXX,"")
+					Endif
+					
+				Else
+					_cBlocoSXX := "S04"		// Bloco S04
+					_cBlocoSXX += "|08"		// CST
+					
+					aadd(_aBlocoSXX,_cBlocoSXX)
+					
+				Endif
+		
+				SF4->(dbSetOrder(1))
+				SF4->(dbSeek(xFilial("SF4")+SD1->D1_TES))
+				
+				nScan2  := aScan(_aGrpMen2,SF4->F4_CODIGO)
+				If ( nScan2 == 0 )
+					AADD(_aGrpMen2,SF4->F4_CODIGO)
+
+					If !Empty(SF4->F4_FORMULA)
+						cMensCli += Alltrim(Formula(SF4->F4_FORMULA) )+"-"						
+					EndIf			
+					
+					If !Empty(SF4->F4_FORMU04)
+						cMensCli += Alltrim(Formula(SF4->F4_FORMU04))+"-"
+					EndIf			
+				Endif
+				
+				If !Empty(SD1->D1_MENS)
+					cMensCli += AllTrim(SD1->D1_MENS)
+				EndIf                          
+
+				nScan3  := aScan(_aMens,SF4->F4_CODIGO)
+				If ( nScan3 == 0 )
+					AADD(_aMens,SF4->F4_CODIGO)
+				    
+				    If SD1->D1_VALIMP1 > 0    /// I.I.
+						If  !Empty(SF4->F4_FORMU05)			
+							cMensFis += Alltrim(Formula(SF4->F4_FORMU05))+"-"
+						EndIf
+            		Endif
+            		
+				    If SD1->D1_VALIMP6 > 0    /// PIS
+						If  !Empty(SF4->F4_FORMU01)			
+							cMensFis += Alltrim(Formula(SF4->F4_FORMU01))+"-"
+						EndIf
+					Endif
+			             
+				    If SD1->D1_VALIMP5 > 0    /// COFINS
+						If !Empty(SF4->F4_FORMU02)
+							cMensFis += Alltrim(Formula(SF4->F4_FORMU02))+"-"
+						EndIf
+					Endif
+					
+					If !Empty(SF4->F4_FORMU03)
+						cMensFis += Alltrim(Formula(SF4->F4_FORMU03))+"-"
+					EndIf			
+                Endif												
+								
+				SD1->(dbSkip())
+				
+			EndDo
+			
+			dbSelectArea("SF4")                     &&Tipos de E/S
+			dbSetOrder(1)
+			
+			For i :=1 TO len(mTipoES)
+				xTipoES := mTipoES[i]
+				
+				If SF4->(dbSeek(xfilial()+xTipoES))
+					xLinha07_1 := IIf(ALLTRIM(SF4->F4_TEXTO) $ xLinha07_1,xLinha07_1, xLinha07_1 + IIf(i==1,"","/")+ ALLTRIM(SF4->F4_TEXTO))
+					aadd(_aBlocoB,IIf(ALLTRIM(SF4->F4_TEXTO) $ xLinha07_1,xLinha07_1, xLinha07_1 + IIf(i==1,"","/")+ ALLTRIM(SF4->F4_TEXTO))) // _aBlocoB[8] - Natureza
+				EndIf
+			Next i
+		EndIf
+		
+		IF !EMPTY(WNFORI)
+			cMensFis += "Nota Fiscal Original No.: "+WNFORI
+		ENDIF
+		
+	ElseIf cTipoNF == 2
+		xTipo   := SF2->F2_TIPO
+		xCod_FC := SF2->F2_CLIENTE
+		xLoja   := SF2->F2_LOJA
+		xTransp := SF2->F2_TRANSP
+		_cNfisc := SF2->F2_DOC
+		
+		// Sefaz Bloco B
+		aadd(_aBlocoB,Substr(SM0->M0_CODMUN,1,2))												 										   	// _aBlocoB[1] - Codigo IBGE da UF
+		aadd(_aBlocoB,IIf(SF2->F2_COND == "001", "0", "1")) 			   				     												// _aBlocoB[2] - Condicao de Pagamento
+		aadd(_aBlocoB,alltrim(str(val(SF2->F2_DOC)))) 				   																		// _aBlocoB[3] - Numero da NF
+		aadd(_aBlocoB,substr(dtos(SF2->F2_EMISSAO),1,4)+"-"+substr(dtos(SF2->F2_EMISSAO),5,2)+"-"+substr(dtos(SF2->F2_EMISSAO),7,2)) 	    // _aBlocoB[4] - Emissao
+		aadd(_aBlocoB,substr(dtos(ddatabase),1,4)+"-"+substr(dtos(ddatabase),5,2)+"-"+substr(dtos(ddatabase),7,2))						    // _aBlocoB[5] - Data Base
+		aadd(_aBlocoB,SM0->M0_CODMUN) 																										// _aBlocoB[6] - Municipio
+		aadd(_aBlocoB,IIf(SF2->F2_TIPO $ "N#B#D", "1", "2")) 																				// _aBlocoB[7] - Tipo da Nota
+		
+		// Sefaz Bloco B14
+		_cBlocoB13 := alltrim(SF2->F2_CHVNFE)
+		
+		// Sefaz Bloco W - Totais
+		
+		// Bloco W02 - Referentes ao ICMS
+		aadd(_aBlocoW02,_fTransform(SF2->F2_BASEICM,15,2)) 		// _aBlocoW02[1] - vBC
+		IF SF2->F2_TIPO == "I"
+			aadd(_aBlocoW02,_fTransform(SF2->F2_VALMERC,15,2)) 			// _aBlocoW02[2] - vICMS
+		ELSE
+			aadd(_aBlocoW02,_fTransform(SF2->F2_VALICM,15,2)) 			// _aBlocoW02[2] - vICMS
+		ENDIF
+		aadd(_aBlocoW02,"")								 			// _aBlocoW02[3] - vBCST
+		aadd(_aBlocoW02,"") 										// _aBlocoW02[4] - vST
+		aadd(_aBlocoW02,_fTransform(SF2->F2_VALMERC,15,2)) 		// _aBlocoW02[5] - vProd
+		aadd(_aBlocoW02,_fTransform(SF2->F2_FRETE,15,2)) 			// _aBlocoW02[6] - vFrete
+		aadd(_aBlocoW02,_fTransform(SF2->F2_SEGURO,15,2)) 			// _aBlocoW02[7] - vSeg
+		aadd(_aBlocoW02,_fTransform(SF2->F2_DESCONT,15,2)) 		// _aBlocoW02[8] - vDesc
+		aadd(_aBlocoW02,"")								 			// _aBlocoW02[9] - vII
+		aadd(_aBlocoW02,_fTransform(SF2->F2_VALIPI,15,2)) 			// _aBlocoW02[10] - vIPI
+		aadd(_aBlocoW02,_fTransform(SF2->F2_VALPIS,15,2)) 			// _aBlocoW02[11] - vPIS
+		aadd(_aBlocoW02,_fTransform(SF2->F2_VALCOFI,15,2)) 		// _aBlocoW02[12] - vCOFINS
+		aadd(_aBlocoW02,_fTransform(SF2->F2_DESPESA,15,2)) 		// _aBlocoW02[13] - vOutro
+		aadd(_aBlocoW02,_fTransform(SF2->F2_VALFAT,15,2)) 			// _aBlocoW02[14] - vNF
+		
+		// Bloco W23 - Impostos de Retencao
+		aadd(_aBlocoW23,_fTransform(SF2->F2_VALPIS,15,2)) 			// _aBlocoW23[1] - vRetPIS
+		aadd(_aBlocoW23,_fTransform(SF2->F2_VALCOFI,15,2)) 		// _aBlocoW23[2] - vRetCOFINS
+		aadd(_aBlocoW23,_fTransform(SF2->F2_VALCSLL,15,2)) 		// _aBlocoW23[3] - vRetCSLL
+		aadd(_aBlocoW23,_fTransform(SF2->F2_BASEIRR,15,2))			// _aBlocoW23[4] - vBCIRRF
+		aadd(_aBlocoW23,_fTransform(SF2->F2_VALIRRF,15,2)) 		// _aBlocoW23[5] - vIRRF
+		aadd(_aBlocoW23,_fTransform(SF2->F2_BASEINS,15,2)) 		// _aBlocoW23[6] - vBCRetPrev
+		aadd(_aBlocoW23,_fTransform(SF2->F2_VALINSS,15,2)) 		// _aBlocoW23[7] - vBCPrev
+		
+		If !Empty(xTransp)
+			dbSelectArea("SA4")                     &&Cad. Transportadoras
+			dbSetOrder(1)
+			
+			If SA4->(dbSeek(xfilial()+xTransp))
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Sefaz Bloco X03 - Transportadora                                       ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				
+				aadd(_aBlocoX03,AllTrim(SA4->A4_CGC))
+				aadd(_aBlocoX03,AllTrim(SA4->A4_NOME))
+				aadd(_aBlocoX03,AllTrim(SA4->A4_INSEST))
+				aadd(_aBlocoX03,AllTrim(SA4->A4_END))
+				aadd(_aBlocoX03,AllTrim(SA4->A4_MUN))
+				aadd(_aBlocoX03,AllTrim(Upper(SA4->A4_EST)))
+				aadd(_aBlocoX03,AllTrim(SA4->A4_COD))
+				
+				// Sefaz Bloco X18 - Veiculos
+				If !Empty(SF2->F2_VEICUL1)
+					dbSelectArea("DA3")
+					dbSetOrder(1)
+					MsSeek(xFilial("DA3")+SF2->F2_VEICUL1)
+					
+					aadd(_aBlocoX18,alltrim(DA3->DA3_PLACA))       // placa
+					aadd(_aBlocoX18,alltrim(DA3->DA3_ESTPLA))		// UF
+					aadd(_aBlocoX18,"")								// RNTC
+				EndIf
+			EndIf
+		EndIf
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Sefaz Bloco Y07 - Procura duplicatas                                   ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		
+		If !Empty(SF2->F2_DUPL)
+			cLJTPNFE := (StrTran(cMV_LJTPNFE," ,"," ','"))+" "
+			cWhere := cLJTPNFE
+			dbSelectArea("SE1")
+			dbSetOrder(1)
+			
+			lQuery    := .T.
+			cAliasSE1 := GetNextAlias()
+			BeginSql Alias cAliasSE1
+				COLUMN E1_VENCREA AS DATE
+				SELECT E1_FILIAL,E1_PREFIXO,E1_NUM,E1_PARCELA,E1_TIPO,E1_VENCREA,E1_VALOR,E1_ORIGEM
+				FROM %Table:SE1% SE1
+				WHERE
+				SE1.E1_FILIAL = %xFilial:SE1% AND
+				SE1.E1_PREFIXO = %Exp:SF2->F2_PREFIXO% AND
+				SE1.E1_NUM = %Exp:SF2->F2_DUPL% AND
+				((SE1.E1_TIPO = %Exp:MVNOTAFIS%) OR
+				(SE1.E1_ORIGEM = 'LOJA701' AND SE1.E1_TIPO IN (%Exp:cWhere%))) AND
+				SE1.%NotDel%
+				ORDER BY %Order:SE1%
+			EndSql
+			
+			While !Eof() .And. xFilial("SE1") == (cAliasSE1)->E1_FILIAL .And.;
+				SF2->F2_PREFIXO == (cAliasSE1)->E1_PREFIXO .And.;
+				SF2->F2_DOC == (cAliasSE1)->E1_NUM
+				If 	(cAliasSE1)->E1_TIPO = MVNOTAFIS .OR. ((cAliasSE1)->E1_ORIGEM = 'LOJA701' .AND. (cAliasSE1)->E1_TIPO $ cWhere)
+					aadd(_aBlocoY07,{(cAliasSE1)->E1_PREFIXO+(cAliasSE1)->E1_NUM+(cAliasSE1)->E1_PARCELA,(cAliasSE1)->E1_VENCREA,(cAliasSE1)->E1_VALOR})
+				EndIf
+				dbSelectArea(cAliasSE1)
+				dbSkip()
+			EndDo
+			If lQuery
+				dbSelectArea(cAliasSE1)
+				dbCloseArea()
+				dbSelectArea("SE1")
+			EndIf
+		Else
+			_aBlocoY07 := {}
+		EndIf
+		
+		_aRetorno := {}
+		_Poder3   := ""
+		xCertIf   := ""
+		
+		xPesoB   := SF2->F2_PBRUTO
+		xPesoL   := SF2->F2_PLIQUI
+		cPesq1   := "xfilial()+SF2->F2_SERIE+SF2->F2_DUPL"
+		
+		_aGrpMens   := {}
+		_aGrpMen2   := {}
+		_cCont      := "00"
+		_cMensC     := _cMensF := "ITEM(S)- ("
+		_lMensC     := _lMensF := .F.
+		xEspecie    := "CAIXA"
+		xVolume     := 0
+		xPESO_BRUTO := 0
+		xPESO_LIQUI := 0
+		
+		xCodFis := SUBSTR(xCodFis,2,len(ALLTRIM(xCodFis))-1)
+		_lCFO   := IIf("/" $ xCodFis, .T., .F.)
+		
+		dbSelectArea("SD2")
+		dbSetOrder(3)
+		If SD2->(dbSeek(xfilial() + SF2->F2_DOC + SF2->F2_SERIE+SF2->F2_CLIENTE + SF2->F2_LOJA))
+			xAcuipi := 0
+			xValipi := xAlipi := xTotipi := 0
+			xSemipi := "N"
+			
+			While SD2->D2_DOC == SF2->F2_DOC .AND. SD2->D2_SERIE == SF2->F2_SERIE .AND. ;
+				SD2->D2_CLIENTE  == SF2->F2_CLIENTE .AND. SD2->D2_LOJA == SF2->F2_LOJA
+				
+				xTem := ASCAN(mTipoES,SD2->D2_TES)
+				
+				If xTem == 0 .AND. !Empty(SD2->D2_TES)
+					aadd(mTipoES,SD2->D2_TES)
+				EndIf
+				
+				dbSelectArea("SB1")                     && Cad.Produtos
+				dbSetOrder(1)
+				If !SB1->(dbSeek(xfilial()+SD2->D2_COD))
+					alert("Erro grave. Avise o Administrador de Sistemas !!")
+					SD2->(dbSkip())
+					Loop
+				EndIf
+				
+				xCodFis := IIf(ALLTRIM(SD2->D2_CF) $ xCodFis,xCodFis,xCodFis+"/"+ ALLTRIM(SD2->D2_CF))
+				
+				dbSelectArea("SC5")                     && Pedido de Venda
+				dbSetOrder(3)
+				
+				If SC5->(dbSeek(xfilial()+SF2->F2_CLIENTE+SF2->F2_LOJA+SD2->D2_PEDIDO))
+					_PVLib := .T. //IIf(SC5->C5_PVLIB == "N", .F., .T.)
+					
+					xEndEnt := "" //SC5->C5_ENDENT
+					
+					SC6->(dbSetOrder(1))
+					SC6->(dbSeek(xFilial("SC6")+SD2->D2_PEDIDO + SD2->D2_ITEMPV))
+										
+					xDescri := Iif (Empty(SC6->C6_DESCRI),ALLTRIM(SB1->B1_DESC),ALLTRIM(SC6->C6_DESCRI))
+					xItem   := SC6->C6_ITEM
+					
+					If Empty(_aBlocoZB)
+						_aBlocoZB := {"",AllTrim(SC6->C6_PEDCLI),""}
+					EndIf
+					
+					xVOLUME     := 0
+//					xVOLUME     := SC6->C6_VOLUME
+					xMARCA      := ""
+//					xMARCA      := SC5->C5_MARCA
+//					xNUMERO     := SC5->C5_NUMERO
+					xPESO_BRUTO := SC5->C5_PBRUTO             // Peso Bruto
+					xPESO_LIQUI := SD2->D2_QUANT
+					
+					If !Empty(SC5->C5_VEND1) .AND. ! ALLTRIM(SC5->C5_VEND1) $ xVEndedor
+						xVEndedor := xVEndedor + IIf(Empty(xVEndedor),"","/")+ ALLTRIM(SC5->C5_VEND1)
+					EndIf
+					
+					If !Empty(SC5->C5_MENPAD)
+						xtem := ASCAN(mMenPad,SC5->C5_MENPAD)
+						
+						If xTem == 0
+							aadd(mMenPad,SC5->C5_MENPAD)
+						EndIf
+					Endif
+					
+					If !Empty(SC5->C5_MENNOTA)
+						xtem := ASCAN(mCodMen,SC5->C5_MENNOTA)
+						
+						If xTem == 0
+							aadd(mCodMen,SC5->C5_MENNOTA)
+						EndIf
+					Endif
+				EndIf
+								
+				SF4->(dbSetOrder(1))
+				SF4->(dbSeek(xFilial("SF4")+SD2->D2_TES))
+				
+				_cFimGrupo := Right(SB1->B1_GRUPO,1)
+				_cCont     := Soma1(_cCont)
+				
+				If _cFimGrupo = "C"
+					_lMensC := .T.
+					nScan   := aScan(_aGrpMens,_cFimGrupo)
+					If ( nScan==0 )
+						AADD(_aGrpMens,_cFimGrupo)
+						_cMensC += _cCont
+					Else
+						_cMensC += "-"+_cCont
+					Endif
+				ElseIf _cFimGrupo = "F"
+					_lMensF := .T.
+					nScan   := aScan(_aGrpMens,_cFimGrupo)
+					If ( nScan==0 )
+						AADD(_aGrpMens,_cFimGrupo)
+						_cMensF += _cCont
+					Else
+						_cMensF += "-"+_cCont
+					Endif
+				EndIf
+				
+				If !AllTrim(SC5->C5_MENNOTA) $ cMensCli
+					cMensCli += AllTrim(SC5->C5_MENNOTA)
+				EndIf
+				
+				If !Empty(SC5->C5_MENPAD) .And. !AllTrim(FORMULA(SC5->C5_MENPAD)) $ cMensFis
+					cMensFis += AllTrim(FORMULA(SC5->C5_MENPAD))
+				EndIf
+				
+				nScan2  := aScan(_aGrpMen2,SF4->F4_CODIGO)
+				If ( nScan2 == 0 )
+					AADD(_aGrpMen2,SF4->F4_CODIGO)
+					/*
+					If  !Empty(SF4->F4_FORMU01)
+						cMensFis += " - "+Formula(SF4->F4_FORMU01)
+					EndIf
+					
+					If !Empty(SF4->F4_FORMU02)
+						cMensFis += " - "+Formula(SF4->F4_FORMU02)
+					EndIf
+					
+					If !Empty(SF4->F4_FORMU03)
+						cMensFis += " - "+Formula(SF4->F4_FORMU03)
+					EndIf
+					
+					If !Empty(SF4->F4_FORMU04)
+						cMensFis += " - "+Formula(SF4->F4_FORMU04)
+					EndIf
+  */					
+					If !Empty(SF4->F4_FORMULA)
+						cMensFis += " - "+Formula(SF4->F4_FORMULA)
+					EndIf
+				Endif
+				
+				cEspecie := "CAIXA"
+				nScan := aScan(_aBlocoX26,{|x| x[1] == cEspecie})
+				If ( nScan==0 )
+					aadd(_aBlocoX26,{ cEspecie, xVolume, xPESO_LIQUI , xPESO_BRUTO})
+				Else
+					_aBlocoX26[nScan][2] += xVolume
+					_aBlocoX26[nScan][3] += xPESO_LIQUI
+				EndIf
+				
+				xValipi := SD2->D2_VALIPI
+				xAlipi  := SD2->D2_IPI
+				xAcuipi := SF2->F2_VALIPI
+				
+				xCodPro  := SB1->B1_COD
+				
+				dbSelectArea("SF4")
+				dbSeek(xFilial("SF4") + SD2->D2_TES)
+				
+				_SitTrib := IIf(Found(), SB1->B1_ORIGEM + SF4->F4_SITTRIB, SB1->B1_ORIGEM)
+				_Poder3  := SF4->F4_PODER3
+				
+				xipi     := IIf(int(xAlipi)=xAlipi,TRANSFORM(xAlipi,"99"),TRANSFORM(xAlipi,"99.9"))
+				
+				xprodimp := ALLTRIM(SD2->D2_COD)
+				dDtCot := CTOD("01/04/09")  //Getmv("MV_SDTCOT")
+				
+				If _Poder3 = "D"
+					If ! Empty(SD2->D2_NFORI)
+						
+						If SD2->D2_TIPO $ "N$D$B"
+							_cUF		:= Substr(SM0->M0_CODMUN,1,2)
+							_cEmissao 	:= substr(dtos(POSICIONE("SF1",1,xFilial("SF1") + SD2->D2_NFORI, "F1_EMISSAO")),3,4)
+							_cMod       := "01"
+							_cSerie		:= "0" //MV_PAR03 //"2" colocado de forma provisória
+							_cNF		:= alltrim(str(val(SD2->D2_NFORI)))
+							If SD2->D2_TIPO == "N"
+								_cCNPJ	:= POSICIONE("SA1",1,xFilial("SA1") + SD2->D2_CLIENTE, "A1_CGC")
+							Else
+								_cCNPJ 	:= POSICIONE("SA2",1,xFilial("SA2") + SD2->D2_CLIENTE, "A2_CGC")
+							Endif
+						ElseIf SD2->D2_TIPO $ "C$I$P"
+							_cUF		:= Substr(SM0->M0_CODMUN,1,2)
+							_cEmissao 	:= substr(dtos(POSICIONE("SF2",1,xFilial("SF2") + SD2->D2_NFORI, "F2_EMISSAO")),3,4)
+							_cCNPJ 		:= POSICIONE("SA1",1,xFilial("SA1") + SD2->D2_CLIENTE, "A1_CGC")
+							_cMod       := "01"
+							_cSerie		:= "001" //MV_PAR03 //"2" colocado de forma provisória
+							_cNF		:= alltrim(str(val(SD2->D2_NFORI)))
+							If POSICIONE("SF2",1,xFilial("SF2") + SD2->D2_NFORI, "F2_TIPO") == "N"
+								_cCNPJ	:= POSICIONE("SA1",1,xFilial("SA1") + SD2->D2_CLIENTE, "A1_CGC")
+							Else
+								_cCNPJ	:= POSICIONE("SA2",1,xFilial("SA2") + SD2->D2_CLIENTE, "A2_CGC")
+							Endif
+						Endif
+						
+						// Preparo vetor para posterior montagem de mensagens
+						_RetCli := POSICIONE("SB6",3,xFilial("SB6") + SD2->D2_IDENTB6 + SD2->D2_COD + "R", "B6_CLIFor")
+						_RetLoj := POSICIONE("SB6",3,xFilial("SB6") + SD2->D2_IDENTB6 + SD2->D2_COD + "R", "B6_LOJA")
+						_RetChave := SD2->D2_NFORI + SD2->D2_SERIORI + _RetCli + _RetLoj
+						_RetValor := SD2->D2_TOTAL + SD2->D2_VALIPI
+						
+						If len(_aRetorno) == 0
+							aadd(_aRetorno,{_RetChave, _RetValor, SD2->D2_IDENTB6})
+						Else
+							_RetPos := ASCAN(_aRetorno,{|_aVal| _aVal[1] == _RetChave})
+							
+							If _RetPos == 0
+								aadd(_aRetorno,{_RetChave, _RetValor, SD2->D2_IDENTB6})
+							Else
+								_aRetorno[_RetPos,2] := _aRetorno[_RetPos,2] + _RetValor
+							EndIf
+						EndIf
+					EndIf
+				EndIf
+				
+				aadd(_aBlocoH,"H|"+alltrim(str(val(SD2->D2_ITEM)))+"|")
+				
+				_vUncom  := alltrim(Transform(IIF(!SD2->D2_TIPO$"IP",SD2->D2_PRCVEN+((SD2->D2_DESCON+SD2->D2_DESCZFR)/SD2->D2_QUANT),SD2->D2_TOTAL),"@R 9999999999999999.9999"))
+				_vProd	 := _fTransform(IIF(!SD2->D2_TIPO$"IP",Iif(!SD2->D2_TIPO$"D",SD2->D2_TOTAL+SD2->D2_DESCON+SD2->D2_DESCZFR,SD2->D2_TOTAL),SD2->D2_TOTAL),15,2)
+				_uTrib	 := alltrim(SB1->B1_UM)
+				_qTrib	 := _fTransform(IIF(Empty(POSICIONE("SB5",1,xFilial("SB5")+SD2->D2_COD, "B5_CONVDIPI")),SD2->D2_QUANT,POSICIONE("SB5",1,xFilial("SB5")+SD2->D2_COD, "B5_CONVDIPI")*SD2->D2_QUANT),12,4)
+				
+				IF val(_qTrib) == 0
+					_qTrib := _fTransform(1,12,4)
+				ENDIF
+				
+				_vUnTrib := _fTransform(val(_vProd)/val(_qTrib),16,4)
+				IF val(_vUnTrib) == 0
+					_vUnTrib := _fTransform(SD2->D2_TOTAL,16,4)
+				ENDIF
+				
+				TRANSFORM(SA1->A1_CGC,"@R 99.999.999/9999-99")
+				
+				_cBlocoI := "I"                                						// Bloco I
+				_cBlocoI += "|"+alltrim(xprodimp) 									// cProd
+				_cBlocoI += "|" 					            					// cEAN
+				_cBlocoI += "|"+alltrim(xDescri)									// xProd
+				_cBlocoI += "|"+alltrim(SB1->B1_POSIPI)								// NCM
+				_cBlocoI += "|"+alltrim(SB1->B1_EX_NCM)								// EXTIPI
+				_cBlocoI += "|"														// genero
+				_cBlocoI += "|"+alltrim(SD2->D2_CF)									// CFOP
+				_cBlocoI += "|"+alltrim(SB1->B1_UM)									// uCom
+				IF SD2->D2_QUANT == 0
+					_cBlocoI += "|"+ALLTRIM(_fTRANSFORM(1,15,4)) //para casos de compl. de icms e ipi
+				ELSE
+					_cBlocoI += "|"+ALLTRIM(_fTRANSFORM(SD2->D2_QUANT,15,4)) //alltrim(str(SD2->D2_QUANT))						// qCom
+				ENDIF
+				_cBlocoI += "|"+_vUncom                        						// vUncom
+				_cBlocoI += "|"+_vProd												// vProd
+				_cBlocoI += "|"														// cEANTrib
+				_cBlocoI +=	"|"+_uTrib												// uTrib
+				_cBlocoI += "|"+_qTrib												// qTrib
+				_cBlocoI += "|"+_vUnTrib											// vUnTrib
+				_cBlocoI += "|"+_fTransform(SD2->D2_VALFRE,15,2)					// vFrete
+				_cBlocoI += "|"+_fTransform(SD2->D2_SEGURO,15,2)					// vSeg
+				_cBlocoI += "|"+_fTransform(SD2->D2_DESCON+SD2->D2_DESCZFR,15,2)	// vDesc
+				
+				aadd(_aBlocoI,_cBlocoI)
+				
+				// Impostos
+				_aCST := {IIF(!Empty(SD2->D2_CLASFIS),SubStr(SD2->D2_CLASFIS,2,2),'50'),;
+				IIF(!Empty(SD2->D2_CLASFIS),SubStr(SD2->D2_CLASFIS,1,1),'0')}
+				
+				dbSelectArea("CD2")
+				If !SD2->D2_TIPO $ "DB"
+					dbSetOrder(1)
+				Else
+					dbSetOrder(2)
+				EndIf
+				If !MsSeek(xFilial("CD2")+"S"+SF2->F2_SERIE+SF2->F2_DOC+SF2->F2_CLIENTE+SF2->F2_LOJA+PadR(SD2->D2_ITEM,4)+SD2->D2_COD)
+					
+				EndIf
+				
+				While !Eof() .And. xFilial("CD2") == CD2->CD2_FILIAL .And.;
+					"S" == CD2->CD2_TPMOV .And.;
+					SF2->F2_SERIE == CD2->CD2_SERIE .And.;
+					SF2->F2_DOC == CD2->CD2_DOC .And.;
+					SF2->F2_CLIENTE == IIF(!SD2->D2_TIPO $ "DB",CD2->CD2_CODCLI,CD2->CD2_CODFOR) .And.;
+					SF2->F2_LOJA == IIF(!SD2->D2_TIPO $ "DB",CD2->CD2_LOJCLI,CD2->CD2_LOJFOR) .And.;
+					SD2->D2_ITEM == SubStr(CD2->CD2_ITEM,1,Len(SD2->D2_ITEM)) .And.;
+					SD2->D2_COD == CD2->CD2_CODPRO
+					
+					Do Case
+						Case AllTrim(CD2->CD2_IMP) == "ICM"
+							IF SF2->F2_TIPO == "I"
+								_aICMS := {CD2->CD2_ORIGEM,CD2->CD2_CST,CD2->CD2_MODBC,CD2->CD2_PREDBC,CD2->CD2_VLTRIB,CD2->CD2_ALIQ,CD2->CD2_VLTRIB,0,CD2->CD2_QTRIB,CD2->CD2_PAUTA}
+							ELSE
+								_aICMS := {CD2->CD2_ORIGEM,CD2->CD2_CST,CD2->CD2_MODBC,CD2->CD2_PREDBC,CD2->CD2_BC,CD2->CD2_ALIQ,CD2->CD2_VLTRIB,0,CD2->CD2_QTRIB,CD2->CD2_PAUTA}
+							ENDIF
+						Case AllTrim(CD2->CD2_IMP) == "SOL"
+							_aICMSST := {CD2->CD2_ORIGEM,CD2->CD2_CST,CD2->CD2_MODBC,CD2->CD2_PREDBC,CD2->CD2_BC,CD2->CD2_ALIQ,CD2->CD2_VLTRIB,CD2->CD2_MVA,CD2->CD2_QTRIB,CD2->CD2_PAUTA}
+							lCalSol := .T.
+						Case AllTrim(CD2->CD2_IMP) == "IPI"
+							_aIPI := {"","",0,"999",CD2->CD2_CST,CD2->CD2_BC,CD2->CD2_QTRIB,CD2->CD2_PAUTA,CD2->CD2_ALIQ,CD2->CD2_VLTRIB,CD2->CD2_MODBC,CD2->CD2_PREDBC}
+						Case AllTrim(CD2->CD2_IMP) == "PS2"
+							If SD2->D2_VALISS==0
+								_aPIS := {CD2->CD2_CST,CD2->CD2_BC,CD2->CD2_ALIQ,CD2->CD2_VLTRIB,CD2->CD2_QTRIB,CD2->CD2_PAUTA}
+							Else
+								If Empty(_aISS)
+									_aISS := {0,0,0,0,0}
+								EndIf
+								_aISS[04]+= CD2->CD2_VLTRIB
+							EndIf
+						Case AllTrim(CD2->CD2_IMP) == "CF2"
+							If SD2->D2_VALISS==0
+								_aCOFINS := {CD2->CD2_CST,CD2->CD2_BC,CD2->CD2_ALIQ,CD2->CD2_VLTRIB,CD2->CD2_QTRIB,CD2->CD2_PAUTA}
+							Else
+								If Empty(_aISS)
+									_aISS := {0,0,0,0,0}
+								EndIf
+								_aISS[05] += CD2->CD2_VLTRIB
+							EndIf
+						Case AllTrim(CD2->CD2_IMP) == "PS3" .And. SD2->D2_VALISS==0
+							_aPISST := {CD2->CD2_CST,CD2->CD2_BC,CD2->CD2_ALIQ,CD2->CD2_VLTRIB,CD2->CD2_QTRIB,CD2->CD2_PAUTA}
+						Case AllTrim(CD2->CD2_IMP) == "CF3" .And. SD2->D2_VALISS==0
+							_aCOFINSST := {CD2->CD2_CST,CD2->CD2_BC,CD2->CD2_ALIQ,CD2->CD2_VLTRIB,CD2->CD2_QTRIB,CD2->CD2_PAUTA}
+						Case AllTrim(CD2->CD2_IMP) == "ISS"
+							If Empty(_aISS)
+								_aISS := {0,0,0,0,0}
+							EndIf
+							_aISS[01] += SD2->D2_TOTAL+SD2->D2_DESCON
+							_aISS[02] += CD2->CD2_BC
+							_aISS[03] += CD2->CD2_VLTRIB
+							cMunISS := ConvType(aUF[aScan(aUF,{|x| x[1] == aDest[09]})][02]+aDest[07])
+							_aISSQN := {CD2->CD2_BC,CD2->CD2_ALIQ,CD2->CD2_VLTRIB,cMunISS,SD2->D2_CODISS}
+					EndCase
+					
+					dbSelectArea("CD2")
+					dbSkip()
+				EndDo
+				
+				// Informacoes Blocos N02 ao N10 (ICMS) - Sefaz
+				If Len(_aIcms)>0
+					_cBlocoNXX := _fTribICMS(alltrim(_aICMS[02])) 		// Bloco N02 a N10
+					_cBlocoNXX += "|"+alltrim(_aICMS[01])				// orig
+					_cBlocoNXX += "|"+alltrim(_aICMS[02])				// CST
+					If !(alltrim(_aICMS[02]) $ "40#41#50#")
+						_cBlocoNXX += "|"+alltrim(_aICMS[03])			// modBC
+						If alltrim(_aICMS[02]) $ "51#90"
+							_cBlocoNXX += "|"+alltrim(_aICMS[04])		// pRedBC
+						Endif
+						_cBlocoNXX += "|"+_fTransform(_aICMS[05],15,2)	// vBC
+						_cBlocoNXX += "|"+_fTransform(_aICMS[06],5,2)	// pICMS
+						_cBlocoNXX += "|"+_fTransform(_aICMS[07],15,2)	// vICMS
+						If alltrim(_aICMS[02]) == "90"
+							_cBlocoNXX += "||||||"						// Outros - ST
+						Endif
+					Endif
+				Else
+					_cBlocoNXX := _fTribICMS(alltrim(_aCST[01]))		// Bloco N02 a N10
+					_cBlocoNXX += "|"+alltrim(_aCST[02])				// orig
+					_cBlocoNXX += "|"+alltrim(_aCST[01])				// CST
+					If !(alltrim(_aCST[01]) $ "40#41#50#")
+						_cBlocoNXX += "|"+"3"							// modBC
+						If alltrim(_aCST[01]) $ "51#90"
+							_cBlocoNXX += "|"							// pRedBC
+						Endif
+						_cBlocoNXX += "|"+"0"							// vBC
+						_cBlocoNXX += "|"+"0"							// pICMS
+						_cBlocoNXX += "|"+"0"							// vICMS
+						If alltrim(_aCST[01]) == "90"
+							_cBlocoNXX += "||||||"						// Outros - ST
+						Endif
+					Endif
+				Endif
+				
+				aadd(_aBlocoNXX,_cBlocoNXX)
+				
+				If Len(_aIPI) > 0
+					
+					_cBlocoO := "O" 								// Bloco O
+					_cBlocoO += "|"+alltrim(_aIPI[01])				// clEnq
+					_cBlocoO += "|"									// CNPJProd
+					_cBlocoO += "|"+alltrim(_aIPI[02])				// cSelo
+					_cBlocoO += "|"+_fTransform(_aIPI[03],12,0)	// qSelo
+					_cBlocoO += "|"+alltrim(_aIPI[04])				// cEnq
+					
+					aadd(_aBlocoO,_cBlocoO)
+					
+					If alltrim(_aIPI[05]) $ "00#49#50#99"
+						_cBlocoOXX := "O07"								//Bloco O07
+						_cBlocoOXX += "|"+alltrim(_aIPI[05])			// CST
+						_cBlocoOXX += "|"+_fTransform(_aIPI[10],15,2)	// vIPI
+						
+						aadd(_aBlocoOXX,_cBlocoOXX)
+						
+						_cBlocoO10 := "O10"								//Bloco O10
+						_cBlocoO10 += "|"+_fTransform(_aIPI[06],15,2)	// vBC
+						_cBlocoO10 += "|"+_fTransform(_aIPI[09],5,2)	// pIPI
+						
+						aadd(_aBlocoO10,_cBlocoO10)
+						
+						_cBlocoO11 := "O11"								//Bloco O11
+						_cBlocoO11 += "|"+_fTransform(_aIPI[08],15,4)	// vUnid
+						_cBlocoO11 += "|"+_fTransform(_aIPI[07],15,4)	// qUnid
+						
+						aadd(_aBlocoO11,_cBlocoO11)
+						
+					ElseIf alltrim(_aIPI[05]) $ "01#02#03#04#05#51#52#53#54#55"
+						_cBlocoOXX := "O08"							//Bloco O08
+						_cBlocoOXX += "|"+alltrim(_aIPI[05])		// CST
+						
+						aadd(_aBlocoOXX,_cBlocoOXX)
+						aadd(_aBlocoO10,"")
+						aadd(_aBlocoO11,"")
+						
+					Else
+						aadd(_aBlocoOXX,"")
+						aadd(_aBlocoO10,"")
+						aadd(_aBlocoO11,"")
+						
+						_cMensSefaz := ("Tipo de Tributacao do IPI não está preenchido corretamente!")
+						
+					Endif
+				Else
+					aadd(_aBlocoO,"")
+					aadd(_aBlocoOXX,"")
+					aadd(_aBlocoO10,"")
+					aadd(_aBlocoO11,"")
+				Endif
+				
+				If Len(_aPIS) > 0
+					If alltrim(_aPIS[01]) $ "01#02"
+						_cBlocoQXX := "Q02"								// Bloco Q02
+						_cBlocoQXX += "|"+alltrim(_aPIS[01])			// CST
+						_cBlocoQXX += "|"+_fTransform(_aPIS[02],15,2)	// vBC
+						_cBlocoQXX += "|"+_fTransform(_aPIS[03],5,2)	// pPIS
+						_cBlocoQXX += "|"+_fTransform(_aPIS[04],15,2)	// vPIS
+					ElseIf alltrim(_aPIS[01]) == "03"
+						_cMensSefaz := ("Não trabalhamos com tributação do PIS por Qtde!")
+					Elseif alltrim(_aPIS[01]) $ "04#06#07#08#09"
+						_cBlocoQXX := "Q04" 								// Bloco Q04
+						_cBlocoQXX += "|"+alltrim(_aPIS[01])				// CST
+					Elseif alltrim(_aPIS[01]) == "99"
+						_cMensSefaz := ("Outras operações do PIS não está habilitada!")
+					Else
+						_cMensSefaz := ("Tributação do PIS não está preenchida adequadamente!")
+					Endif
+					
+					If alltrim(_aPIS[01]) $ "01#02#04#06#07#08#09"
+						aadd(_aBlocoQXX,_cBlocoQXX)
+					Else
+						aadd(_aBlocoQXX,"")
+					Endif
+				Else
+					_cBlocoQXX := "Q04"		// Bloco Q04
+					_cBlocoQXX += "|08"		// CST
+					
+					aadd(_aBlocoQXX,_cBlocoQXX)
+				Endif
+				
+				If Len(_aCofins) > 0
+					If alltrim(_aCofins[01]) $ "01#02"
+						_cBlocoSXX := "S02"									// Bloco S02
+						_cBlocoSXX += "|"+alltrim(_aCofins[01])				// CST
+						_cBlocoSXX += "|"+_fTransform(_aCofins[02],15,2)	// vBC
+						_cBlocoSXX += "|"+_fTransform(_aCofins[03],5,2)		// pCofins
+						_cBlocoSXX += "|"+_fTransform(_aCofins[04],15,2)	// vCofins
+					ElseIf alltrim(_aCofins[01]) == "03"
+						_cMensSefaz := ("Não trabalhamos com tributação do Cofins por Qtde!")
+					Elseif alltrim(_aCofins[01]) $ "04#06#07#08#09"
+						_cBlocoSXX := "S04" 								// Bloco S04
+						_cBlocoSXX += "|"+alltrim(_aCofins[01])				// CST
+					Elseif alltrim(_aCofins[01]) == "99"
+						_cMensSefaz := ("Outras operações do Cofins não está habilitada!")
+					Else
+						_cMensSefaz := ("Tributação do Cofins não está preenchida adequadamente!")
+					Endif
+					
+					If alltrim(_aCofins[01]) $ "01#02#04#06#07#08#09"
+						aadd(_aBlocoSXX,_cBlocoSXX)
+					Else
+						aadd(_aBlocoSXX,"")
+					Endif
+					
+				Else
+					_cBlocoSXX := "S04"		// Bloco S04
+					_cBlocoSXX += "|08"		// CST
+					
+					aadd(_aBlocoSXX,_cBlocoSXX)
+				Endif
+				
+				SD2->(dbSkip())
+			EndDo
+			
+			dbSelectArea("SM4")                     && Formulas de Mensagens
+			dbSetOrder(1)
+			
+			For i := 1 to len(mCodMen)
+				SM4->(dbGoTop())
+				
+				If SM4->(dbSeek(xfilial()+mCodMen[i]))
+					txt1 := FORMULA(mCodMen[i])
+					_aTxt01  := _aTxt02 := _aTxt03 := _aTxt04 := _aTxt05 := _aTxtTmp := ""
+					_aPos    := 1
+					_nLinMen := 0
+					
+					While _aPos <= len(txt1)
+						_aTxtTmp += SUBSTR(txt1,_aPos,1)
+						
+						If SUBSTR(txt1,_aPos,1) == "," .OR. len(_aTxtTmp) == 120 .OR. _aPos == len(txt1)
+							_nLinMen++
+							
+							If _nLinMen == 1 //_aPos <= 120
+								_aTxt01 := _aTxtTmp
+							ElseIf _nLinMen == 2 // _aPos > 120 .AND. _aPos <= 240
+								_aTxt02 := _aTxtTmp
+							ElseIf _nLinMen == 3 //_aPos > 240 .AND. _aPos <= 360
+								_aTxt03 := _aTxtTmp
+							ElseIf _nLinMen == 4 //_aPos > 360 .AND. _aPos <= 480
+								_aTxt04 := _aTxtTmp
+							Else
+								_aTxt05 := _aTxtTmp
+							EndIf
+							_aTxtTmp := ""
+						EndIf
+						_aPos++
+					EndDo
+					aadd(mTexto,{_aTxt01,_aTxt02,_aTxt03,_aTxt04,_aTxt05})
+				EndIf
+			Next i
+			
+			dbSelectArea("SF4")                     &&Tipos de E/S
+			dbSetOrder(1)
+			
+			For i:= 1 TO len(mTipoES)
+				xTipoES := mTipoES[i]
+				
+				If SF4->(dbSeek(xfilial()+xTipoES))
+					xLinha07_1 := IIf(ALLTRIM(SF4->F4_TEXTO) $ xLinha07_1,xLinha07_1, xLinha07_1 + IIf(i==1,"","/")+ ALLTRIM(SF4->F4_TEXTO))
+					aadd(_aBlocoB,IIf(ALLTRIM(SF4->F4_TEXTO) $ xLinha07_1,xLinha07_1, xLinha07_1 + IIf(i==1,"","/")+ ALLTRIM(SF4->F4_TEXTO))) // _aBlocoB[8] - Natureza
+				EndIf
+				
+			Next i
+		EndIf
+		
+		dbSelectArea("SE1")                           && Contas a Receber
+		dbSetOrder(1)
+		
+		If SE1->(dbSeek(&cPesq1))
+			
+			While SE1->E1_NUM == SF2->F2_DUPL
+				
+				If SE1->E1_CLIENTE == SF2->F2_CLIENTE .AND. (! "-" $ SE1->E1_TIPO)
+					_vencto := IIf(xAjustDt = "N",SE1->E1_VENCTO,SE1->E1_VENCREA)
+					
+					If SE1->E1_SABTPIS + SE1->E1_SABTCOF + SE1->E1_SABTCSL == 0
+						_E1_VALOR := SE1->E1_VALOR - (SE1->E1_PIS + SE1->E1_COFINS + SE1->E1_CSLL)
+					Else
+						_E1_VALOR := SE1->E1_VALOR
+					EndIf
+					
+					aadd(mDuplic,{SE1->E1_NUM,SE1->E1_PARCELA,_Vencto,_E1_VALOR})
+				EndIf
+				
+				SE1->(dbSkip())
+			EndDo
+		EndIf
+		
+		xLinha474 := 0
+		
+		If xSemipi<>"S"
+			
+			If Empty(SF2->F2_VALIPI)
+				xLinha474 := xAcuipi
+			Else
+				xLinha474 := SF2->F2_VALIPI
+			EndIf
+		EndIf
+	EndIf
+	
+	If _lMensC
+		cMensCli += " "+_cMensC+") "+Formula("C01")+" - "+Formula("E01")//CHR(13)+CHR(10)
+	Endif
+	
+	If _lMensF
+		cMensCli += " - "+_cMensF+") "+Formula("F01")
+	Endif
+	
+	For i := 1 to len(mTexto)
+		For t := 1 to 5
+			If !Empty(mTexto[i,t])
+				cMensCli  += alltrim(mTexto[i,t]) + " "
+			EndIf
+		Next t
+	Next i
+	
+	_cTexMsg := "O numero de informações da nota excendem os limites de impressão do formulário." + CHR(13)+CHR(10)
+	_cTexMsg += "Refaça a nota com menos itens."
+	
+	// Sefaz Bloco A e B
+	_BlocoAB()
+	
+	// Sefaz Bloco B14
+	If _lNFRefer
+		If !empty(_cBlocoB13)
+			_BlocoB13()
+		Else
+			_BlocoB14()
+		Endif
+	Endif
+	
+	// Sefaz Bloco C
+	_BlocoC()
+	
+	// Sefaz Bloco E
+	_BlocoE()
+	
+	// Sefaz Bloco G
+	If len(_aBlocoG) > 0
+		_BlocoG()
+	Endif
+	
+	// Sefaz Itens - Blocos do H ate U
+	_Itens()
+	
+	// Sefaz Bloco W - Totais
+	_BlocoW()
+	
+	// Sefaz Bloco X - Transporte
+	_BlocoX()
+	
+	// Sefaz Bloco Y - Cobranca
+	If len(_aBlocoY07) > 0
+		_BlocoY()
+	Endif
+	
+	// Sefaz Bloco Z - Informacoes Adicionais
+	If !empty(cMensCli) .or. !empty(cMensFis)
+		_BlocoZ()
+	Endif
+	
+	If !Empty(_cMensSefaz)
+		alert ("SEFAZ - "+_cMensSefaz+_CRLF+"ARQUIVO NÃO GERADO! NOTA FISCAL--> "+SF2->F2_DOC)
+	Else
+		NS34_02(_cNFisc)
+	Endif
+	
+	If cTipoNF == 1
+		SF1->(dbSkip())
+	Else
+		SF2->(dbSkip())
+	EndIf
+	
+EndDo
+
+
+
+Return
+
+
+
+
+Static Function NS34_02(_cNFisc)
+
+_cNomArq    := "NFE_"+_cNFisc+".TXT"
+_cArquivo   := fCreate("\SPED\"+_cNomArq)
+_cSefaz		:= ""
+
+For _i:=1 to len(_aSefaz)
+	_cSefaz += _aSefaz[_i]
+	If !empty(_aSefaz[_i])
+		_cSefaz += _CRLF
+	Endif
+Next _i
+
+If _cArquivo == -1
+	MsgAlert("O arquivo de nome sped.txt nao pode ser executado! Verifique os parametros.","Atencao!")
+	Return()
+Endif
+
+If fWrite(_cArquivo,_cSefaz,Len(_cSefaz)) != Len(_cSefaz)
+	Alert("Ocorreu um erro na gravacao do arquivo!")
+Endif
+
+fClose(_cArquivo)
+
+CPYS2T("\SPED\"+_cNomArq,"C:\SPED",.T.)
+
+Return()
+
+
+Static Function _BlocoAB()
+
+_cBlocoB := ""
+
+// Cabecalho e Bloco A
+aadd(_aSefaz,"NOTAFISCAL|1") // Cabecalho
+aadd(_aSefaz,"A|1.10|NFe")   // Bloco A
+
+_cBlocoB := "B"							// Bloco B
+_cBlocoB += "|"+_aBlocoB[1]				// cU	F
+_cBlocoB += "|"							// cNF
+_cBlocoB += "|"+_aBlocoB[8]				// natOp
+_cBlocoB += "|"+_aBlocoB[2]				// CondPag
+_cBlocoB += "|55"						// mod
+_cBlocoB += "|"+cSerie					// serie
+_cBlocoB += "|"+_aBlocoB[3]				// cNF
+_cBlocoB += "|"+_aBlocoB[4]				// dEmi
+_cBlocoB += "|"+_aBlocoB[5]				// dSaiEnt
+if mv_par04 == 1 //entrada
+	_cBlocoB += "|0"						// tpNF 0 - entrada / 1 - saída
+else
+	_cBlocoB += "|1"						// tpNF 0 - entrada / 1 - saída
+endif
+_cBlocoB += "|"+_aBlocoB[6]				// cMunFG
+_cBlocoB += "|1"						// tpImp
+_cBlocoB += "|1"						// tpEmis
+_cBlocoB += "|"							// cDV
+_cBlocoB += "|1"						// tpAmb     ///////// MUDAR AMBIENTE
+_cBlocoB += "|"+_aBlocoB[7]				// finNFe
+_cBlocoB += "|3"						// procEmi
+//	_cBlocoB += "|TESTE 1.3.2"				// verProc
+_cBlocoB += "|1.4.1"	     			// verProc
+
+
+aadd(_aSefaz,_cBlocoB)
+
+Return()
+
+
+Static Function _BlocoB13()
+
+aadd(_aSefaz,"B13|"+alltrim(_BlocoB13))
+
+Return()
+
+
+Static Function _BlocoB14()
+
+//Bloco B14
+aadd(_aSefaz,"B14|"+_cUF+"|"+_cEmissao+"|"+_cCNPJ+"|"+_cMod+"|"+_cSerie+"|"+_cNF)
+
+Return()
+
+
+Static Function _BlocoC()
+
+_cBlocoC05 := ""
+
+//Bloco C
+aadd(_aSefaz,"C|"+alltrim(SM0->M0_NOMECOM)+"|"+alltrim(SM0->M0_NOME)+"|"+alltrim(SM0->M0_INSC)+"|||")
+
+//Bloco C02
+aadd(_aSefaz,"C02|"+SM0->M0_CGC)
+
+//Bloco C05
+_cBlocoC05 := "C05"
+_cBlocoC05 += "|"+alltrim(substr(SM0->M0_ENDENT,1,at(",",SM0->M0_ENDENT)-1))		// xLgr
+_cBlocoC05 += "|"+alltrim(substr(SM0->M0_ENDENT,at(",",SM0->M0_ENDENT)+1,10))   	// nro
+_cBlocoC05 += "|"																	// xCpl
+_cBlocoC05 += "|"+alltrim(SM0->M0_BAIRENT)											// xBairro
+_cBlocoC05 += "|"+alltrim(SM0->M0_CODMUN)		   									// cMun
+_cBlocoC05 += "|"																	// xMun
+_cBlocoC05 += "|"+alltrim(SM0->M0_ESTENT)											// UF
+_cBlocoC05 += "|"+alltrim(SM0->M0_CEPENT)											// CEP
+_cBlocoC05 += "|1058" 																// cPais
+_cBlocoC05 += "|BRASIL" 															// xPais
+_cBlocoC05 += "|"+SM0->M0_TEL //"|1141764010" 														// fone
+
+aadd(_aSefaz,_cBlocoC05)
+
+Return()
+
+
+Static Function _BlocoG()
+
+_cBlocoG  := ""
+_cBlocoG3 := IIF(ValType(_aBlocoG[3])=="N",alltrim(str(_aBlocoG[3])),alltrim(_aBlocoG[3]))
+
+//Bloco G
+_cBlocoG := "G"
+_cBlocoG += "|"+alltrim(_aBlocoG[1])   			// CNPJ
+_cBlocoG += "|"+alltrim(_aBlocoG[2])           // xLgr
+_cBlocoG += "|"+alltrim(_cBlocoG3)				// nro
+_cBlocoG += "|"+alltrim(_aBlocoG[4])			// xCpl
+_cBlocoG += "|"+alltrim(_aBlocoG[5])			// xBairro
+_cBlocoG += "|"+alltrim(_aBlocoG[6])			// cMun
+_cBlocoG += "|"+alltrim(_aBlocoG[7])			// xMun
+_cBlocoG += "|"+alltrim(_aBlocoG[8])			// UF
+
+aadd(_aSefaz,_cBlocoG)
+
+Return()
+
+Static Function _BlocoE()
+
+_cBlocoE05 := ""
+
+IF MV_PAR04 == 2 // SAÍDA
+	If SF2->F2_TIPO $ "D$B"
+		
+		dbSelectArea("SA2")                     && Cadastro de Fornecedores
+		dbSetOrder(1)
+		dbSeek(xFilial()+SF2->F2_CLIENTE+SF2->F2_LOJA)
+		
+		//Bloco E
+		aadd(_aSefaz,"E|"+alltrim(SA2->A2_NOME)+"|"+alltrim(VldIE(SA2->A2_INSCR,lContr))+"|")
+		
+		//Bloco E02
+		aadd(_aSefaz,"E02|"+alltrim(SA2->A2_CGC))
+		
+		//Bloco E05
+		_cBlocoE05 := "E05"
+		_cBlocoE05 += "|"+alltrim(FisGetEnd(SA2->A2_END)[1])											// xLgr
+		_cBlocoE05 += "|"+alltrim(IIF(FisGetEnd(SA2->A2_END)[2]<>0,str(FisGetEnd(SA2->A2_END)[2]),"SN"))	// nro
+		_cBlocoE05 += "|"+""
+		_cBlocoE05 += "|"+alltrim(SA2->A2_BAIRRO)														// xBairro
+		If SA2->A2_EST == "EX"		
+			_cBlocoE05 += "|"+"9999999"	// cMun
+		Else	
+			_cBlocoE05 += "|"+Substr(SM0->M0_CODMUN,1,2)+alltrim(SA2->A2_COD_MUN)	// cMun
+			_cBlocoE05 += "|"																				// xMun			
+		Endif
+		_cBlocoE05 += "|"																				// xMun
+		_cBlocoE05 += "|"+alltrim(SA2->A2_EST)															// UF
+		_cBlocoE05 += "|"+alltrim(SA2->A2_CEP)															// CEP
+		
+		If SA2->A2_EST == "EX"		
+			_cPais  := IIF(Empty(SA2->A2_PAIS),"1589","")
+			_cBlocoE05 += "|"+_cPais
+			_cBlocoE05 += "|CHILE"																				// xPais
+		Else
+			_cBlocoE05 += "|"+_cPais
+			_cBlocoE05 += "|"																				// xPais
+		Endif
+
+		If !empty(SA2->A2_DDD) .and. !empty(SA2->A2_TEL)
+			_cBlocoE05 += "|"+_fTransform(FisGetTel(SA2->A2_DDD+SA2->A2_TEL)[3],10,0)					// fone
+		Elseif !empty(SA2->A2_TEL)
+			_cBlocoE05 += "|"+_fTransform(FisGetTel("11"+SA2->A2_TEL)[3],10,0)							// fone
+		Endif
+		
+		aadd(_aSefaz,_cBlocoE05)
+		
+		// Consistencias
+		If Empty(SA2->A2_COD_MUN)
+			_cMensSefaz := ("A Cidade do Fornecedor não está preenchida!" + _CRLF +;
+			"Entre em contato com o Depto de Vendas")
+		Endif
+		
+	Else
+		
+		dbSelectArea("SA1")                     && Cadastro de Clientes
+		dbSetOrder(1)
+		dbSeek(xFilial()+SF2->F2_CLIENTE+SF2->F2_LOJA)
+		
+		//Linha E
+		aadd(_aSefaz,"E|"+alltrim(SA1->A1_NOME)+"|"+alltrim(VldIE(SA1->A1_INSCR,(SA1->(FIELDPOS("A1_CONTRIB"))>0,SA1->A1_CONTRIB<>"2",.T.)))+"|"+alltrim(SA1->A1_SUFRAMA))
+		
+		//Linha E02
+		aadd(_aSefaz,"E02|"+alltrim(SA1->A1_CGC))
+		
+		//Linha E05
+		_cBlocoE05 := "E05"
+		_cBlocoE05 += "|"+alltrim(FisGetEnd(SA1->A1_END)[1])											// xLgr
+		_cBlocoE05 += "|"+alltrim(IIF(FisGetEnd(SA1->A1_END)[2]<>0,str(FisGetEnd(SA1->A1_END)[2]),"SN"))	// nro
+		_cBlocoE05 += "|"+""
+		_cBlocoE05 += "|"+alltrim(SA1->A1_BAIRRO)														// xBairro
+		_cBlocoE05 += "|"+Substr(SM0->M0_CODMUN,1,2)+alltrim(SA1->A1_COD_MUN) // cMun
+		_cBlocoE05 += "|"																				// xMun
+		_cBlocoE05 += "|"+alltrim(SA1->A1_EST)															// UF
+		_cBlocoE05 += "|"+alltrim(SA1->A1_CEP)															// CEP
+		_cBlocoE05 += "|1058"																			// cPais
+		_cBlocoE05 += "|"																				// xPais
+		If !empty(SA1->A1_DDD) .and. !empty(SA1->A1_TEL)
+			_cBlocoE05 += "|"+_fTransform(FisGetTel(SA1->A1_DDD+SA1->A1_TEL)[3],10,0)					// fone
+		Elseif !empty(SA1->A1_TEL)
+			_cBlocoE05 += "|"+_fTransform(FisGetTel("11"+SA1->A1_TEL)[3],10,0)							// fone
+		Endif
+		
+		aadd(_aSefaz,_cBlocoE05)
+		
+		// Consistencias
+		If Empty(SA1->A1_COD_MUN)
+			_cMensSefaz := ("A Cidade do Cliente não está preenchida!" + _CRLF +;
+			"Entre em contato com o Depto de Vendas")
+		Endif
+		
+	Endif
+ELSE
+	If SF1->F1_TIPO $ "D$B"
+		
+		dbSelectArea("SA1")                     && Cadastro de CLIENTES
+		dbSetOrder(1)
+		dbSeek(xFilial()+SF1->F1_FORNECE+SF1->F1_LOJA)
+		
+		//Bloco E
+		aadd(_aSefaz,"E|"+alltrim(SA1->A1_NOME)+"|"+alltrim(VldIE(SA1->A1_INSCR,lContr))+"|")
+		
+		//Bloco E02
+		aadd(_aSefaz,"E02|"+alltrim(SA1->A1_CGC))
+		
+		//Bloco E05
+		_cBlocoE05 := "E05"
+		_cBlocoE05 += "|"+alltrim(FisGetEnd(SA1->A1_END)[1])											// xLgr
+		_cBlocoE05 += "|"+alltrim(IIF(FisGetEnd(SA1->A1_END)[2]<>0,str(FisGetEnd(SA1->A1_END)[2]),"SN"))	// nro
+		_cBlocoE05 += "|"+"" //alltrim(IIF(SA2->(FieldPos("A2_COMPLEM")) > 0 .And. !Empty(SA2->A2_COMPLEM),SA2->A2_COMPLEM,FisGetEnd(SA2->A2_END)[4]))	// xCpl
+		_cBlocoE05 += "|"+alltrim(SA1->A1_BAIRRO)														// xBairro
+		_cBlocoE05 += "|"+Substr(SM0->M0_CODMUN,1,2)+alltrim(SA1->A1_COD_MUN)	// cMun
+		_cBlocoE05 += "|"																				// xMun
+		_cBlocoE05 += "|"+alltrim(SA1->A1_EST)															// UF
+		_cBlocoE05 += "|"+alltrim(SA1->A1_CEP)															// CEP
+		_cBlocoE05 += "|1058"																			// cPais
+		_cBlocoE05 += "|"																				// xPais
+		If !empty(SA1->A1_DDD) .and. !empty(SA1->A1_TEL)
+			_cBlocoE05 += "|"+_fTransform(FisGetTel(SA1->A1_DDD+SA1->A1_TEL)[3],10,0)					// fone
+		Elseif !empty(SA1->A1_TEL)
+			_cBlocoE05 += "|"+_fTransform(FisGetTel("11"+SA1->A1_TEL)[3],10,0)							// fone
+		Endif
+		
+		aadd(_aSefaz,_cBlocoE05)
+		
+		// Consistencias
+		If Empty(SA1->A1_COD_MUN)
+			_cMensSefaz := ("A Cidade do Fornecedor não está preenchida!" + _CRLF +;
+			"Entre em contato com o Depto de Vendas")
+		Endif
+	Else
+		
+		dbSelectArea("SA2")                     && Cadastro de FORNECEDORES
+		dbSetOrder(1)
+		dbSeek(xFilial()+SF1->F1_FORNECE+SF1->F1_LOJA)
+		
+		//Linha E
+		aadd(_aSefaz,"E|"+alltrim(SA2->A2_NOME)+"|"+alltrim(VldIE(SA2->A2_INSCR,lContr))+"|")
+		
+		//Linha E02
+		aadd(_aSefaz,"E02|"+alltrim(SA2->A2_CGC))
+		
+		//Linha E05
+		_cBlocoE05 := "E05"
+		_cBlocoE05 += "|"+alltrim(FisGetEnd(SA2->A2_END)[1])											// xLgr
+		_cBlocoE05 += "|"+alltrim(IIF(FisGetEnd(SA2->A2_END)[2]<>0,str(FisGetEnd(SA2->A2_END)[2]),"SN"))	// nro
+		_cBlocoE05 += "|"+"" //alltrim(IIF(SA1->(FieldPos("A1_COMPLEM")) > 0 .And. !Empty(SA1->A1_COMPLEM),SA1->A1_COMPLEM,FisGetEnd(SA1->A1_END)[4]))	// xCpl
+		_cBlocoE05 += "|"+alltrim(SA2->A2_BAIRRO)														// xBairro
+		If SA2->A2_EST == "EX"		
+			_cBlocoE05 += "|9999999"	// cMun
+			_cBlocoE05 += "|EXTERIOR"												// xMun
+		Else	
+			_cBlocoE05 += "|"+Substr(SM0->M0_CODMUN,1,2)+alltrim(SA2->A2_COD_MUN)	// cMun
+			_cBlocoE05 += "|"																				// xMun			
+		Endif
+		_cBlocoE05 += "|"+alltrim(SA2->A2_EST)															// UF
+		_cBlocoE05 += "|"+alltrim(SA2->A2_CEP)															// CEP
+		                            
+		If SA2->A2_EST == "EX"		
+			_cPais  := IIF(Empty(SA2->A2_PAIS),"1589","")
+			_cBlocoE05 += "|"+_cPais
+			_cBlocoE05 += "|CHILE"																				// xPais
+		Else
+			_cBlocoE05 += "|"+_cPais
+			_cBlocoE05 += "|"																				// xPais
+		Endif
+		
+		If !empty(SA2->A2_DDD) .and. !empty(SA2->A2_TEL)
+			_cBlocoE05 += "|"+_fTransform(FisGetTel(SA2->A2_DDD+SA2->A2_TEL)[3],10,0)					// fone
+		Elseif !empty(SA1->A1_TEL)
+			_cBlocoE05 += "|"+_fTransform(FisGetTel("11"+SA2->A2_TEL)[3],10,0)							// fone
+		Endif
+		
+		aadd(_aSefaz,_cBlocoE05)
+		
+		// Consistencias
+		If Empty(SA2->A2_COD_MUN)
+			_cMensSefaz := ("A Cidade do Cliente não está preenchida!" + _CRLF +;
+			"Entre em contato com o Depto de Vendas")
+		Endif
+		
+	Endif
+	
+ENDIF
+Return()
+
+
+Static Function _Itens()
+
+For _i :=1 TO len(_aBlocoH)
+	
+	//Bloco H
+	aadd(_aSefaz,_aBlocoH[_i])
+	
+	//Bloco I
+	aadd(_aSefaz,_aBlocoI[_i])
+	
+	//Bloco M
+	aadd(_aSefaz,"M")
+	
+	//Bloco N - ICMS
+	aadd(_aSefaz,"N")
+	
+	//Bloco NXX - Pode ser De N02 ate N10
+	aadd(_aSefaz,_aBlocoNXX[_i])
+	
+	//Bloco O - IPI
+	If !empty(_aBlocoO[_i])
+		aadd(_aSefaz,_aBlocoO[_i])
+	Endif
+	
+	//Bloco O07 ou O08
+	If !empty(_aBlocoOXX[_i])
+		aadd(_aSefaz,_aBlocoOXX[_i])
+	Endif
+	
+	//Bloco O10 e O11
+	If !empty(_aBlocoO10[_i])
+		aadd(_aSefaz,_aBlocoO10[_i])
+	Endif
+	
+	//Bloco Q - PIS
+	aadd(_aSefaz,"Q")
+	
+	//Bloco QXX - Pode ser de Q02 ate Q10
+	aadd(_aSefaz,_aBlocoQXX[_i])
+	
+	//Bloco S - Cofins
+	aadd(_aSefaz,"S")
+	
+	//Bloco SXX - Pode ser de Q02 ate S09
+	aadd(_aSefaz,_aBlocoSXX[_i])
+	
+Next _i
+
+Return()
+
+
+Static Function _BlocoW()
+
+_cBlocoW02 := ""
+_cBlocoW23 := ""
+
+// Bloco W02 - Referentes ao ICMS
+_cBlocoW02 := "W02"
+_cBlocoW02 += "|"+_aBlocoW02[1]			// vBC
+_cBlocoW02 += "|"+_aBlocoW02[2]			// vICMS
+_cBlocoW02 += "|"+_aBlocoW02[3]			// vBCST
+_cBlocoW02 += "|"+_aBlocoW02[4]			// vST
+_cBlocoW02 += "|"+_aBlocoW02[5]			// vProd
+_cBlocoW02 += "|"+_aBlocoW02[6]			// vFrete
+_cBlocoW02 += "|"+_aBlocoW02[7]			// vSeg
+_cBlocoW02 += "|"+_aBlocoW02[8]			// vDesc
+_cBlocoW02 += "|"+_aBlocoW02[9]			// vII
+_cBlocoW02 += "|"+_aBlocoW02[10]		// vIPI
+_cBlocoW02 += "|"+_aBlocoW02[11]		// vPIS
+_cBlocoW02 += "|"+_aBlocoW02[12]		// vCOFINS
+_cBlocoW02 += "|"+_aBlocoW02[13]		// vOutro
+_cBlocoW02 += "|"+_aBlocoW02[14]		// vNF
+
+// Bloco W23 - Impostos de Retencao
+_cBlocoW23 := "W23"
+_cBlocoW23 += "|"+_aBlocoW23[1]			// vRetPIS
+_cBlocoW23 += "|"+_aBlocoW23[2]			// vRetCOFINS
+_cBlocoW23 += "|"+_aBlocoW23[3]			// vRetCSLL
+_cBlocoW23 += "|"+_aBlocoW23[4]			// vBCIRRF
+_cBlocoW23 += "|"+_aBlocoW23[5]			// vIRRF
+_cBlocoW23 += "|"+_aBlocoW23[6]			// vBCRetPrev
+_cBlocoW23 += "|"+_aBlocoW23[7]			// vBCPrev
+
+//	aadd(_aSefaz,"W")
+If _cBlocoW02 <> "W02||||||||||||||"
+	aadd(_aSefaz,"W")
+	aadd(_aSefaz,_cBlocoW02)
+Endif
+If _cBlocoW23 <> "W23|||||||"
+	aadd(_aSefaz,"W")
+	aadd(_aSefaz,_cBlocoW23)
+Endif
+
+Return()
+
+
+Static Function _BlocoX()
+
+_cBlocoX03 	:= ""
+_cBlocoX04 	:= ""
+_cBlocoX05 	:= ""
+_cBlocoX18 	:= ""
+_cBlocoX22 	:= ""
+_cBlocoX26 	:= ""
+
+_cFrete		:= iif(!empty(alltrim(xxTpFrete)),alltrim(str(val(xxTpFrete) - 1)),"0")
+
+// Sefaz Bloco X - Transporte
+aadd(_aSefaz,"X|"+_cFrete)			// X|modFrete
+
+If len(_aBlocoX03) > 0 			// Cod da Transportadora
+	
+	// Bloco X03
+	_cBlocoX03 := "X03"
+	_cBlocoX03 += "|"+_aBlocoX03[2]			// xNome
+	_cBlocoX03 += "|"+_aBlocoX03[3]			// IE
+	_cBlocoX03 += "|"+_aBlocoX03[4]			// xEnder
+	_cBlocoX03 += "|"+_aBlocoX03[6]			// UF
+	_cBlocoX03 += "|"+_aBlocoX03[5]			// xMun
+	
+	// Bloco X04 ou X05
+	If Len(_aBlocoX03[1])==14
+		_cBlocoX04 := "X04"
+		_cBlocoX04 += "|"+_aBlocoX03[1]		// CNPJ
+	ElseIf Len(_aBlocoX03[1])<>0
+		_cBlocoX05 := "X05"
+		_cBlocoX05 += "|"+_aBlocoX03[1]		// CPF
+	EndIf
+	
+	// Caso nao tenha CNPJ ou CPF da Transportadora
+	If empty(_cBlocoX04) .and. empty(_cBlocoX05)
+		_cBlocoX04 := "X04|"
+	Endif
+Endif
+
+// Sefaz Bloco X18 - Veiculos
+If len(_aBlocoX18) > 0
+	_cBlocoX18 := "X18"
+	_cBlocoX18 += "|"+_aBlocoX18[1]			// placa
+	_cBlocoX18 += "|"+_aBlocoX18[2]			// UF
+	_cBlocoX18 += "|"+_aBlocoX18[3]			// RNTC
+Endif
+
+// Sefaz Bloco X22 - Volumes
+If len(_aBlocoX22) > 0
+	_cBlocoX22 := "X22"
+	_cBlocoX22 += "|"+_aBlocoX22[1]			// placa
+	_cBlocoX22 += "|"+_aBlocoX22[2]			// UF
+	_cBlocoX22 += "|"+_aBlocoX22[3]			// RNTC
+Endif
+
+aadd(_aSefaz,_cBlocoX03)
+aadd(_aSefaz,_cBlocoX04)
+aadd(_aSefaz,_cBlocoX05)
+aadd(_aSefaz,_cBlocoX18)
+aadd(_aSefaz,_cBlocoX22)
+
+//Else
+//	alert ("Transportadora não cadastrada")
+//Endif
+
+// Sefaz Bloco X26 - Volumes
+If len(_aBlocoX26) > 0
+	
+	For _i := 1 to len(_aBlocoX26)
+		
+		_cBlocoX26 := "X26"
+		_cBlocoX26 += "|"+_fTransform(_aBlocoX26[_i,2],15,0)	// qVol
+		_cBlocoX26 += "|"+alltrim(_aBlocoX26[_i,1])			// esp
+		_cBlocoX26 += "|"										// marca
+		_cBlocoX26 += "|"										// nVol
+		_cBlocoX26 += "|"+_fTransform(_aBlocoX26[_i,3],15,3)	// pesoL
+		_cBlocoX26 += "|"+_fTransform(_aBlocoX26[_i,4],15,3)	// pesoB
+		
+		aadd(_aSefaz,_cBlocoX26)
+		
+	Next _i
+Endif
+
+Return()
+
+
+
+Static Function _BlocoY()
+
+_cBlocoY07 	:= ""
+
+// Sefaz Bloco Y - Cobranca
+aadd(_aSefaz,"Y")
+
+// Sefaz Bloco Y07 - Duplicatas
+For _i := 1 to len(_aBlocoY07)
+	
+	_cBlocoY07 := "Y07"
+	_cBlocoY07 += "|"+alltrim(_aBlocoY07[_i,1])			// nDup
+	_cBlocoY07 += "|"+alltrim(_aBlocoY07[_i,2])			// dVenc
+	_cBlocoY07 += "|"+_fTransform(_aBlocoY07[_i,3],15,2)	// vDup
+	
+	aadd(_aSefaz,_cBlocoY07)
+	
+Next _i
+
+Return()
+
+
+
+Static Function _BlocoZ()
+
+//Bloco Z - Informacoes Adicionais
+aadd(_aSefaz,"Z|"+cMensFis+"|"+cMensCli)
+
+Return()
+
+
+
+Static Function _BlocoZB()
+
+_cBlocoZB 	:= ""
+
+// Sefaz Bloco ZB - Informacoes adicionais de compras
+_cBlocoZB := "ZB"
+_cBlocoZB += "|"+alltrim(_aBlocoZB[1])			// xNEmp
+_cBlocoZB += "|"+alltrim(_aBlocoZB[2])			// xPed
+_cBlocoZB += "|"+alltrim(_aBlocoZB[3])			// xCont
+
+aadd(_aSefaz,_cBlocoZB)
+
+Return()
+
+
+
+Static Function _DelString(_frase,_string)
+
+While AT(_string,_frase) <> 0
+	
+	_frase := STUFF(_frase,AT(_string,_frase),1,"")
+	
+EndDo
+
+Return(_frase)
+
+
+
+Static Function _fTransform(_nNumero,_nInt,_nDec)
+
+//alltrim(Transform(_nNumero,"@R "+Replicate("9",_nInt)))
+
+_cNumero := ""
+
+If _nDec > 0
+	_cNumero := IIF(_nNumero=0,"",alltrim(Transform(_nNumero,Replicate("9",_nInt)+"."+Replicate("9",_nDec))))
+Else
+	_cNumero := IIF(_nNumero=0,"",alltrim(Transform(_nNumero,Replicate("9",_nInt))))
+Endif
+
+Return(_cNumero)
+
+
+Static Function _fTribICMS(_cTipo)
+
+_cTribICMS := ""
+
+Do Case
+	Case _cTipo == "00"
+		_cTribICMS := "N02"
+	Case _cTipo == "10"
+		_cTribICMS := "N03"
+	Case _cTipo == "20"
+		_cTribICMS := "N04"
+	Case _cTipo $ "40#41#50"
+		_cTribICMS := "N06"
+	Case _cTipo == "51"
+		_cTribICMS := "N07"
+	Case _cTipo == "70"
+		_cTribICMS := "N09"
+	Case _cTipo == "90"
+		_cTribICMS := "N10"
+	OtherWise
+		_cMensSefaz := ("Tipo de Tributacao do ICMS não está preenchido corretamente!")
+EndCase
+
+Return(_cTribICMS)
+
+
+Static Function Inverte(uCpo)
+
+Local cCpo	:= uCpo
+Local cRet	:= ""
+Local cByte	:= ""
+Local nAsc	:= 0
+Local nI		:= 0
+Local aChar	:= {}
+Local nDiv	:= 0
+
+
+Aadd(aChar,	{"0", "9"})
+Aadd(aChar,	{"1", "8"})
+Aadd(aChar,	{"2", "7"})
+Aadd(aChar,	{"3", "6"})
+Aadd(aChar,	{"4", "5"})
+Aadd(aChar,	{"5", "4"})
+Aadd(aChar,	{"6", "3"})
+Aadd(aChar,	{"7", "2"})
+Aadd(aChar,	{"8", "1"})
+Aadd(aChar,	{"9", "0"})
+
+For nI:= 1 to Len(cCpo)
+	cByte := Upper(Subs(cCpo,nI,1))
+	If (Asc(cByte) >= 48 .And. Asc(cByte) <= 57) .Or. ;	// 0 a 9
+		(Asc(cByte) >= 65 .And. Asc(cByte) <= 90) .Or. ;	// A a Z
+		Empty(cByte)	// " "
+		nAsc	:= Ascan(aChar,{|x| x[1] == cByte})
+		If nAsc > 0
+			cRet := cRet + aChar[nAsc,2]	// Funcao Inverte e chamada pelo rdmake de conversao
+		EndIf
+	Else
+		// Caracteres <> letras e numeros: mantem o caracter
+		cRet := cRet + cByte
+	EndIf
+Next
+Return(cRet)
+
+
+Static Function VldIE(cInsc,lContr)
+
+Local cRet	:=	""
+Local nI	:=	1
+For nI:=1 To Len(cInsc)
+	If Isdigit(Subs(cInsc,nI,1)) .Or. IsAlpha(Subs(cInsc,nI,1))
+		cRet+=Subs(cInsc,nI,1)
+	Endif
+Next
+cRet := AllTrim(cRet)
+If "ISENT"$Upper(cRet)
+	cRet := ""
+EndIf
+If !(lContr) .And. !Empty(cRet)
+	cRet := ""
+EndIf
+
+Return(cRet)
+
+
+Static Function AtuSX1()
+
+cPerg := "PA0208"
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                         ³
+//³ mv_par01        //  Da Nota Fiscal                           ³
+//³ mv_par02        //  Ate a Nota Fiscal                        ³
+//³ mv_par03        //  Serie                                    ³
+//³ mv_par04        //  Nota Fiscal de Entrada/Saida             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+//    	   Grupo/Ordem/Pergunta               /perg_spa /perg_eng/Variavel/Tipo/Tamanho/Decimal/Presel/GSC/Valid/Var01           /Def01    /defspa1/defeng1/Cnt01/Var02/Def02/Defspa2/defeng2/Cnt02/Var03/Def03/defspa3/defeng3/Cnt03/Var04/Def04/defspa4/defeng4/Cnt04/Var05/Def05/deefspa5/defeng5/Cnt05/F3
+U_CRIASX1(cPerg,"01","Nota Fiscal De        ?",""       ,""      ,"mv_ch1","C" ,09     ,0      ,0     ,"G",""        ,"MV_PAR01",""        ,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""   ,"")
+U_CRIASX1(cPerg,"02","Nota Fiscal Ate       ?",""       ,""      ,"mv_ch2","C" ,09     ,0      ,0     ,"G",""        ,"MV_PAR02",""        ,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""   ,"")
+U_CRIASX1(cPerg,"03","Serie                 ?",""       ,""      ,"mv_ch3","C" ,03     ,0      ,0     ,"G",""        ,"MV_PAR03",""        ,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""   ,"")
+U_CRIASX1(cPerg,"04","Entrada / Saida       ?",""       ,""      ,"mv_ch4","N" ,01     ,0      ,0     ,"C",""        ,"MV_PAR04","Entrada" ,""     ,""     ,""   ,""   ,"Saida",""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""   ,"")
+
+Return (Nil)
