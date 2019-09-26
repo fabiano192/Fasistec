@@ -7,9 +7,9 @@
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 ±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
 ±±³Fun‡…o    ³ F290FIL  ³ Autor ³ Alexandro da Silva    ³ Data ³ 18/08/10 ³±±
-±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±ðÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
 ±±³Descri‡…o ³ Ponto de Entrada no Financeiro                             ³±±
-±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±ðÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
 ±±³ Uso      ³ Faturas a Pagar                                            ³±±
 ±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
@@ -189,7 +189,7 @@ User Function F050ALT()
 	_aAliOri := GetArea()
 	_aAliSE2 := SE2->(GetArea())
 
-	If Alltrim(FunName()) $ "MATA952/MATA953" // APURAÇÃO DO IPI E APURAÇAÕ DO ICMS
+	If Alltrim(FunName()) $ "MATA952/MATA953" // APURAÇðO DO IPI E APURAÇAÕ DO ICMS
 
 		SE2->(RecLock("SE2",.F.))
 		SE2->E2_DATALIB := dDataBase
@@ -282,9 +282,9 @@ Local _cTipo  := PARAMIXB
 
 _lRet := .T.
 
-If _cTipo = "PA"
+	If _cTipo = "PA"
 _lRet := .F.
-Endif
+	Endif
 
 RestArea(_aAliOri)
 
@@ -297,11 +297,11 @@ User Function FIN420_1()  // COMENTADO EM 09/05/17 estava limpando indevidamente
 _aAliOri := GetArea()
 _aAliSE2 := SE2->(GetArea())
 
-If !Empty(SE2->E2_IDCNAB)
+	If !Empty(SE2->E2_IDCNAB)
 SE2->(RecLock("SE2",.F.))
 SE2->E2_IDCNAB := ""
 SE2->(MsUnlock())
-Endif
+	Endif
 
 RestArea(_aAliSE2)
 RestArea(_aAliOri)
@@ -422,7 +422,7 @@ User Function FA070BCO()
 				If SA6->A6_YEMP <> "99"
 					If SA6->A6_YEMP <> cFilAnt
 						_lRet := .F.
-						MsgAlert("Banco Selecioando Não Pertence a Filial Corrente!!")
+						MsgAlert("Banco Selecioando Nðo Pertence a Filial Corrente!!")
 					Endif
 				Endif
 			Endif
@@ -452,7 +452,7 @@ User Function FA080BCO()
 				If SA6->A6_YEMP <> "99"
 					If SA6->A6_YEMP <> cFilAnt
 						_lRet := .F.
-						MsgAlert("Banco Selecioando Não Pertence a Filial Corrente!!")
+						MsgAlert("Banco Selecioando Nðo Pertence a Filial Corrente!!")
 					Endif
 				Endif
 			Endif
@@ -509,7 +509,7 @@ User Function F420FIL()
 	ZEA->(dbCloseArea())
 
 	If !Empty(cbordNAO)
-		Alert("Liberação incompleta para o Bordero ["+cbordNAO+"]")
+		Alert("Liberaçðo incompleta para o Bordero ["+cbordNAO+"]")
 	Endif
 
 	cfiltro:= "E2_FILIAL=='XX'"
@@ -638,7 +638,7 @@ User Function FA100TRF()
 			If SA6->A6_YEMP <> "99"
 				If SA6->A6_YEMP <> cFilAnt
 					_lRet := .F.
-					MsgAlert("Banco Origem Não Pertence a Filial Corrente. Favor Refazer a Operação!!")
+					MsgAlert("Banco Origem Nðo Pertence a Filial Corrente. Favor Refazer a Operaçðo!!")
 				Endif
 			Endif
 		Endif
@@ -649,7 +649,7 @@ User Function FA100TRF()
 				If SA6->A6_YEMP <> "99"
 					If SA6->A6_YEMP <> cFilAnt
 						_lRet := .F.
-						MsgAlert("Banco Destino Não Pertence a Filial Corrente. Favor Refazer a Operação!!")
+						MsgAlert("Banco Destino Nðo Pertence a Filial Corrente. Favor Refazer a Operaçðo!!")
 					Endif
 				Endif
 			Endif
@@ -679,13 +679,13 @@ cQuery += " SE2.E2_EMISSAO<='"+Dtos(mv_par02)+"' AND "
 cQuery += " SE2.E2_VENCREA>='"+Dtos(mv_par03)+"' AND "
 cQuery += " SE2.E2_VENCREA<='"+Dtos(mv_par04)+"' AND "
 
-If mv_par05 == 2
+	If mv_par05 == 2
 cQuery +=   "SE2.E2_TIPO NOT IN "+FormatIn(MVPROVIS,";")+" AND "
-EndIf
+	EndIf
 
-If mv_par06 == 2
+	If mv_par06 == 2
 cQuery += " SE2.E2_FATURA IN('"+Space(Len(SE2->E2_FATURA))+"','NOTFAT') AND "
-Endif
+	Endif
 
 cQuery += "SE2.E2_TIPO NOT IN " + FormatIn(MVABATIM,";") +" AND "
 cQuery += "SE2.E2_TIPO NOT IN " + FormatIn(MVRECANT+";"+MV_CRNEG+";"+MV_CPNEG,";")+" AND "
@@ -741,14 +741,14 @@ Static Function VERFIL(nAcao,cAliasFil)
 				Aadd(aTmpFil,{"","",""})
 				nPosAlias := Len(aTmpFil)
 				aTmpFil[nPosAlias,1] := cAliasFil
-				MsgRun("Favor Aguardar.....","Consulta Posição fornecedores" ,{|| aTmpFil[nPosAlias,2] := VERFIL02(aSelFil,cAliasFil,.T.,@cTmpFil)})
+				MsgRun("Favor Aguardar.....","Consulta Posiçðo fornecedores" ,{|| aTmpFil[nPosAlias,2] := VERFIL02(aSelFil,cAliasFil,.T.,@cTmpFil)})
 				aTmpFil[nPosAlias,3] := cTmpFil
 			Endif
 		Endif
 	Else
 		If nAcao == 2
 			If !Empty(aTmpFil)
-				MsgRun("Favor Aguardar.....","Consulta Posição fornecedores" ,{|| AEval(aTmpFil,{|tmpfil| CtbTmpErase(tmpFil[3])})})
+				MsgRun("Favor Aguardar.....","Consulta Posiçðo fornecedores" ,{|| AEval(aTmpFil,{|tmpfil| CtbTmpErase(tmpFil[3])})})
 				nPosAlias := Len(aTmpFil)
 				aTmpFil := {}
 				aSelFil := {}
@@ -901,64 +901,254 @@ Return(Nil)
 
 
 
+User Function ME4_COND()
+
+	Local _aAliOri	:= GetArea()
+	Local _aAliSE4	:= SE4->(GetArea())
+	Local _aAliSD2	:= SD2->(GetArea())
+	Local _aAliSF4	:= SF4->(GetArea())
+	Local _cCond	:= SC5->C5_CONDPAG
+	Local _aCond	:= Array(6)
+	Local _cKey		:= ''
+	Local _oDlg		:= Nil
+	Local _oGroup	:= Nil
+	Local _oTButton	:= Nil
+
+	Private _nTot	:= 0
+	Private _nDep	:= 0
+	Private _nDin	:= 0
+	Private _nCar	:= 0
+	Private _oDep	:= Nil
+	Private _oDin	:= Nil
+	Private _oCar	:= Nil
+
+	If SF2->F2_COND = "000" //.And. Empty(SF2->F2_XNCCRED)
+		SD2->(dbSetOrder(3))
+		IF SD2->(MsSeek(xFilial("SD2")+ SF2->F2_DOC + SF2->F2_SERIE + SF2->F2_CLIENTE + SF2->F2_LOJA))
+
+			_cKey := SD2->D2_FILIAL + SD2->D2_DOC + SD2->D2_SERIE + SD2->D2_CLIENTE + SD2->D2_LOJA
+
+			While !SD2->(EOF()) .And. _cKey == SD2->D2_FILIAL + SD2->D2_DOC + SD2->D2_SERIE + SD2->D2_CLIENTE + SD2->D2_LOJA
+
+				SF4->(dbSetOrder(1))
+				If SF4->(MsSeek(xFilial("SF4")+SD2->D2_TES))
+					If SF4->F4_DUPLIC = 'S'
+						_nTot += SD2->D2_TOTAL + SD2->D2_VALFRE + SD2->D2_ICMSRET
+					Endif
+				Endif
+
+				SD2->(dbSkip())
+			EndDo
+		Endif
+
+		If _nTot > 0
+
+			_nCar := _nTot
+
+			DEFINE MSDIALOG _oDlg TITLE OemToAnsi("Modalidade de Pagamento") FROM 0,0 TO 185,320 OF _oDlg PIXEL Style DS_MODALFRAME
+
+			_oDlg:lEscClose := .F. //Nðo permite fechar a janela pelo botðo "ESC"
+
+			_oGroup := TGroup():New(5,5,90,160,"",_oDlg,CLR_BLUE,,.T.)
+
+			@ 010,010 SAY OemToAnsi("Escolha abaixo o valor de cada modalidade de Pagamento")	SIZE 200, 7 OF _oGroup PIXEL
+
+			@ 025, 010 SAY	OemToAnsi('Cartðo')	SIZE 32, 7 OF _oGroup PIXEL
+			//			@ 025, 040 MSGET _oCar VAR _nCar Picture "@<E 999,999,999.99" Valid (If(_nDin > _nTot,(MsgAlert('Valor digitado maior que a NF!'),_nDin := 0, _nDep := 0),(_nDep := _nTot - _nDin,_oDep:Refresh()))) SIZE 50,10 OF _oGroup PIXEL
+			@ 025, 040 MSGET _oCar VAR _nCar Picture "@<E 999,999,999.99" SIZE 50,10 OF _oGroup PIXEL
+
+			@ 040, 010 SAY	OemToAnsi('Dinheiro')	SIZE 32, 7 OF _oGroup PIXEL
+			//			@ 040, 040 MSGET _oDin VAR _nDin Picture "@<E 999,999,999.99" Valid (If(_nDin > _nTot,(MsgAlert('Valor digitado maior que a NF!'),_nDin := 0, _nDep := 0),(_nDep := _nTot - _nDin,_oDep:Refresh()))) SIZE 50,10 OF _oGroup PIXEL
+			@ 040, 040 MSGET _oDin VAR _nDin Picture "@<E 999,999,999.99" SIZE 50,10 OF _oGroup PIXEL
+
+			@ 055, 010 SAY	OemToAnsi("Depósito")		SIZE 26, 7 OF _oGroup PIXEL
+			//			@ 055, 040 MSGET _oDep VAR _nDep Picture "@<E 999,999,999.99" WHEN .F. 	SIZE 50,10 OF _oGroup PIXEL
+			@ 055, 040 MSGET _oDep VAR _nDep Picture "@<E 999,999,999.99" SIZE 50,10 OF _oGroup PIXEL
+
+			_oTButton	:= TButton():New( 75, 030, "OK"	,_oGroup,{||If(!VldVlr(),MsgAlert('Total digitado difere do valor da NF.'),_oDlg:End())}	, 40,10,,,.F.,.T.,.F.,,.F.,,,.F. )
+
+			ACTIVATE MSDIALOG _oDlg CENTERED
+
+			//			If _nDin > 0 .And. _nDep > 0
+
+			If _nDin > 0
+				ZF4->(dbSetOrder(1))
+				If ZF4->(MsSeek(xFilial("ZF4")+cEmpAnt+cFilAnt + SF2->F2_SERIE + SF2->F2_DOC + SF2->F2_CLIENTE + SF2->F2_LOJA + '1'))
+					ZF4->(RecLock("ZF4",.F.))
+					ZF4->ZF4_TOTAL := _nTot
+					ZF4->ZF4_VALOR := _nDin
+					ZF4->ZF4_INTEGR:= 'N'
+					ZF4->(MsUnLock())
+				Else
+					ZF4->(RecLock("ZF4",.T.))
+					ZF4->ZF4_FILIAL	:= xFilial("ZF4")
+					ZF4->ZF4_MSEMP	:= cEmpAnt
+					ZF4->ZF4_MSFIL	:= cFilAnt
+					ZF4->ZF4_SERIE 	:= SF2->F2_SERIE
+					ZF4->ZF4_DOC 	:= SF2->F2_DOC
+					ZF4->ZF4_CLIENT := SF2->F2_CLIENTE
+					ZF4->ZF4_LOJA 	:= SF2->F2_LOJA
+					ZF4->ZF4_TIPO 	:= '1'
+					ZF4->ZF4_TOTAL 	:= _nTot
+					ZF4->ZF4_VALOR 	:= _nDin
+					ZF4->ZF4_INTEGR	:= 'N'
+					ZF4->(MsUnLock())
+				Endif
+				_cCond := '000'
+			Endif
+
+			If _nDep > 0
+				ZF4->(dbSetOrder(1))
+				If ZF4->(MsSeek(xFilial("ZF4")+cEmpAnt+cFilAnt + SF2->F2_SERIE + SF2->F2_DOC + SF2->F2_CLIENTE + SF2->F2_LOJA + '2'))
+					ZF4->(RecLock("ZF4",.F.))
+					ZF4->ZF4_TOTAL := _nTot
+					ZF4->ZF4_VALOR := _nDep
+					ZF4->ZF4_INTEGR:= 'N'
+					ZF4->(MsUnLock())
+				Else
+					ZF4->(RecLock("ZF4",.T.))
+					ZF4->ZF4_FILIAL	:= xFilial("ZF4")
+					ZF4->ZF4_MSEMP	:= cEmpAnt
+					ZF4->ZF4_MSFIL	:= cFilAnt
+					ZF4->ZF4_SERIE 	:= SF2->F2_SERIE
+					ZF4->ZF4_DOC 	:= SF2->F2_DOC
+					ZF4->ZF4_CLIENT := SF2->F2_CLIENTE
+					ZF4->ZF4_LOJA 	:= SF2->F2_LOJA
+					ZF4->ZF4_TIPO 	:= '2'
+					ZF4->ZF4_TOTAL 	:= _nTot
+					ZF4->ZF4_VALOR 	:= _nDep
+					ZF4->ZF4_INTEGR	:= 'N'
+					ZF4->(MsUnLock())
+				Endif
+
+				If _nDin > 0
+					_cCond := 'BRI'
+				Else
+					_cCond := '000'
+				Endif
+			Endif
+
+			If _nCar > 0
+				ZF4->(dbSetOrder(1))
+				If ZF4->(MsSeek(xFilial("ZF4")+cEmpAnt+cFilAnt + SF2->F2_SERIE + SF2->F2_DOC + SF2->F2_CLIENTE + SF2->F2_LOJA + '3'))
+					ZF4->(RecLock("ZF4",.F.))
+					ZF4->ZF4_TOTAL := _nTot
+					ZF4->ZF4_VALOR := _nCar
+					ZF4->ZF4_INTEGR:= 'N'
+					ZF4->(MsUnLock())
+				Else
+					ZF4->(RecLock("ZF4",.T.))
+					ZF4->ZF4_FILIAL	:= xFilial("ZF4")
+					ZF4->ZF4_MSEMP	:= cEmpAnt
+					ZF4->ZF4_MSFIL	:= cFilAnt
+					ZF4->ZF4_SERIE 	:= SF2->F2_SERIE
+					ZF4->ZF4_DOC 	:= SF2->F2_DOC
+					ZF4->ZF4_CLIENT := SF2->F2_CLIENTE
+					ZF4->ZF4_LOJA 	:= SF2->F2_LOJA
+					ZF4->ZF4_TIPO 	:= '3'
+					ZF4->ZF4_TOTAL 	:= _nTot
+					ZF4->ZF4_VALOR 	:= _nCar
+					ZF4->ZF4_INTEGR	:= 'N'
+					ZF4->(MsUnLock())
+				Endif
+
+				If _nDin > 0 .And. _nDep > 0
+					_cCond := 'BR1'
+				ElseIf _nDin > 0 .Or. _nDep > 0
+					_cCond := 'BRI'
+				Else
+					_cCond := '000'
+				Endif
+			Endif
+
+			SF2->(RecLock("SF2",.F.))
+			SF2->F2_COND := _cCond
+			SF2->(MsUnlock())
+
+			//Endif
+		Endif
+	Endif
+
+	SE4->(dbSetOrder(1))
+	SE4->(dbSeek(xFilial()+_cCond))
+
+	_aCond[1] := SE4->E4_CODIGO
+	_aCond[2] := SE4->E4_COND
+	_aCond[3] := SE4->E4_TIPO
+	_aCond[4] := SE4->E4_DDD
+	_aCond[5] := SE4->E4_IPI
+	_aCond[6] := SE4->E4_SOLID
+
+	RestArea(_aAliSE4)
+	RestArea(_aAliOri)
+
+Return(_aCond)
+
+
+
+Static Function VldVlr()
+
+	Local _lRet := .T.
+
+	If _nDin+_nDep+_nCar <> _nTot
+		_lRet := .F.
+	Endif
+
+Return(_lRet)
+
+
+
 
 User Function M040SE1()
 
 	_aAliOri := GetArea()
 	_aAliSE1 := SE1->(GetArea())
 
-	If Val(SE4->E4_COND) = 0
-		SE1->(RecLock("SE1",.F.))
-		SE1->E1_FORMREC := "00"
-		SE1->(MsUnlock())
-	Endif
+//	If SF2->F2_COND = "BRI"
+	If SF2->F2_COND $ "BRI|BR1|000"
 
-	//MSGINFO("Ponto M040SE1!!")
+		ZF4->(dbSetOrder(1))
+		If ZF4->(MsSeek(xFilial("ZF4")+Alltrim(cEmpAnt)+Alltrim(cFilAnt)+SE1->E1_PREFIXO + SE1->E1_NUM + SE1->E1_CLIENTE + SE1->E1_LOJA))
 
+			_cKey := ZF4->ZF4_FILIAL + ZF4->ZF4_MSEMP + ZF4->ZF4_MSFIL + ZF4->ZF4_SERIE + ZF4->ZF4_DOC + ZF4->ZF4_CLIENT + ZF4->ZF4_LOJA
 
-	If SE1->E1_TIPO = 'NF'
+			While ZF4->(!EOF()) .And. _cKey == ZF4->ZF4_FILIAL + ZF4->ZF4_MSEMP + ZF4->ZF4_MSFIL + ZF4->ZF4_SERIE + ZF4->ZF4_DOC + ZF4->ZF4_CLIENT + ZF4->ZF4_LOJA
 
-		/*
-		O Código será composto de 13 caracteres
-		Filial	= 2
-		Prefixo	= 3
-		Número	= 6
-		Parcela	= 2
-		*/
+				If ZF4->ZF4_INTEGR = 'N'
 
-		_cNum	:= If(Len(Alltrim(SE1->E1_NUM)) = 6,Alltrim(SE1->E1_NUM),Right(SE1->E1_NUM,6))
-		_cPar	:= If(Empty(SE1->E1_PARCELA),'00',SE1->E1_PARCELA)
+					SE1->(RecLock("SE1",.F.))
+					SE1->E1_LA := ''
+					SE1->(MsUnlock())
 
-		_cCode	:= SE1->E1_FILIAL + SE1->E1_PREFIXO + _cNum + _cPar
+					_aVetor := { ;
+						{"E1_FILIAL"	,SE1->E1_FILIAL		,Nil},;
+						{"E1_PREFIXO"	,SE1->E1_PREFIXO	,Nil},;
+						{"E1_NUM"		,SE1->E1_NUM		,Nil},;
+						{"E1_PARCELA"	,SE1->E1_PARCELA	,Nil},;
+						{"E1_TIPO"		,SE1->E1_TIPO		,Nil},;
+						{"E1_CLIENTE"	,SE1->E1_CLIENTE	,Nil},;
+						{"E1_LOJA"		,SE1->E1_LOJA		,Nil},;
+						{"E1_FORMREC"	,ZF4->ZF4_TIPO		,Nil},;
+						{"E1_VALOR"		,ZF4->ZF4_VALOR		,Nil }}
 
-		_nTama	:= Len(_cCode)
-		_nDigi	:= 0
-		_nBase	:= 9
-		_nPeso	:= _nBase
+					lMsErroAuto := .F.
 
-		While _nTama > 0
-		
-			_nDigi += (Val(SubStr(_cCode, _nTama, 1)) * _nPeso)
-			
-			_nPeso -= 1
-			
-			If _nPeso = 1
-				_nPeso := _nBase
-			Endif
-			
-			_nTama -= 1
-		EndDo
-		_nResto := Mod(_nDigi,11)
+					MSExecAuto({|x,y| Fina040(x,y)},_aVetor,4) //Alteracao
 
-		If (_nResto > 9 )
-			_nDigi := 0
-		Else
-			_nDigi := _nResto
+					If !lMsErroAuto
+						ZF4->(RecLock("ZF4",.F.))
+						ZF4->ZF4_INTEGR := 'S'
+						ZF4->(MsUnLock())
+					Else
+						MostraErro()
+					Endif
+
+					Exit
+				Endif
+
+				ZF4->(dbSkip())
+			EndDo
 		Endif
-
-		SE1->(RecLock("SE1",.F.))
-		SE1->E1_YCODDEP := _cCode+'-'+cValToChar(_nDigi)
-		SE1->(MsUnlock())	
 	Endif
 
 	RestArea(_aAliSE1)
@@ -968,6 +1158,69 @@ Return(Nil)
 
 
 
+/*
+User Function M040SE1()
+
+_aAliOri := GetArea()
+_aAliSE1 := SE1->(GetArea())
+
+	If Val(SE4->E4_COND) = 0
+SE1->(RecLock("SE1",.F.))
+SE1->E1_FORMREC := "00"
+SE1->(MsUnlock())
+
+		If cEmpAnt == "50"
+			If SE1->E1_TIPO = 'NF'
+
+
+O Código será composto de 10 caracteres (Codigo + Digito)
+Prefixo	= 3
+Número	= 6
+
+
+_cNum	:= If(Len(Alltrim(SE1->E1_NUM)) = 6,Alltrim(SE1->E1_NUM),Right(SE1->E1_NUM,6))
+_cPar	:= If(Empty(SE1->E1_PARCELA),'00',SE1->E1_PARCELA)
+
+//_cCode	:= SE1->E1_FILIAL + SE1->E1_PREFIXO + _cNum + _cPar
+_cCode	:= SE1->E1_PREFIXO + _cNum
+
+_nTama	:= Len(_cCode)
+_nDigi	:= 0
+_nBase	:= 9
+_nPeso	:= _nBase
+
+				While _nTama > 0
+
+_nDigi += (Val(SubStr(_cCode, _nTama, 1)) * _nPeso)
+
+_nPeso -= 1
+
+					If _nPeso = 1
+_nPeso := _nBase
+					Endif
+
+_nTama -= 1
+				EndDo
+_nResto := Mod(_nDigi,11)
+
+				If (_nResto > 9 )
+_nDigi := 0
+				Else
+_nDigi := _nResto
+				Endif
+
+SE1->(RecLock("SE1",.F.))
+SE1->E1_YDEPIDE := _cCode+'-'+cValToChar(_nDigi)
+SE1->(MsUnlock())
+			Endif
+		Endif
+	Endif
+
+RestArea(_aAliSE1)
+RestArea(_aAliORI)
+
+Return
+*/
 
 /*
 User Function FA060QRY()
@@ -1005,7 +1258,7 @@ User Function PF0001()
 
 		M->MV_PAR01 := Space(06)
 
-		MsgInfo("Existem Borderos Que Não Foram Enviados ao Banco. Favor verificar os Borderos na Planilha Aberta!!!")
+		MsgInfo("Existem Borderos Que Nðo Foram Enviados ao Banco. Favor verificar os Borderos na Planilha Aberta!!!")
 
 		_cDir := "C:\PROTHEUS12"
 
@@ -1035,7 +1288,7 @@ User Function PF0001()
 		COPY ALL TO &_cNomArq VIA "DBFCDXADS"
 
 		If !__CopyFile(_cNomArq, "C:\PROTHEUS12\BORDERO_"+_cData+"_"+_cUser+".XLS" )
-			MSGAlert("O arquivo não foi copiado!", "AQUIVO NÃO COPIADO!")
+			MSGAlert("O arquivo nðo foi copiado!", "AQUIVO NðO COPIADO!")
 		Endif
 
 		If ! ApOleClient( 'MsExcel' )
@@ -1058,8 +1311,6 @@ User Function PF0001()
 	RestArea(_aAliOri)
 
 Return(_lRet)
-
-
 
 User function F380FIL()
 
@@ -1092,10 +1343,10 @@ User function FA060Num()
 
 cProx := cNumBor
 
-While !MayIUseCode ("E1_NUMBOR"+cNumBor)
+	While !MayIUseCode ("E1_NUMBOR"+cNumBor)
 cNumBor := cProx
 cProx :=Soma1(cNumBor)
-EndDo
+	EndDo
 
 
 Return
@@ -1103,7 +1354,7 @@ Return
 
 User Function F060BOR()
 
-	_aAliOri := GetArea() 
+	_aAliOri := GetArea()
 
 	dbSelectArea("SX6")
 
@@ -1116,3 +1367,81 @@ User Function F060BOR()
 	RestArea(_aAliOri)
 
 Return(_cNumBor)
+
+/*
+User Function F380RECO()
+
+	Local nMoedBco := SA6->A6_MOEDA
+	Local lBrasil  := cPaisLoc=="BRA"
+
+	Local _lRec		:= u_ChkAcesso("F380REC",6,.F.)
+	Local _lPag		:= u_ChkAcesso("F380PAG",6,.F.)
+
+	If !Empty(TRB->E5_OK)
+		If TRB->E5_RECPAG == "P" .And. !_lPag
+			
+			ShowHelpDlg("F380RECO_1", {'Usuário sem acesso à Reconciliaçðo do Contas a Pagar'},1,{'Solicite acesso ao departamento responsável.'},1)
+		
+			TRB->(RecLock("TRB"))
+			TRB->E5_OK  := '  '
+			TRB->(MsUnlock())
+			
+			nValPag 	-= IIF(nMoedBco>1 .And. lBrasil,TRB->E5_VLMOED2,TRB->E5_VALOR)
+			nValPagT 	+= IIF(nMoedBco>1 .And. lBrasil,TRB->E5_VLMOED2,TRB->E5_VALOR)
+			nQtdTitP	--
+		ElseIf TRB->E5_RECPAG == "R" .And. !_lRec
+
+			ShowHelpDlg("F380RECO_2", {'Usuário sem acesso à Reconciliaçðo do Contas a Receber'},1,{'Solicite acesso ao departamento responsável.'},1)
+
+			TRB->(RecLock("TRB"))
+			TRB->E5_OK  := '  '
+			TRB->(MsUnlock())
+			nValRec 	-= IIF(nMoedBco>1 .And. lBrasil,TRB->E5_VLMOED2,TRB->E5_VALOR)
+			nValRecT 	+= IIF(nMoedBco>1 .And. lBrasil,TRB->E5_VLMOED2,TRB->E5_VALOR)
+			nQtdTitR	--	
+		Endif
+	Else
+		If TRB->E5_RECPAG == "P" .And. !_lPag
+		
+			ShowHelpDlg("F380RECO_3", {'Usuário sem acesso à Reconciliaçðo do Contas a Pagar'},1,{'Solicite acesso ao departamento responsável.'},1)
+		
+			TRB->(RecLock("TRB"))
+			TRB->E5_OK  := cMarca
+			TRB->(MsUnlock())
+
+			nValPag 	+= IIF(nMoedBco>1 .And. lBrasil,TRB->E5_VLMOED2,TRB->E5_VALOR)
+			nValPagT 	-= IIF(nMoedBco>1 .And. lBrasil,TRB->E5_VLMOED2,TRB->E5_VALOR)
+			nQtdTitP	++
+		ElseIf TRB->E5_RECPAG == "R" .And. !_lRec
+
+			ShowHelpDlg("F380RECO_4", {'Usuário sem acesso à Reconciliaçðo do Contas a Receber'},1,{'Solicite acesso ao departamento responsável.'},1)
+
+			TRB->(RecLock("TRB"))
+			TRB->E5_OK  := cMarca
+			TRB->(MsUnlock())
+			
+			nValRec 	+= IIF(nMoedBco>1 .And. lBrasil,TRB->E5_VLMOED2,TRB->E5_VALOR)
+			nValRecT 	-= IIF(nMoedBco>1 .And. lBrasil,TRB->E5_VLMOED2,TRB->E5_VALOR)
+			nQtdTitR	++
+		Endif
+	Endif
+
+Return(Nil)
+*/
+User Function F130QRY()
+
+	_cQ := " AND E1_SITUACA <> 'P' "
+
+Return(_cQ)
+
+
+
+// Ponto de Entrada para inclusão de novo indice de pesquisa na rotina de Conciliação Bancária.
+USER FUNCTION F380IND()
+
+	Local _aRet := {} /*Array para armazenar outro array contendo 3 elementos, sendo o 1º um identificador do índice com 2 caracteres no máximo e
+	o 2º elemento um array com os campos para formar o índice e o 3º elemento uma string representando a descrição do indice*/
+
+	AADD(_aRet,{"7",{"E5_HISTOR"},"Historico"})
+
+Return(ACLONE(_aRet)) //Retorno do tipo array
