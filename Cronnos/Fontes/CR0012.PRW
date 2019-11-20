@@ -45,7 +45,7 @@ User Function CR0012()
 
 	TCSQLEXEC(_cq3)
 
-	CONOUT("Final da integração CBL - CR0012")
+	CONOUT("Final da integraçðo CBL - CR0012")
 
 Return
 
@@ -96,7 +96,8 @@ Static Function CR12A(_lFim)
 
 	_cData2    := GravaData(dDataBase,.f.,8)
 	_cHora2    := Substr(Time(),1,2) + Substr(Time(),4,2) + Substr(Time(),7,2)
-	_dDt       := dDataBase - 20
+	//_dDt       := dDataBase - 20
+	_dDt       := dDataBase - 5
 
 	ProcRegua(20)
 
@@ -237,57 +238,74 @@ Static Function CR12A(_lFim)
 						Endif
 					Endif
 
-					For B:= 1 To Len(_aDtEnt)
+					If !Empty(_aDtEnt)
+						For B:= 1 To Len(_aDtEnt)
 
-						If !Empty(_cProdCron)
-							SZ4->(dbSetOrder(4))
-							If SZ4->(dbSeek(xFilial("SZ4")+Dtos(dDataBase)+ _cCliente + _cLoja + _cProdCron +Dtos(_aDTEnt[B,1]) ))
-								_cChavProg := Dtos(SZ4->Z4_DTDIGIT) +SZ4->Z4_CODCLI + SZ4->Z4_LOJA + SZ4->Z4_PRODPAS + DTOS(SZ4->Z4_DTENT)
+							If !Empty(_cProdCron)
+								SZ4->(dbSetOrder(4))
+								If SZ4->(dbSeek(xFilial("SZ4")+Dtos(dDataBase)+ _cCliente + _cLoja + _cProdCron +Dtos(_aDTEnt[B,1]) ))
+									_cChavProg := Dtos(SZ4->Z4_DTDIGIT) +SZ4->Z4_CODCLI + SZ4->Z4_LOJA + SZ4->Z4_PRODPAS + DTOS(SZ4->Z4_DTENT)
 
-								While SZ4->(!Eof()) .And. _cChavProg == DTOS(SZ4->Z4_DTDIGIT) +SZ4->Z4_CODCLI + SZ4->Z4_LOJA + SZ4->Z4_PRODPAS + DTOS(SZ4->Z4_DTENT)
+									While SZ4->(!Eof()) .And. _cChavProg == DTOS(SZ4->Z4_DTDIGIT) +SZ4->Z4_CODCLI + SZ4->Z4_LOJA + SZ4->Z4_PRODPAS + DTOS(SZ4->Z4_DTENT)
 
-									If _cSemAtu == _cSemAtu2 .And. UPPER(SZ4->Z4_NOMARQ)  != DTOS(_dDt)+"\"+UPPER(Alltrim(_aArqTxt[i]))
-										SZ4->(RecLock("SZ4",.F.))
-										SZ4->(dbDelete())
-										SZ4->(MsUnlock())
-									Endif
+										If _cSemAtu == _cSemAtu2 .And. UPPER(SZ4->Z4_NOMARQ)  != DTOS(_dDt)+"\"+UPPER(Alltrim(_aArqTxt[i]))
+											SZ4->(RecLock("SZ4",.F.))
+											SZ4->(dbDelete())
+											SZ4->(MsUnlock())
+										Endif
 
-									SZ4->(dbSkip())
-								EndDo
-							Else
-								_lProx := .F.
+										SZ4->(dbSkip())
+									EndDo
+								Else
+									_lProx := .F.
+								Endif
 							Endif
-						Endif
 
-						_cTpPed    := Subs(cLinha,_nPed,1)
+							_cTpPed    := Subs(cLinha,_nPed,1)
 
-						_nPed += 16
-						SZ4->(RecLock("SZ4",.T.))
-						SZ4->Z4_FILIAL  := xFilial("SZ4")
-						SZ4->Z4_CODCLI  := _cCliente
-						SZ4->Z4_LOJA    := _cLoja
-						SZ4->Z4_PRODPAS := _cProdCron
-						SZ4->Z4_PRODCLI := _cProdCli
-						SZ4->Z4_DTMOV   := _dDtMov
-						SZ4->Z4_CONTROL := _cCont
-						SZ4->Z4_SEMATU  := _cSemAtu
-						SZ4->Z4_DTATU   := _dDtAtu
-						SZ4->Z4_SEMANT  := _cSemAnt
-						SZ4->Z4_LOCDEST := _cLocDest
-						SZ4->Z4_TIPO    := _cTipo
-						SZ4->Z4_ULTNF   := "000"+_cUltNf
-						SZ4->Z4_SERIE   := _cSerNf
-						SZ4->Z4_DTULTNF := _dDtUltNf
-						SZ4->Z4_DTENT   := _aDTEnt[B,1]
-						SZ4->Z4_QTENT   := _aQuant[B,1]
-						SZ4->Z4_DTFECH  := _aQuant[B,2]
-						SZ4->Z4_PEDIDO  := _cPedido
-						SZ4->Z4_TPPED   := _cTpPed
-						SZ4->Z4_CONTATO := _cContato
-						SZ4->Z4_DTDIGIT := dDataBase
-						SZ4->Z4_NOMARQ  := DTOS(_dDt)+"\"+UPPER(Alltrim(_aArqTxt[i]))
-						SZ4->(MsUnlock())
-					Next B
+							_nPed += 16
+							SZ4->(RecLock("SZ4",.T.))
+							SZ4->Z4_FILIAL  := xFilial("SZ4")
+							SZ4->Z4_CODCLI  := _cCliente
+							SZ4->Z4_LOJA    := _cLoja
+							SZ4->Z4_PRODPAS := _cProdCron
+							SZ4->Z4_PRODCLI := _cProdCli
+							SZ4->Z4_DTMOV   := _dDtMov
+							SZ4->Z4_CONTROL := _cCont
+							SZ4->Z4_SEMATU  := _cSemAtu
+							SZ4->Z4_DTATU   := _dDtAtu
+							SZ4->Z4_SEMANT  := _cSemAnt
+							SZ4->Z4_LOCDEST := _cLocDest
+							SZ4->Z4_TIPO    := _cTipo
+							SZ4->Z4_ULTNF   := "000"+_cUltNf
+							SZ4->Z4_SERIE   := _cSerNf
+							SZ4->Z4_DTULTNF := _dDtUltNf
+							SZ4->Z4_DTENT   := _aDTEnt[B,1]
+							SZ4->Z4_QTENT   := _aQuant[B,1]
+							SZ4->Z4_DTFECH  := _aQuant[B,2]
+							SZ4->Z4_PEDIDO  := _cPedido
+							SZ4->Z4_TPPED   := _cTpPed
+							SZ4->Z4_CONTATO := _cContato
+							SZ4->Z4_DTDIGIT := dDataBase
+							SZ4->Z4_NOMARQ  := DTOS(_dDt)+"\"+UPPER(Alltrim(_aArqTxt[i]))
+							SZ4->(MsUnlock())
+						Next B
+					else
+
+						_cElimRes := " UPDATE "+RetSqlName("SC6")+" SET C6_BLQ = 'R', C6_XDTELIM = '"+DTOS(dDataBase)+"', C6_LOCALIZ = 'CR0012' "+CRLF
+						_cElimRes += " WHERE D_E_L_E_T_ = '' AND C6_FILIAL = '"+xFilial("SC6")+"' " +CRLF
+						_cElimRes += " AND C6_CLI		= '"+_cCliente+"' " +CRLF
+						_cElimRes += " AND C6_LOJA		= '"+_cLoja+"' " +CRLF
+						_cElimRes += " AND C6_PRODUTO	= '"+_cProdCron+"' " +CRLF
+						_cElimRes += " AND C6_CPROCLI	= '"+_cProdCli+"' " +CRLF
+						_cElimRes += " AND C6_PEDCLI	= '"+_cPedido+"' " +CRLF
+						_cElimRes += " AND C6_QTDVEN > C6_QTDENT " +CRLF
+						_cElimRes += " AND C6_XRESIDU <> 'N' " +CRLF
+						_cElimRes += " AND C6_BLQ = '' " +CRLF
+						_cElimRes += " AND C6_PEDAMOS IN ('N','Z','M','I')" +CRLF
+
+						TCSQLEXEC(_cElimRes)
+					Endif
 
 					_cSemAtu2 := ""
 				ElseIf Subs(cLinha,1,3) == "PE6"
@@ -361,11 +379,11 @@ Static Function CR12B(_lFim)
 	TCSQLEXEC(_cq)
 
 	SZ4->(dbSetOrder(4))
-	If SZ4->(dbSeek(xFilial("SZ4")+DTOS(dDataBase),.F.))
+	If SZ4->(dbSeek(xFilial("SZ4")+DTOS(dDataBase)+"000017",.F.))
 
 		ProcRegua(RecCount())
 
-		While SZ4->(!Eof()) .And. SZ4->Z4_DTDIGIT == dDataBase
+		While SZ4->(!Eof()) .And. SZ4->Z4_DTDIGIT == dDataBase .And. SZ4->Z4_CODCLI == "000017"
 
 			_lPrim     := .F.
 			_nTotQt    := 0
@@ -842,9 +860,9 @@ Static Function CR012D()
 
 	oHTML := oProcess:oHTML
 
-	oProcess:cSubject := "Inconsistencia Programação - CBL - "+Dtoc(dDataBase)+" Hora : "+Substr(Time(),1,5)
+	oProcess:cSubject := "Inconsistencia Programaçðo - CBL - "+Dtoc(dDataBase)+" Hora : "+Substr(Time(),1,5)
 
-	oProcess:fDesc := "Inconsistencia Programação - CBL"
+	oProcess:fDesc := "Inconsistencia Programaçðo - CBL"
 
 	Private _cTo := _cCC := ""
 

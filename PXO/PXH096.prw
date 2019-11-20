@@ -72,19 +72,21 @@ Static Function PXH96A()
 	Pergunte("PXH096",.F.)
 
 	//Lançamentos via SE2
-	_cQuery  := " SELECT E5_FILIAL AS FILIAL, E5_PREFIXO AS PREFIXO, E5_NUMERO AS NUMERO,E5_PARCELA AS PARCELA,E5_TIPO AS TIPO,E2_CC AS CUSTO, " + CRLF
+	_cQuery  := " SELECT E5_FILIAL AS FILIAL, E5_PREFIXO AS PREFIXO, E5_NUMERO AS NUMERO,E5_PARCELA AS PARCELA,E5_TIPO AS TIPO, " + CRLF
+	// _cQuery  := " SELECT E5_FILIAL AS FILIAL, E5_PREFIXO AS PREFIXO, E5_NUMERO AS NUMERO,E5_PARCELA AS PARCELA,E5_TIPO AS TIPO,E2_CC AS CUSTO, " + CRLF
+	_cQuery  += " 'CUSTO' = IIF(coalesce(E2_CC,'')='', E5_CCUSTO, E2_CC), " + CRLF
 	_cQuery  += " E5_CLIFOR AS CLIFOR, E5_LOJA AS LOJA, A2_NREDUZ AS NOME, A2_CGC AS CNPJ,A2_TIPO AS PESSOA,E5_DTDISPO AS DTDISPO, E5_MOTBX AS MOTBX, " + CRLF
 	_cQuery  += " E5_TIPODOC AS TIPODOC, E5_VALOR AS E5VALOR " + CRLF
 	_cQuery  += " FROM "+RetSqlName("SE5")+" E5 (NOLOCK) " + CRLF
 	_cQuery  += " LEFT JOIN "+RetSqlName("SED")+" ED ON ED_CODIGO = E5_NATUREZ AND ED.D_E_L_E_T_ = '' AND ED_FILIAL = '"+xFilial("SED")+"' " + CRLF
-	_cQuery  += " INNER JOIN "+RetSqlName("SE2")+" E2 ON E2_FILIAL= E5_FILIAL AND E2_PREFIXO=E5_PREFIXO AND E2_NUM=E5_NUMERO " + CRLF
-	_cQuery  += " AND E2_PARCELA=E5_PARCELA AND E2_FORNECE=E5_FORNECE AND E2_LOJA=E5_LOJA AND E2_TIPO=E5_TIPO  " + CRLF
+	_cQuery  += " LEFT JOIN "+RetSqlName("SE2")+" E2 ON E2_FILIAL= E5_FILIAL AND E2_PREFIXO=E5_PREFIXO AND E2_NUM=E5_NUMERO " + CRLF
+	_cQuery  += " AND E2_PARCELA=E5_PARCELA AND E2_FORNECE=E5_FORNECE AND E2_LOJA=E5_LOJA AND E2_TIPO=E5_TIPO AND E2.D_E_L_E_T_ = '' " + CRLF
 	_cQuery  += " LEFT JOIN "+RetSqlName("SA2")+" A2 ON E5_CLIFOR = A2_COD AND E5_LOJA = A2_LOJA AND A2.D_E_L_E_T_ = ''" + CRLF
-	_cQuery  += " WHERE E5.D_E_L_E_T_ = '' AND E2.D_E_L_E_T_ = '' " + CRLF
+	_cQuery  += " WHERE E5.D_E_L_E_T_ = '' " + CRLF
 	_cQuery  += " AND E5_FILIAL = '"+xFilial("SE5")+"' " + CRLF
 	_cQuery  += " AND E5_DTDISPO BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"' " + CRLF
-	_cQuery  += " AND E5_SITUACA = '' AND E5_TIPODOC NOT IN ('JR','MT','DC','CH') " + CRLF
-
+	_cQuery  += " AND E5_SITUACA = '' AND E5_TIPODOC NOT IN ('JR','MT','DC','CH','TR') " + CRLF
+/*
 	_cQuery  += " UNION ALL " + CRLF
 
 	//Lançamentos via SE5 Movto Bancária
@@ -100,6 +102,9 @@ Static Function PXH96A()
 	_cQuery  += " AND E5_RECPAG = 'P' AND E5_NUMERO = '' AND E5_MOEDA = 'M1' " + CRLF
 	_cQuery  += " AND E5_DTDISPO BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"' " + CRLF
 	_cQuery  += " ORDER BY CUSTO,FILIAL,DTDISPO" + CRLF
+*/
+
+	MemoWrite('D:\PXH096.txt',_cQuery)
 
 	TCQUERY _cQuery NEW ALIAS "TSE5"
 
@@ -805,8 +810,6 @@ Static Function LoadSynthetic(_lExcel)
 
 	Endif
 
-	SZJ->(dbGoTop())
-
 	_nTotCC := 0
 	_nLin 		:= 60
 
@@ -830,80 +833,87 @@ Static Function LoadSynthetic(_lExcel)
 	_cMsg     := ''
 	_aExcel   := {}
 
-	While SZJ->(!EOF())
+	SZJ->(dbSetOrder(1))
+	If SZJ->(MsSeek(xFilial("SZJ")))
 
-		_cNivel := SZJ->ZJ_CODIGO
+		_cKey := SZJ->ZJ_FILIAL
 
-		If Len(Alltrim(SZJ->ZJ_CODIGO)) = 1 //1
-			_cNiv1 := Alltrim(SZJ->ZJ_CODIGO) +" - "+Alltrim(SZJ->ZJ_DESCRIC)
-			_oFont := _oFont3
-			_nCol  := 10
-		ElseIf Len(Alltrim(SZJ->ZJ_CODIGO)) = 3 //1.1
-			_oFont := _oFont4
-			_nCol  := 15
-		ElseIf Len(Alltrim(SZJ->ZJ_CODIGO)) = 5 //1.1.1
-			_nCol  := 20
-			_oFont := _oFont6
-		Endif
+		While SZJ->(!EOF()) .And. _cKey == SZJ->ZJ_FILIAL
 
-		If _cNiv1Bkp != _cNiv1 .and. _nNiv1 > 0
-			If !_lExcel
-				_oPrinter:Say(_nLin1,250,TRANS(_nNiv1, "@E 999,999,999.99"),_oFont,,,,1)
-			Else
-				_nPos := aScan(_aExcel,{|x| x[1] == _cNiv1Bkp})
-				If _nPos = 0
-					AADD(_aExcel,{_cNiv1Bkp,0})
+			_cNivel := SZJ->ZJ_CODIGO
+
+			If Len(Alltrim(SZJ->ZJ_CODIGO)) = 1 //1
+				_cNiv1 := Alltrim(SZJ->ZJ_CODIGO) +" - "+Alltrim(SZJ->ZJ_DESCRIC)
+				_oFont := _oFont3
+				_nCol  := 10
+			ElseIf Len(Alltrim(SZJ->ZJ_CODIGO)) = 3 //1.1
+				_oFont := _oFont4
+				_nCol  := 15
+			ElseIf Len(Alltrim(SZJ->ZJ_CODIGO)) = 5 //1.1.1
+				_nCol  := 20
+				_oFont := _oFont6
+			Endif
+
+			If _cNiv1Bkp != _cNiv1 .and. _nNiv1 > 0
+				If !_lExcel
+					_oPrinter:Say(_nLin1,250,TRANS(_nNiv1, "@E 999,999,999.99"),_oFont,,,,1)
 				Else
-					_aExcel[_nPos][2] := _nNiv1
+					_nPos := aScan(_aExcel,{|x| x[1] == _cNiv1Bkp})
+					If _nPos = 0
+						AADD(_aExcel,{_cNiv1Bkp,0})
+					Else
+						_aExcel[_nPos][2] := _nNiv1
+					Endif
+
 				Endif
-
+				_nNiv1 := 0
 			Endif
-			_nNiv1 := 0
-		Endif
 
-		_cMsg := Alltrim(SZJ->ZJ_CODIGO) +" - "+Alltrim(SZJ->ZJ_DESCRIC)
-		If !_lExcel
-			_oPrinter:Say(_nLin,_nCol,_cMsg,_oFont)
-		ELSE
-			_nPos := aScan(_aExcel,{|x|x[1] == _cMsg})
-			If _nPos = 0
-				AADD(_aExcel,{_cMsg,0})
-			Endif
-		Endif
-
-		_nVal := 0
-		If TSB->(msSeek(SZJ->ZJ_CODIGO))
-			_nVal := TSB->VALOR
-		Endif
-
-		If Len(Alltrim(SZJ->ZJ_CODIGO)) > 1 .Or. SZJ->ZJ_ClASSE = '2'
+			_cMsg := Alltrim(SZJ->ZJ_CODIGO) +" - "+Alltrim(SZJ->ZJ_DESCRIC)
 			If !_lExcel
-				_oPrinter:Say(_nLin,250,TRANS(_nVal, "@E 999,999,999.99"),_oFont,,,,1)
-			Else
+				_oPrinter:Say(_nLin,_nCol,_cMsg,_oFont)
+			ELSE
 				_nPos := aScan(_aExcel,{|x|x[1] == _cMsg})
 				If _nPos = 0
-					AADD(_aExcel,{_cMsg,_nVal})
-				Else
-					_aExcel[_nPos][2] := _nVal
+					AADD(_aExcel,{_cMsg,0})
 				Endif
 			Endif
-		Endif
 
-		If SZJ->ZJ_CLASSE = '2'
-			_nTotCC += _nVal
-			_nNiv1 += _nVal
-		Endif
+			_nVal := 0
+			If TSB->(msSeek(SZJ->ZJ_CODIGO))
+				_nVal := TSB->VALOR
+			Endif
 
-		_cNiv1Bkp := _cNiv1
+			If Len(Alltrim(SZJ->ZJ_CODIGO)) > 1 .Or. SZJ->ZJ_ClASSE = '2'
+				If !_lExcel
+					_oPrinter:Say(_nLin,250,TRANS(_nVal, "@E 999,999,999.99"),_oFont,,,,1)
+				Else
+					_nPos := aScan(_aExcel,{|x|x[1] == _cMsg})
+					If _nPos = 0
+						AADD(_aExcel,{_cMsg,_nVal})
+					Else
+						_aExcel[_nPos][2] := _nVal
+					Endif
+				Endif
+			Endif
 
-		If Len(Alltrim(SZJ->ZJ_CODIGO)) = 1
-			_nLin1 := _nLin
-		Endif
+			If SZJ->ZJ_CLASSE = '2'
+				_nTotCC += _nVal
+				_nNiv1 += _nVal
+			Endif
 
-		_nLin += 10
+			_cNiv1Bkp := _cNiv1
 
-		SZJ->(dbSkip())
-	EndDo
+			If Len(Alltrim(SZJ->ZJ_CODIGO)) = 1
+				_nLin1 := _nLin
+			Endif
+
+			_nLin += 10
+
+			SZJ->(dbSkip())
+		EndDo
+
+	Endif
 
 	_nLin += 10
 

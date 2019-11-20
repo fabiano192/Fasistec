@@ -96,12 +96,12 @@ User Function CR0075()
 							Endif
 
 							aadd(_aItD3,   {{"D3_COD"    , SB1->B1_COD 		,NIL},;
-							{"D3_UM"     , SB1->B1_UM		,NIL},;
-							{"D3_QUANT"  , _nQuant			,NIL},;
-							{"D3_LOCAL"  , SB1->B1_LOCPAD	,Nil},;
-							{"D3_LOCALIZ", SBF->BF_LOCALIZ	,Nil},;
-							{"D3_GRUPO"  , SB1->B1_GRUPO	,Nil},;
-							{"D3_YNFPASY", RIGHT(_aLin[1],9),Nil}})
+								{"D3_UM"     , SB1->B1_UM		,NIL},;
+								{"D3_QUANT"  , _nQuant			,NIL},;
+								{"D3_LOCAL"  , SB1->B1_LOCPAD	,Nil},;
+								{"D3_LOCALIZ", SBF->BF_LOCALIZ	,Nil},;
+								{"D3_GRUPO"  , SB1->B1_GRUPO	,Nil},;
+								{"D3_YNFPASY", RIGHT(_aLin[1],9),Nil}})
 
 							AADD(_aPick,{_aLin[1],SB1->B1_COD,SB1->B1_UM,SB1->B1_LOCPAD,SBF->BF_LOCALIZ,_nQuant})
 
@@ -130,12 +130,12 @@ User Function CR0075()
 						If SB2->B2_QATU >= _nQtOri
 
 							aadd(_aItD3,   {{"D3_COD"    , SB1->B1_COD 		,NIL},;
-							{"D3_UM"     , SB1->B1_UM		,NIL},;
-							{"D3_QUANT"  , _nQtOri			,NIL},;
-							{"D3_LOCAL"  , SB1->B1_LOCPAD	,Nil},;
-							{"D3_LOCALIZ", ''				,Nil},;
-							{"D3_GRUPO"  , SB1->B1_GRUPO	,Nil},;
-							{"D3_YNFPASY", RIGHT(_aLin[1],9),Nil}})
+								{"D3_UM"     , SB1->B1_UM		,NIL},;
+								{"D3_QUANT"  , _nQtOri			,NIL},;
+								{"D3_LOCAL"  , SB1->B1_LOCPAD	,Nil},;
+								{"D3_LOCALIZ", ''				,Nil},;
+								{"D3_GRUPO"  , SB1->B1_GRUPO	,Nil},;
+								{"D3_YNFPASY", RIGHT(_aLin[1],9),Nil}})
 
 							AADD(_aPick,{_aLin[1],SB1->B1_COD,SB1->B1_UM,SB1->B1_LOCPAD,'',_nQtOri})
 
@@ -185,6 +185,7 @@ User Function CR0075()
 			If SD3->(msSeek(xFilial('SD3')+Substr(_cFile,3,9)))
 
 				AAdd(_aCabD3,{"D3_DOC" 		,  SD3->D3_DOC	,NIL})
+				_aItem := {}
 
 				While SD3->(!EOF()) .And. SD3->D3_YNFPASY == Substr(_cFile,3,9)
 
@@ -193,35 +194,37 @@ User Function CR0075()
 						Loop
 					Endif
 
-					aItem := {	{"D3_COD"		,SD3->D3_COD	,NIL},;
-					{"D3_UM"		,SD3->D3_UM		,NIL},;
-					{"D3_QUANT"		,SD3->D3_QUANT	,NIL},;
-					{"D3_LOCAL"		,SD3->D3_LOCAL	,NIL},;
-					{"D3_LOCALIZ"	,SD3->D3_LOCALIZ,NIL},;
-					{"D3_ESTORNO"	,"S"			,NIL}}
+					_aItem := {	{"D3_COD"		,SD3->D3_COD	,NIL},;
+						{"D3_UM"		,SD3->D3_UM		,NIL},;
+						{"D3_QUANT"		,SD3->D3_QUANT	,NIL},;
+						{"D3_LOCAL"		,SD3->D3_LOCAL	,NIL},;
+						{"D3_LOCALIZ"	,SD3->D3_LOCALIZ,NIL},;
+						{"D3_ESTORNO"	,"S"			,NIL}}
 
 					AADD(_aPick,{SD3->D3_YNFPASY,SD3->D3_COD,SD3->D3_UM,SD3->D3_LOCAL,SD3->D3_LOCALIZ,SD3->D3_QUANT})
 
 					SD3->(dbSkip())
 				EndDo
 
-				SD3->(dbOrderNickName('INDSD33'))
-				SD3->(msSeek(xFilial('SD3')+Substr(_cFile,3,9)))
+				If !Empty(_aItem)
+					SD3->(dbOrderNickName('INDSD33'))
+					SD3->(msSeek(xFilial('SD3')+Substr(_cFile,3,9)))
 
-				lMsErroAuto := .f.
+					lMsErroAuto := .f.
 
-				MSExecAuto({|x,y,z| MATA241(x,y,z)},_aCabD3,{aItem},6) //estorno
+					MSExecAuto({|x,y,z| MATA241(x,y,z)},_aCabD3,{_aItem},6) //estorno
 
-				If !lMsErroAuto
+					If !lMsErroAuto
 						_cData    := GravaData(dDataBase,.f.,8)
 						_cHora    := Substr(Time(),1,2) + Substr(Time(),4,2) + Substr(Time(),7,2)
 
 						__CopyFile( _cDir +_cFile, _cDir+"BKP\"+_cFile )
 						FErase(_cDir +_cFile)
 						//					MostraErro()
-					PickList('D',_aPick)
-				Else
-					MostraErro()
+						PickList('D',_aPick)
+					Else
+						MostraErro()
+					Endif
 				Endif
 			Endif
 		Endif
