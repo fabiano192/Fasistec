@@ -131,29 +131,28 @@ Static Function Panel01( oPanel1 )
 		@ 001, 005 Say 'Procurar:' 	Size 025, 008 Of oPanel1A Pixel
 		@ 001, 035 MsGet _cSeek	   	Size 025, 008 Of oPanel1A Pixel
 
-		DEFINE SBUTTON oBtn1 FROM 001,075 TYPE 11 ACTION PesqCpo(_cSeek,@aListFil1,@oListArq1,3) Message "Pesquisando o Cliente" ENABLE Of oPanel1A
+		DEFINE SBUTTON oBtn1 FROM 001,075 TYPE 11 ACTION PesqCpo(_cSeek,@aListFil1,@oListArq1,3)  ENABLE Of oPanel1A
+		// DEFINE SBUTTON oBtn1 FROM 001,075 TYPE 11 ACTION PesqCpo(_cSeek,@aListFil1,@oListArq1,3) Message "Pesquisando o Cliente" ENABLE Of oPanel1A
 		oBtn1:cCaption := 'Localizar'
 		oBtn1:cToolTip := 'Localizar'
 
-		DEFINE SBUTTON oBtn1 FROM 001,110 TYPE 15 ACTION BRI92D(aListFil1) MESSAGE "Visualizar Cliente" ENABLE Of oPanel1A
+		DEFINE SBUTTON oBtn1 FROM 001,110 TYPE 15 ACTION BRI92D(aListFil1) ENABLE Of oPanel1A
+		// DEFINE SBUTTON oBtn1 FROM 001,110 TYPE 15 ACTION BRI92D(aListFil1) MESSAGE "Visualizar Cliente" ENABLE Of oPanel1A
 		oBtn1:cCaption := 'Cliente'
 		oBtn1:cToolTip := 'Cliente'
         
-        /*
-		DEFINE SBUTTON oBtn1 FROM 001,145 TYPE 15 ACTION BRI92E(aListFil2,oListArq2) MESSAGE "Imprimir Boleto" ENABLE Of oPanel1A
-		oBtn1:cCaption := 'Boleto'
-		oBtn1:cToolTip := 'Boleto'
-		*/       //Tirado o botão boleto devido a problemas de numeração - Bruno Fernandes
-
-		DEFINE SBUTTON oBtn1 FROM 001,180 TYPE 15 ACTION U_BRI093(_nTotal,_nSaldo) MESSAGE "Gerar Fatura" ENABLE Of oPanel1A
+        DEFINE SBUTTON oBtn1 FROM 001,180 TYPE 15 ACTION U_BRI093(_nTotal,_nSaldo) ENABLE Of oPanel1A
+        // DEFINE SBUTTON oBtn1 FROM 001,180 TYPE 15 ACTION U_BRI093(_nTotal,_nSaldo) MESSAGE "Gerar Fatura" ENABLE Of oPanel1A
 		oBtn1:cCaption := 'Fatura'
 		oBtn1:cToolTip := 'Fatura'
 
-		DEFINE SBUTTON oBtn1 FROM 001,215 TYPE 15 ACTION U_BRI094(aListFil2[oListArq2:nAt,3], aListFil2[oListArq2:nAt,4],aListFil2[oListArq2:nAt,22]) MESSAGE "Gerar Danfe" ENABLE Of oPanel1A
+		// DEFINE SBUTTON oBtn1 FROM 001,215 TYPE 15 ACTION U_BRI094(aListFil2[oListArq2:nAt,3], aListFil2[oListArq2:nAt,4],aListFil2[oListArq2:nAt,22]) MESSAGE "Gerar Danfe" ENABLE Of oPanel1A
+		DEFINE SBUTTON oBtn1 FROM 001,215 TYPE 15 ACTION U_BRI094(aListFil2[oListArq2:nAt,3], aListFil2[oListArq2:nAt,4],aListFil2[oListArq2:nAt,22]) ENABLE Of oPanel1A
 		oBtn1:cCaption := 'Danfe'
 		oBtn1:cToolTip := 'Danfe'
 
-		DEFINE SBUTTON oBtn1 FROM 001,250 TYPE 15 ACTION BRI92F(aListFil2[oListArq2:nAt,22],aListFil2[oListArq2:nAt,3], aListFil2[oListArq2:nAt,4],aListFil2[oListArq2:nAt,5],aListFil2[oListArq2:nAt,6]) MESSAGE "Título" ENABLE Of oPanel1A
+		// DEFINE SBUTTON oBtn1 FROM 001,250 TYPE 15 ACTION BRI92F(aListFil2[oListArq2:nAt,22],aListFil2[oListArq2:nAt,3], aListFil2[oListArq2:nAt,4],aListFil2[oListArq2:nAt,5],aListFil2[oListArq2:nAt,6]) MESSAGE "Título" ENABLE Of oPanel1A
+		DEFINE SBUTTON oBtn1 FROM 001,250 TYPE 15 ACTION BRI92F(aListFil2[oListArq2:nAt,22],aListFil2[oListArq2:nAt,3], aListFil2[oListArq2:nAt,4],aListFil2[oListArq2:nAt,5],aListFil2[oListArq2:nAt,6]) ENABLE Of oPanel1A
 		oBtn1:cCaption := 'Título'
 		oBtn1:cToolTip := 'Contas a Receber'
 
@@ -186,7 +185,7 @@ Static Function Panel02( oPanel2 )
 
 	Local cTitulo  := ""			// Titulo da FormBatch
 	Local cList2    := ""			// Variavel auxiliar para montagem da ListBox
-	Local nOpc     := 0				// Opcao selecionada pelo usuario na FormBatch
+	// Local nOpc     := 0				// Opcao selecionada pelo usuario na FormBatch
 	Local oOk     					// Objeto referente a marca da linha da ListBox quando marcada
 	Local oNo     					// Objeto referente a marca da linha da ListBox quando desmarcada
 
@@ -310,9 +309,9 @@ Return
 
 Static Function BRI92A()
 
-	Local nI      := 0
-	Local cUpload := ""
-	Local aFiles  := {}
+	// Local nI      := 0
+	// Local cUpload := ""
+	// Local aFiles  := {}
 	Local lSeek   := .F.
 
 	Pergunte("BRI092",.F.)
@@ -434,12 +433,12 @@ Static Function BRI92C(_cOpt)
 			If _nDias > 0
 
 				If _cOpt $ "PM|DP"
-//					_nMulta          	+= (SE1->E1_SALDO * (_nPerMulta/100))
-//					aListFil2[nInd][16] := (SE1->E1_SALDO * (_nPerMulta/100))
-//					SE1->E1_YVLMULT  	:= (SE1->E1_SALDO * (_nPerMulta/100))
-					_nMulta          	+= (SE1->E1_SALDO * (_nPerMulta/100))  / 30 * _nDias
-					aListFil2[nInd][16] := (SE1->E1_SALDO * (_nPerMulta/100))  / 30 * _nDias
-					SE1->E1_YVLMULT  	:= (SE1->E1_SALDO * (_nPerMulta/100))  / 30 * _nDias
+					_nMulta          	+= (SE1->E1_SALDO * (_nPerMulta/100))	// ALTERADO POR ALEXANDRO 28/02
+					aListFil2[nInd][16] := (SE1->E1_SALDO * (_nPerMulta/100))	// ALTERADO POR ALEXANDRO 28/02
+					SE1->E1_YVLMULT  	:= (SE1->E1_SALDO * (_nPerMulta/100))	// ALTERADO POR ALEXANDRO 28/02
+					//_nMulta          		+= (SE1->E1_SALDO * (_nPerMulta/100))  / 30 * _nDias // ALTERADO POR ALEXANDRO 28/02
+					//aListFil2[nInd][16] 	:= (SE1->E1_SALDO * (_nPerMulta/100))  / 30 * _nDias // ALTERADO POR ALEXANDRO 28/02
+					//SE1->E1_YVLMULT  		:= (SE1->E1_SALDO * (_nPerMulta/100))  / 30 * _nDias // ALTERADO POR ALEXANDRO 28/02
 					If _nPerMulta > 0 .And. lUser
 						_lVM				:= .T.
 					Else
@@ -459,8 +458,8 @@ Static Function BRI92C(_cOpt)
 				Endif
 				
 				If _cOpt $ "VM"
-//					_nPerMulta 			:= Round(((aListFil2[nInd][17] * _nMulta) / SE1->E1_SALDO),2)
-					_nPerMulta 			:= Round(((((aListFil2[nInd][15] * _nMulta)/_nDias)*30)/SE1->E1_SALDO),2)
+					_nPerMulta 			:= Round(((aListFil2[nInd][17] * _nMulta) / SE1->E1_SALDO),2)   // ALTERADO POR ALEXANDRO 28/02
+					//_nPerMulta 			:= Round(((((aListFil2[nInd][15] * _nMulta)/_nDias)*30)/SE1->E1_SALDO),2) // ALTERADO POR ALEXANDRO 28/02
 					SE1->E1_YVLMULT  	:= _nMulta * aListFil2[nInd][17]
 				Endif
 				
@@ -567,6 +566,7 @@ Return
 /*
 Impressão do Boleto
 */
+/*
 Static Function BRI92E(_aTitulo,oObj2)
 
 	For A := 1 To Len(_aTitulo)
@@ -605,14 +605,14 @@ Static Function BRI92E(_aTitulo,oObj2)
 	Next A
 
 Return
-
+*/
 
 /*
 Alteração Contas a Receber
 */
 Static Function BRI92F(_cFil,_cSerie,_cDoc,_cParc,_cTipo)
 
-	Local aArea     	:= GetArea()
+	// Local aArea     	:= GetArea()
 	Local aAreaSM0  	:= SM0->(GetArea())
 	Local _oDlg 		:= Nil
 	Local _cTit 		:= 'Titulos a Receber'
@@ -927,6 +927,7 @@ Static Function BRI92H(_cFil,_cSerie,_cDoc,_cParc,_cTipo)
 
 	RestArea(_aAliSE1)
 	RestArea(aAreaSM0)
+	RestArea(aArea)
 
 Return
 

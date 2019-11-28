@@ -35,6 +35,7 @@ User Function AS_MANIF()
 	Private lBtnFiltro	:= .F.
 	Private lUsacolab	:= .F.
 
+
 	While lRetorno
 
 		lBtnFiltro	:= .F.
@@ -203,6 +204,7 @@ Static function execMarkbrowse()
 	Endif
 
 	aCores := {	;
+	{"C00_YSTATU = 'FI'",'S4WB016N_.PNG'},;
 	{"C00_STATUS = '1' .and. alltrim(C00_SITDOC)=='3'",'BR_PINK'},;
 	{"C00_STATUS $ '1' .and. alltrim(C00_CODEVE)=='3' .and. Empty(C00_YSTATU)" ,'BR_LARANJA'},;
 	{"C00_STATUS=='1' .and. alltrim(C00_CODEVE)=='3'",'ENABLE'},;
@@ -362,7 +364,8 @@ Static Function MarkBr()
 		{ STR0432,		"U_MontaMonitor"	,0,2,0,.F.},; //Monitorar
 		{ "Exportar",	"U_ASExporXML(0)"	,0,2,0,.F.},; //Exportar Zip
 		{ "Baixar XML",	"U_ASGrava"			,0,3,0,.F.},; //Gravar XML
-		{ STR0299,		"U_ASBtLegenda"		,0,3,0,.F.}} //Legenda
+		{ STR0299,		"U_ASBtLegenda"		,0,3,0,.F.},; //Legenda
+		{ "Validar Filial","U_ASVldFilial"		,0,3,0,.F.}}  // Validar Filial
 	Else
 		aRotina   := { { STR0004,			"PesqBrw"		,0,1,0,.F.},; //Pesquisar
 		{ STR0430,		"Sincronizar"		,0,3,0,.F.},; //Sincronizar
@@ -370,10 +373,29 @@ Static Function MarkBr()
 		{ STR0432,		"U_MontaMonitor"	,0,2,0,.F.},; //Monitorar
 		{ "Exportar",	"U_ASExporXML(0)"	,0,2,0,.F.},; //Exportar Zip
 		{ STR0299,		"U_ASBtLegenda"		,0,3,0,.F.},;  //Legenda
-		{ "Baixar XML",	"U_ASGrava"			,0,3,0,.F.}}  //Gravar XML
+		{ "Baixar XML",	"U_ASGrava"			,0,3,0,.F.},;  //Gravar XML
+		{ "Validar Filial","U_ASVldFilial"		,0,3,0,.F.}}  // Validar Filial
 	Endif
 
 Return aRotina
+
+
+User Function ASVldFilial()
+
+	Local _oOdlgFil := NIL
+
+	Define MsDialog _oOdlgFil TITLE "Filial" FROM 0,0 TO  150, 360 PIXEL
+
+	TGroup():New(005,005,70,175,'',_oOdlgFil,,,.T.)
+
+	TSay():New(010,010,{||'Marque abaixo a Filial a qual percente o(s) XML(s) marcado(s)'},_oOdlgFil,,,,,,.T.,CLR_BLUE,CLR_WHITE,200,007)
+
+	ACTIVATE MSDIALOG _oOdlgFil CENTERED
+
+
+Return(Nil)
+
+
 
 
 
@@ -381,6 +403,7 @@ User Function ASBtLegenda()
 
 	Local aLegenda:= {}
 
+	AADD(aLegenda, {"S4WB016N_.PNG"	,"Validar Filial"})
 	AADD(aLegenda, {"BR_PINK"		,"NF Cancelada"})
 	AADD(aLegenda, {"BR_LARANJA"	,"Manifestado(Ciencia ou Confirmado) e sem XML gerado"})
 	AADD(aLegenda, {"BR_BRANCO"		,STR0414})//Sem manifestação
@@ -763,6 +786,7 @@ Static function SincAtuDados(cChave,cSitConf,cCancNSU)
 			C00->C00_SITDOC := "1" //nota autorizada
 		EndIf
 		lOk := .T.
+		C00->C00_YSTATU		:= If(_lVldFil,'FI','')
 		MsUnLock()
 
 		If ExistBlock("MANIGRV")
@@ -1365,6 +1389,7 @@ User Function ASExporXML(nOpc,_cChave,_lExpAut)
 			Endif
 			//			cWhere += " AND C00_STATUS IN ('1','4') "
 			cWhere += " AND C00_STATUS IN ('1') "
+			cWhere += " AND C00_YSTATU <> 'FI' "
 
 			//Ponto de entrada para customizar o filtro dos itens exportados.
 			If ExistBlock("MDeExpFil")
@@ -2029,7 +2054,8 @@ User Function ASGrava(cAlias, nReg, nOpc,cMarca, lInverte)
 	Local cAliasC00	:= GetNextAlias()
 	Local cWhere	:= ""
 
-	cWhere+="%C00.C00_FILIAL='"+xFilial("C00")+"' AND C00_YSTATU <> 'OK' AND C00.C00_OK ='"+cMarca+"'"+cCondQry+"%"
+	cWhere+="%C00.C00_FILIAL='"+xFilial("C00")+"' AND C00_YSTATU <> 'OK' AND C00_YSTATU <> 'FI' AND C00.C00_OK ='"+cMarca+"'"+cCondQry+"%"
+	// cWhere+="%C00.C00_FILIAL='"+xFilial("C00")+"' AND C00_YSTATU <> 'OK' AND C00.C00_OK ='"+cMarca+"'"+cCondQry+"%"
 
 	BeginSql Alias cAliasC00
 
