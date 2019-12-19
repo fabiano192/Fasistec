@@ -40,7 +40,7 @@ User Function AS_XML()
 
 	If !(cEmpAnt + cFilAnt + SM0->M0_CGC) $ EmpFil
 		MsgAlert("Rotina não está habilitada para ser executada nesta Filial!")
-		Return(Nil)
+		// Return(Nil)
 	Endif
 
 	Private _oOK		:= LoadBitmap(GetResources(),'LBOK')
@@ -488,6 +488,9 @@ Static Function Panel01()
 	_oTMenu1:Add(_oTMenu1C)
 
 	_oTMenu1D := TMenuItem():New(_oDlg,'Exportar XML',,,.T.,{||U_AS_EXPXML()},,"S4WB014B",,,,,,,.T.)
+	_oTMenu1:Add(_oTMenu1D)
+
+	_oTMenu1D := TMenuItem():New(_oDlg,'Grupo Filiais',,,.T.,{||GRPFIL()},,"DEPENDENTES",,,,,,,.T.)
 	_oTMenu1:Add(_oTMenu1D)
 
 	_oTMenu1E := TMenuItem():New(_oDlg,'Sair',,,,{|| _oDlg:End()},,"FINAL",,,,,,,.T.)
@@ -1728,3 +1731,18 @@ Static Function GetQtdPed()
 	Endif
 
 Return(_lRet)
+
+
+
+Static Function GRPFIL()
+
+	Local _cVldAlt	:= ".T." // Operacao: ALTERACAO
+	Local _cVldExc	:= ".T." // Operacao: EXCLUSAO
+
+	chkFile("ZA4")
+
+	ZA4->(dbSetOrder(1))
+
+	axCadastro("ZA4", "Grupos de Filiais", _cVldExc, _cVldAlt)
+
+Return(Nil)

@@ -757,9 +757,18 @@ User Function CR034A(_lFim,_cProcess)
 					Return
 				Endif
 
+				_cIT101 := '1'	//Assigned Identification
+
+				EE8->(dbsetOrder(1))
+				If EE8->(msSeek(xFilial()+EE9->EE9_PEDIDO+EE9->EE9_SEQUEN+EE9->EE9_COD_I))
+					SC6->(dbsetorder(1))
+					If SC6->(msSeek(xFilial()+Left(EE8->EE8_PEDIDO,6)+Left(EE8->EE8_FATIT,2)))
+						_cIT101 := Alltrim(Str(Val(SC6->C6_POLINE)))
+					ENDIF
+				Endif
+
 				_cLin     := Space(128)+_cEOL
 
-				_cIT101 := '1'	//Assigned Identification
 				//				_cIT101 := Alltrim(EE9->EE9_SEQUEN)	//Assigned Identification
 				_cIT102 := cValtoChar(EE9->EE9_SLDINI)		//Quantity Invoiced
 				_cIT103 := EE9->EE9_UNIDAD			//Unit or Basis for Measurement Code

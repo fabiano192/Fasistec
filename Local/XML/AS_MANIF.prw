@@ -34,6 +34,7 @@ User Function AS_MANIF()
 
 	Private lBtnFiltro	:= .F.
 	Private lUsacolab	:= .F.
+	Private _lVldFil	:= SuperGetMv('AS_VLDFIL',,.T.)
 
 
 	While lRetorno
@@ -204,15 +205,15 @@ Static function execMarkbrowse()
 	Endif
 
 	aCores := {	;
-	{"C00_YSTATU = 'FI'",'S4WB016N_.PNG'},;
-	{"C00_STATUS = '1' .and. alltrim(C00_SITDOC)=='3'",'BR_PINK'},;
-	{"C00_STATUS $ '1' .and. alltrim(C00_CODEVE)=='3' .and. Empty(C00_YSTATU)" ,'BR_LARANJA'},;
-	{"C00_STATUS=='1' .and. alltrim(C00_CODEVE)=='3'",'ENABLE'},;
-	{"C00_STATUS=='2' .and. alltrim(C00_CODEVE)=='3'",'BR_CINZA'},;
-	{"C00_STATUS=='3' .and. alltrim(C00_CODEVE)=='3'",'DISABLE'},;
-	{"C00_STATUS=='4' .and. alltrim(C00_CODEVE)=='3'",'BR_AZUL'},;
-	{"C00_STATUS=='0'",'BR_BRANCO'},;
-	{"C00_STATUS $ '1234' .and. alltrim(C00_CODEVE)=='2'",'BR_AMARELO'}}
+		{"C00_YSTATU = 'FI'",'S4WB016N_.PNG'},;
+		{"C00_STATUS = '1' .and. alltrim(C00_SITDOC)=='3'",'BR_PINK'},;
+		{"C00_STATUS $ '1' .and. alltrim(C00_CODEVE)=='3' .and. Empty(C00_YSTATU)" ,'BR_LARANJA'},;
+		{"C00_STATUS=='1' .and. alltrim(C00_CODEVE)=='3'",'ENABLE'},;
+		{"C00_STATUS=='2' .and. alltrim(C00_CODEVE)=='3'",'BR_CINZA'},;
+		{"C00_STATUS=='3' .and. alltrim(C00_CODEVE)=='3'",'DISABLE'},;
+		{"C00_STATUS=='4' .and. alltrim(C00_CODEVE)=='3'",'BR_AZUL'},;
+		{"C00_STATUS=='0'",'BR_BRANCO'},;
+		{"C00_STATUS $ '1234' .and. alltrim(C00_CODEVE)=='2'",'BR_AMARELO'}}
 
 	//	aFilBrw		:=	{'C00',cCondicao}
 	//	bFiltraBrw := {|| FilBrowse("C00",@aIndArq,@cCondicao) }
@@ -329,7 +330,7 @@ Static function MontaFiltro()
 	cCondicao	+= ".and. C00_YSTATU <> 'OK' "
 	cCondQry	+= "and C00_YSTATU <> 'OK' "
 
-	Return({cCondicao,cCondQry})
+Return({cCondicao,cCondQry})
 
 
 
@@ -380,23 +381,6 @@ Static Function MarkBr()
 Return aRotina
 
 
-User Function ASVldFilial()
-
-	Local _oOdlgFil := NIL
-
-	Define MsDialog _oOdlgFil TITLE "Filial" FROM 0,0 TO  150, 360 PIXEL
-
-	TGroup():New(005,005,70,175,'',_oOdlgFil,,,.T.)
-
-	TSay():New(010,010,{||'Marque abaixo a Filial a qual percente o(s) XML(s) marcado(s)'},_oOdlgFil,,,,,,.T.,CLR_BLUE,CLR_WHITE,200,007)
-
-	ACTIVATE MSDIALOG _oOdlgFil CENTERED
-
-
-Return(Nil)
-
-
-
 
 
 User Function ASBtLegenda()
@@ -415,7 +399,7 @@ User Function ASBtLegenda()
 
 	BrwLegenda(cCadastro,STR0117,aLegenda)
 
-	Return
+Return
 
 
 
@@ -429,7 +413,7 @@ User Function ASBtLegenda()
 	/*/
 Static Function ReadyTSS(cURL,nTipo,lHelp)
 
-	Return (CTIsReady(cURL,nTipo,lHelp,.F.))
+Return (CTIsReady(cURL,nTipo,lHelp,.F.))
 
 
 
@@ -570,7 +554,7 @@ Static Function SincDados(lProcAll,lRefazSinc)
 	oWs := Nil
 	DelClassIntf()
 
-	Return
+Return
 
 
 
@@ -637,9 +621,11 @@ User Function ASManif(cAlias, nReg, nOpc,cMarca, lInverte)
 
 	If ReadyTss()
 		If lInverte
-			cWhere+="%C00.C00_FILIAL='"+xFilial("C00")+"' AND C00.C00_OK <>'"+cMarca+"' "+cCondQry+"%"
+			cWhere+="%C00.C00_FILIAL='"+xFilial("C00")+"' AND C00.C00_OK <>'"+cMarca+"' "+cCondQry+" AND C00.C00_YSTATU <> 'FI'%"
+			// cWhere+="%C00.C00_FILIAL='"+xFilial("C00")+"' AND C00.C00_OK <>'"+cMarca+"' "+cCondQry+"%"
 		Else
-			cWhere+="%C00.C00_FILIAL='"+xFilial("C00")+"' AND C00.C00_OK ='"+cMarca+"'"+cCondQry+"%"
+			cWhere+="%C00.C00_FILIAL='"+xFilial("C00")+"' AND C00.C00_OK ='"+cMarca+"'"+cCondQry+" AND C00.C00_YSTATU <> 'FI'%"
+			// cWhere+="%C00.C00_FILIAL='"+xFilial("C00")+"' AND C00.C00_OK ='"+cMarca+"'"+cCondQry+"%"
 		EndIF
 
 		BeginSql Alias cAliasC00
@@ -668,11 +654,11 @@ User Function ASManif(cAlias, nReg, nOpc,cMarca, lInverte)
 			@065,020 LISTBOX oListBox FIELDS HEADER "","","Chave","Serie","Numero","Valor NFe" SIZE 310,115 PIXEL OF oDlg ON dblClick (aListBox[oListBox:nAt,11]:= !aListBox[oListBox:nAt,11])
 			oListBox:SetArray( aListBox )
 			oListBox:bLine := {||{If(aListBox[oListBox:nAt,11],oOkx,oNo),;
-			getColorStat( aListBox[oListBox:nAt,12] ),;
-			aListBox[oListBox:nAt,2],;
-			aListBox[oListBox:nAt,3],;
-			aListBox[oListBox:nAt,4],;
-			Transform(aListBox[oListBox:nAt,5],"@E 99,999,999,999.99")}}
+				getColorStat( aListBox[oListBox:nAt,12] ),;
+				aListBox[oListBox:nAt,2],;
+				aListBox[oListBox:nAt,3],;
+				aListBox[oListBox:nAt,4],;
+				Transform(aListBox[oListBox:nAt,5],"@E 99,999,999,999.99")}}
 
 			oListBox:bChange := {|| AtuDetalhe(aListBox[oListBox:nAt],@cCNPJEM,@cRazao,@cIEemit,@cDataEmis,@cDtAut),oCnpjEmi1:Refresh(),oRazao:Refresh(),oIEEst1:Refresh(),oDtEmis1:Refresh(),oDtAut1:Refresh()}
 			oListBox:bHeaderClick := {|| aEval(aListBox, {|e| e[11] := lMarkAll}),lMarkAll:=!lMarkAll, oListBox:Refresh()}
@@ -748,7 +734,7 @@ User Function ASManif(cAlias, nReg, nOpc,cMarca, lInverte)
 		Aviso("SPED",STR0021,{STR0114},3) //"Execute o módulo de configuração do serviço, antes de utilizar esta opção!!!"
 	EndIf
 
-	Return
+Return
 
 
 
@@ -787,20 +773,20 @@ Static function SincAtuDados(cChave,cSitConf,cCancNSU)
 		EndIf
 		lOk := .T.
 		C00->C00_YSTATU		:= If(_lVldFil,'FI','')
-		MsUnLock()
+		C00->(MsUnLock())
 
 		If ExistBlock("MANIGRV")
 			ExecBlock("MANIGRV",.F.,.F.,{Substr(cChave,23,3),Substr(cChave,26,9),cChave,cSitConf})
 		EndIf
 	Else
 		If !Empty(cCancNSU)
-			RecLock("C00",.F.)
+			C00->(RecLock("C00",.F.))
 			C00->C00_SITDOC := "3"
-			MsUnLock()
+			C00->(MsUnLock())
 		EndIf
 	EndIf
 
-	return (lOk)
+return (lOk)
 
 
 
@@ -843,7 +829,7 @@ Static function MonAtuDados(cChave,cCNPJEmit,cIeEmit,cNomeEmit,cSitConf,cSituaca
 		C00->(MsUnLock())
 	EndIf
 
-	Return nil
+Return nil
 
 
 
@@ -865,7 +851,7 @@ Static function AtuBrowse()
 		Aviso("Manifesto",cMsg ,{STR0114},3)
 	endif
 
-	return nil
+return nil
 
 
 
@@ -891,7 +877,7 @@ Static Function AtuDetalhe(aList,cCNPJEM,cRazao,cIEemit,cDataEmis,cDtAut)
 	cDataEmis	:=	aList[9]
 	cDtAut  	:=	aList[10]
 
-	Return ()
+Return ()
 
 
 
@@ -998,7 +984,7 @@ Static Function MontaXmlManif(cCbCpo,aMontXml,cRetorno,cJustific)
 		Aviso("SPED",STR0021,{STR0114},3) //"Execute o módulo de configuração do serviço, antes de utilizar esta opção!!!"
 	EndIf
 
-	Return lRetOk
+Return lRetOk
 
 
 
@@ -1152,7 +1138,7 @@ Static Function MonitoraManif(aChave,cAmbiente,cIdEnt,cUrl,lJob)
 	oWs := Nil
 	DelClassIntf()
 
-	Return
+Return
 
 
 
@@ -1204,7 +1190,7 @@ Static Function AtuStatus(aRet,cTpEvento)
 		RestArea(aAreas)
 	EndIf
 
-	Return
+Return
 
 
 
@@ -1235,7 +1221,7 @@ Static Function RetSitDoc(cSitDoc)
 		EndIf
 	EndIf
 
-	Return cDescSit
+Return cDescSit
 
 
 
@@ -1268,7 +1254,7 @@ Static Function RetSitEve(cCodEve)
 		EndIf
 	EndIf
 
-	Return cDescEve
+Return cDescEve
 
 
 
@@ -1288,7 +1274,7 @@ Static Function btLegMonit()
 
 	BrwLegenda(cCadastro,STR0117,aLegenda)
 
-	Return
+Return
 
 
 
@@ -1627,8 +1613,8 @@ Static Function ValidManif( cOpcEve, cJustific, aListBox, aMontXml, lValid )
 				lContinua := .F.
 			Else
 				If MsgYesNo("Existem notas selecionadas que já foram manifestadas com a opção:"+CRLF+cOpcEve+CRLF+CRLF+"Deseja ignorá-las na transmissão?"+CRLF+CRLF+;
-				"IMPORTANTE"+CRLF+;
-				"Ao selecionar a opção 'Não', nenhuma manifestação será transmitida!")
+						"IMPORTANTE"+CRLF+;
+						"Ao selecionar a opção 'Não', nenhuma manifestação será transmitida!")
 
 					lContinua := .T.
 				Else
@@ -1644,7 +1630,7 @@ Static Function ValidManif( cOpcEve, cJustific, aListBox, aMontXml, lValid )
 
 	Endif
 
-	Return lContinua
+Return lContinua
 
 
 
@@ -1690,7 +1676,7 @@ Static Function VerifProces(oRet,aXmlRet,aParam,cAviso,_lExpAut)
 	Next nZ
 
 
-	Return(lRet)
+Return(lRet)
 
 
 	/*/{Protheus.doc} GeraArq()
@@ -1927,7 +1913,7 @@ Static Function GeraArq(aParam,oRetorno,_lExpAut)
 	EndIf
 
 
-	Return lRet
+Return lRet
 
 	//-----------------------------------------------------------------------
 	/*/{Protheus.doc} ValidAPerg()
@@ -1961,7 +1947,7 @@ Static Function ValidAPerg(cPerg)
 		EndIf
 	EndIf
 
-	Return lRet
+Return lRet
 
 
 
@@ -1996,7 +1982,7 @@ static function getAmbMde()
 
 	endif
 
-	return (cAmbiente)
+return (cAmbiente)
 
 	//-------------------------------------------------------------------------------------------
 	/*/{Protheus.doc} getDescEvento()
@@ -2013,13 +1999,13 @@ static Function getDescEvento(cEvento)
 	local cDesc := ""
 
 	do case
-		case cEvento == "210200"
+	case cEvento == "210200"
 		cDesc := "Confirmação da Operação"
-		case cEvento == "210210"
+	case cEvento == "210210"
 		cDesc := "Ciencia da Operação"
-		case cEvento == "210220"
+	case cEvento == "210220"
 		cDesc := "Desconhecimento da Operação"
-		case cEvento == "210240"
+	case cEvento == "210240"
 		cDesc := "Operação não Realizada"
 	end Case
 return (cDesc)
@@ -2034,13 +2020,13 @@ static function getSitConf(cCodEvento)
 	cCodEvento := alltrim(cCodEvento)
 
 	do case
-		case cCodEvento == "210200"
+	case cCodEvento == "210200"
 		cSitConf := "1"
-		case cCodEvento == "210210"
+	case cCodEvento == "210210"
 		cSitConf := "4"
-		case cCodEvento == "210220"
+	case cCodEvento == "210220"
 		cSitConf := "2"
-		case cCodEvento == "210240"
+	case cCodEvento == "210240"
 		cSitConf := "3"
 	endCase
 
@@ -2172,7 +2158,7 @@ Static function MDeMarkAll()
 
 	MarkBRefresh()
 
-	Return
+Return
 
 
 
@@ -2254,13 +2240,13 @@ User Function MontaMonitor()
 					DEFINE MSDIALOG oDlg TITLE "Monitoramento da Manifestação" From aSize[7],0 to aSize[6],aSize[5] OF oMainWnd PIXEL
 					//607,365
 					@aPosObj[1,1],aPosObj[1,2] LISTBOX oListBox 	FIELDS HEADER "","Protocolo","ID","Ambiente","Mensagem" ;
-					SIZE aPosObj[1,4]-aPosObj[1,2],aPosObj[1,3]-aPosObj[1,1] PIXEL
+						SIZE aPosObj[1,4]-aPosObj[1,2],aPosObj[1,3]-aPosObj[1,1] PIXEL
 					oListBox:SetArray(aListBox)
 					oListBox:bLine:={||	{	aListBox[oListBox:nAt][01],;
-					Alltrim(aListBox[oListBox:nAt][02]),;
-					Alltrim(aListBox[oListBox:nAt][03]),;
-					Alltrim(aListBox[oListBox:nAt][04]),;
-					Alltrim(aListBox[oListBox:nAt][06])}}
+						Alltrim(aListBox[oListBox:nAt][02]),;
+						Alltrim(aListBox[oListBox:nAt][03]),;
+						Alltrim(aListBox[oListBox:nAt][04]),;
+						Alltrim(aListBox[oListBox:nAt][06])}}
 
 					@ aPosObj[2,1],aPosObj[2,4]-080 BUTTON oBtn1 PROMPT STR0118		ACTION (aChaves := {}, aChaves := getChaves(@cCodEve), aListBox := getEventos(cChvIni,cChvFin,cCodEve,aChaves) ,oListBox:nAt := 1,IIF(Empty(aListBox),oDlg:End(),oListBox:Refresh())) OF oDlg PIXEL SIZE 035,011 //"Refresh"
 					@ aPosObj[2,1],aPosObj[2,4]-040 BUTTON oBtn2 PROMPT STR0294		ACTION oDlg:End() OF oDlg PIXEL SIZE 035,011 //Sair
@@ -2442,37 +2428,37 @@ Static Function MonitEven(cChvIni,cChvFin,cCodEve,cModelo,cChaves)
 
 				For nX:=1 To Len(aMonitor)
 					AADD( aListBox, {	If(aMonitor[nX]:nStatus <> 6 .And. aMonitor[nX]:nStatus <> 7 ,oNo,oOk),;
-					If(aMonitor[nX]:nProtocolo <> 0 ,Alltrim(Str(aMonitor[nX]:nProtocolo)),""),;
-					aMonitor[nX]:cId_Evento,;
-					Alltrim(Str(aMonitor[nX]:nAmbiente)),;
-					Alltrim(Str(aMonitor[nX]:nStatus)),;
-					If(!Empty(aMonitor[nX]:cCMotEven),Alltrim(aMonitor[nX]:cCMotEven),Alltrim(aMonitor[nX]:cMensagem)),;
-					"" }) //XML manter devido ao TOTVS Colaboração.
-					//Atualizacao do Status do registro de saida
-					cOpcUpd := "3"
-					If aListBox[nX][5]	== "3" .Or. aListBox[nX][5] == "5"
-						cOpcUpd :=	"4"  //Evento rejeitado +msg rejeiçao
-					ElseIf aListBox[nX][5] == "6"
-						cOpcUpd := "3"  //Evento vinculado com sucesso
-					ElseIf aListBox[nX][5] == "1"
-						cOpcUpd := "2"  //Envio de Evento realizado - Aguardando processamento
+						If(aMonitor[nX]:nProtocolo <> 0 ,Alltrim(Str(aMonitor[nX]:nProtocolo)),""),;
+							aMonitor[nX]:cId_Evento,;
+							Alltrim(Str(aMonitor[nX]:nAmbiente)),;
+							Alltrim(Str(aMonitor[nX]:nStatus)),;
+							If(!Empty(aMonitor[nX]:cCMotEven),Alltrim(aMonitor[nX]:cCMotEven),Alltrim(aMonitor[nX]:cMensagem)),;
+								"" }) //XML manter devido ao TOTVS Colaboração.
+							//Atualizacao do Status do registro de saida
+							cOpcUpd := "3"
+							If aListBox[nX][5]	== "3" .Or. aListBox[nX][5] == "5"
+								cOpcUpd :=	"4"  //Evento rejeitado +msg rejeiçao
+							ElseIf aListBox[nX][5] == "6"
+								cOpcUpd := "3"  //Evento vinculado com sucesso
+							ElseIf aListBox[nX][5] == "1"
+								cOpcUpd := "2"  //Envio de Evento realizado - Aguardando processamento
+							EndIF
+
+							cChave:= Substr(aMonitor[nX]:cId_Evento,9,44)
+
+							AtuCodeEve( cChave, cOpcUpd, cCodEve, cModelo, aListBox[nX][4], cIdEnt, cUrl )
+
+						Next
+
 					EndIF
 
-					cChave:= Substr(aMonitor[nX]:cId_Evento,9,44)
+				EndIf
 
-					AtuCodeEve( cChave, cOpcUpd, cCodEve, cModelo, aListBox[nX][4], cIdEnt, cUrl )
+			Else
+				Aviso("SPED",STR0021,{STR0114},3)	//"Execute o módulo de configuração do serviço, antes de utilizar esta opção!!!"
+			EndIf
 
-				Next
-
-			EndIF
-
-		EndIf
-
-	Else
-		Aviso("SPED",STR0021,{STR0114},3)	//"Execute o módulo de configuração do serviço, antes de utilizar esta opção!!!"
-	EndIf
-
-Return aListBox
+			Return aListBox
 
 
 
@@ -2499,5 +2485,89 @@ Static Function RetManif(_oMsg,aChaves)
 		Next _nList
 
 	Next _nTen
+
+Return(Nil)
+
+
+
+
+User Function ASVldFilial()
+
+	Local _oOdlgFil := NIL
+	Local _AreaSM0  := SM0->(GetArea())
+
+	Local _cEmp		:= SM0->M0_CODIGO
+	Local _cFil		:= SM0->M0_CODFIL
+
+	Local _nOpc		:= 0
+
+	Local _cAlias	:= GetNextAlias()
+	Local _cWhere	:= ""
+
+	Local _aRadio := {}
+	Local _nRadio := 1
+
+	ZA4->(dbSetOrder(2))
+	If ZA4->(MsSeek(xFilial("ZA4")+cFilAnt))
+
+		_cGrp  := ZA4->ZA4_GRUPO
+
+		While ZA4->(!EOF()) .And. _cGrp == ZA4->ZA4_GRUPO
+
+			If SM0->( dbSeek( cEmpAnt+ZA4->ZA4_CODFIL) )
+				aAdd( _aRadio, ZA4->ZA4_CODFIL+' - '+SM0->M0_FILIAL )
+			Endif
+
+			ZA4->(dbSkip())
+		EndDo
+
+		SM0->( dbSeek( _cEmp + _cFil ) )
+
+	Endif
+
+	Define MsDialog _oOdlgFil TITLE "Filial" FROM 0,0 TO  150, 360 PIXEL
+
+	TGroup():New(005,005,70,175,'',_oOdlgFil,,,.T.)
+
+	TSay():New(010,010,{||'Selecione abaixo a Filial ao qual percente o(s) XML(s) marcado(s)'},_oOdlgFil,,,,,,.T.,CLR_BLUE,CLR_WHITE,200,007)
+
+	TRadMenu():New(025,015,_aRadio,{|u| If(PCount() > 0, _nRadio := u, _nRadio) },_oOdlgFil,,{|| },,,"",,,70,10,,,,.T.,.F.,.T.)
+
+	TButton():New( 050, 140, "Confirmar"	,_oOdlgFil,{||(_nOpc := 1,_oOdlgFil:End())},30,10,,,.F.,.T.,.F.,,.F.,,,.F. )
+
+
+	ACTIVATE MSDIALOG _oOdlgFil CENTERED
+
+	RestArea(_AreaSM0)
+
+
+	If _nOpc = 1
+	
+		_cWhere += "%C00.C00_FILIAL='"+xFilial("C00")+"' AND C00_YSTATU = 'FI' AND C00.C00_OK = '"+cMarca+"' "+cCondQry+"%"
+	
+		BeginSql Alias _cAlias
+	
+			SELECT C00_CHVNFE
+			FROM %Table:C00% C00
+			WHERE %Exp:_cWhere% AND
+			C00.%notdel%
+		EndSql
+	
+		While (_cAlias)->(!Eof())
+	
+			C00->(DbsetOrder(1))
+			If C00->( DbSeek( xFilial("C00") + (_cAlias)->C00_CHVNFE) )
+				C00->(RecLock("C00",.F.))
+				C00->C00_FILIAL     := Left(_aRadio[_nRadio],2)
+				C00->C00_STATUS     := ''
+				C00->(MsUnLock())
+			Endif
+	
+			(_cAlias)->(dbSkip())
+		EndDo
+	
+		(cAliasC00)->(dbCloseArea())
+	
+	Endif
 
 Return(Nil)

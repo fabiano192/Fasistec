@@ -11,7 +11,7 @@ Descricao 	³ 	Criação de novo módulo
 User Function EspNome()
 
 Return ("Portaria")
- 
+
 /*
 //Ambiente 98
 User function Esp1Nome()
