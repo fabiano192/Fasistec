@@ -118,6 +118,9 @@ Static Function CR109A(_lFim)
 	IndRegua("TRB",cArqLog,cIndLog,,,"Criando Trabalho...")
 
 
+	_cData2    := GravaData(dDataBase,.f.,8)
+	_cHora2    := Substr(Time(),1,2) + Substr(Time(),4,2) + Substr(Time(),7,2)
+	
 	ProcRegua(20)
 
 	IncProc()
@@ -129,7 +132,8 @@ Static Function CR109A(_lFim)
 	For I:= 1 to Len(_aArqTxt)
 
 		_lProx     := .F.
-		_cArqBkp   := _cJDeFold+"Brasil\Entrada\Programacao\"+Alltrim(_aArqTxt[I])
+
+		_cArqBkp   := _cJDeFold+"Brasil\Entrada\Programacao\BKP_EM"+_cData2+_cHora2+"_"+Alltrim(_aArqTxt[I])
 		_cArq      := _cJDeFold+"Brasil\Entrada\"+Alltrim(_aArqTxt[i])
 
 		_lExit     := .F.
