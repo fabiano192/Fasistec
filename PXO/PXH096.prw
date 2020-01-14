@@ -749,6 +749,7 @@ Return()
 
 Static Function LoadSynthetic(_lExcel)
 
+local A
 	If !_lExcel
 		_oPrinter:SetPortrait()
 
