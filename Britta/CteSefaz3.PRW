@@ -1880,9 +1880,9 @@ If cTipo == "1" //-- Saida
 						//-- Necessario incluir SPED_DELMAIL=1 no SERVER.INI do TSS/SPED
 						//-- para excluir este conteudo do arquivo XML final.
 
-						If !Empty(cMail)
-							cString += '[EMAIL=' + cMail + ']'
-						EndIf
+						// If !Empty(cMail)
+						// 	cString += '[EMAIL=' + cMail + ']'
+						// EndIf
 						
 						cString += '</dest>'
 						aAdd(aXMLCTe,AllTrim(cString))
@@ -4123,9 +4123,9 @@ Else //-- Entrada
 					EndIf
 					cString += '</enderDest>'
 
-					If !Empty(cMail)
-						cString += '[EMAIL=' + cMail + ']'
-					EndIf
+					// If !Empty(cMail)
+					// 	cString += '[EMAIL=' + cMail + ']'
+					// EndIf
 
 					cString += '</dest>'
 					aAdd(aXMLCTe,AllTrim(cString))
