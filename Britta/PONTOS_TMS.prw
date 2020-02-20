@@ -1,4 +1,5 @@
 #INCLUDE 'TOTVS.CH'
+#INCLUDE 'TOPCONN.CH'
 
 /*
 Ponto de Entrada:	TME70CAB
@@ -41,6 +42,12 @@ User Function TME70QRY()
 
 	Local _cRet	:= ""
 
+	_cUPD := " UPDATE "+Retsqlname("DT6")+" SET DT6_YSORIG=DTC_SERNFC " 
+	_cUPD += " FROM "+Retsqlname("DT6")+" A INNER JOIN "+Retsqlname("DTC")+" B ON DT6_LOTNFC = DTC_LOTNFC AND DT6_DOC=DTC_DOC AND DT6_SERIE=DTC_SERIE "
+	_cUPD += " WHERE A.D_E_L_E_T_='' AND B.D_E_L_E_T_='' "
+	
+	TCSQLEXEC(_cUPD)
+
 	If !u_ChkAcesso("CTEMBA",6,.F.)
 		_cRet += " AND DT6_YSORIG <> '001' "
 	Endif
@@ -56,8 +63,6 @@ User Function TME70QRY()
 	If !u_ChkAcesso("CTEICC",6,.F.)
 		_cRet += " AND DT6_YSORIG <> '007' "
 	Endif
-	
-	// _cRet += " AND DT6_YSORIG <> '002' "
-	// _cRet += " AND DT6_YSORIG <> '006' "
+
 
 RETURN (_cRet)

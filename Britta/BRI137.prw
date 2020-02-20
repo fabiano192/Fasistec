@@ -150,9 +150,10 @@ Static Function BRI137A()
 		_cSM0Cod  := _aSM0[_nSM0][2]
 		_cSM0Fil  := _aSM0[_nSM0][3]
 
-		//If !(_cSM0Cnpj $ '15409884000100|01471225000199')
-		//	Loop
-		//Endif
+		//If !(_cSM0Cnpj $ '17674000000170')
+		If !(_cSM0Cnpj $ '28311497000188')
+			Loop
+		Endif
 
 		RpcClearEnv()
 
@@ -160,8 +161,6 @@ Static Function BRI137A()
 
 		RpcSetType(3)
 		RpcSetEnv(_cSM0Cod, _cSM0Fil,'cte','cte2020','TMS' ,,  {"DTC","DTP","DT6","DT8","SD1","SD2","SD3","SF2","SA1"})
-
-
 
 		TCConType("TCPIP")
 
@@ -174,8 +173,6 @@ Static Function BRI137A()
 
 		//Seta o Banco de Dados
 		TCSETCONN(_nDADOS)
-
-
 
 		GeraTRB()
 
@@ -196,8 +193,8 @@ Static Function BRI137A()
 					TSF2->(dbCloseArea())
 				Endif
 
-				_cQuery := " SELECT A1.*,A4_CGC,A4_NREDUZ,F2_FILIAL,F2_CLIENTE,F2_LOJA,F2_DOC,F2_SERIE,F2_VOLUME1,F2_PLIQUI,F2_VALBRUT,F2_PDLITTO,F2_EMISSAO,F2_HORA,D2_PDFRETT " + CRLF
-				_cQuery += "  FROM SF2"+_cEmp+"0 F2 " + CRLF
+				_cQuery := " SELECT A1.*,A4_CGC,A4_NREDUZ,F2_FILIAL,F2_CLIENTE,F2_LOJA,F2_DOC,F2_SERIE,F2_VOLUME1,F2_PLIQUI,F2_VALBRUT,F2_PDLITTO,F2_EMISSAO,F2_HORA,D2_PDFRETT, " + CRLF
+				_cQuery += " F2_PLACA,F2_PDLITQT,F2_PDLITUN FROM SF2"+_cEmp+"0 F2 " + CRLF
 				_cQuery += " INNER JOIN SD2"+_cEmp+"0 D2 ON F2_CLIENTE = D2_CLIENTE AND F2_LOJA = D2_LOJA AND F2_DOC = D2_DOC AND F2_SERIE = D2_SERIE AND F2_FILIAL = D2_FILIAL" + CRLF
 				_cQuery += " INNER JOIN SA1500 A1 ON F2_CLIENTE = A1_COD AND F2_LOJA = A1_LOJA " + CRLF
 				_cQuery += " INNER JOIN SA4"+_cEmp+"0 A4 ON F2_TRANSP = A4_COD AND F2_FILIAL = A4_FILIAL" + CRLF
@@ -268,6 +265,12 @@ Static Function BRI137A()
 					_cHora   := TSF2->F2_HORA
 					_cNomTr  := TSF2->A4_NREDUZ
 
+					_cPLACA  := TSF2->F2_PLACA
+					_nQTLIT  := TSF2->F2_PDLITQT
+					_nVLUNIT := TSF2->F2_PDLITUN
+					_nVLTOT  := TSF2->F2_PDLITTO
+					_nFREBRU := TSF2->D2_PDFRETT
+
 					_cKey 	 := TSF2->F2_FILIAL+TSF2->F2_SERIE+TSF2->F2_DOC
 
 					While TSF2->(!EOF()) .And. _cKey = TSF2->F2_FILIAL+TSF2->F2_SERIE+TSF2->F2_DOC
@@ -292,9 +295,15 @@ Static Function BRI137A()
 						TRB->VALBRUT:= _nValor
 						TRB->VALFRET:= _nVlFret
 						TRB->VALOR	:= _nValBru
-						TRB->EMISSAO:=_dEmissa
-						TRB->HORA	:=_cHora
+						TRB->EMISSAO:= _dEmissa
+						TRB->HORA	:= _cHora
 						TRB->NOMETR	:= _cNomTr
+
+						TRB->PLACA  := _cPLACA
+						TRB->QTLITRO:= _nQTLIT
+						TRB->VLUNI	:= _nVLUNIT
+						TRB->VLTOT	:= _nVLTOT
+						TRB->VLFRET	:= _nFREBRU
 						TRB->(MsUnLock())
 
 						_lTRB := .T.
@@ -304,7 +313,6 @@ Static Function BRI137A()
 				EndDo
 
 				TSF2->(dbCloseArea())
-
 
 				//Grava o Cliente de remessa na tabela temporária TSA1
 				If !TSA1->(MsSeek( Alltrim(_cCNPJRem)))
@@ -350,8 +358,7 @@ Static Function BRI137A()
 		Next F
 
 		TCUNLINK(_nDADOS)
-// TCSetConn(advConnection())	//-TCSetConn eh igual ao dbSelectArea
-
+		// TCSetConn(advConnection())	//-TCSetConn eh igual ao dbSelectArea
 
 		If _lTRB
 
@@ -390,6 +397,8 @@ Static Function BRI137A()
 						Endif
 					Endif
 
+					_cCliDes := SA1->A1_COD
+					_cLojDes := SA1->A1_LOJA
 					_cRegDes := SA1->A1_CDRDES
 
 					//Verifica se o Cliente Remessa está cadastrado
@@ -474,42 +483,46 @@ Static Function BRI137A()
 							{"DTC_DATENT" 	,TRB->EMISSAO , Nil},;
 							{"DTC_CLIDES"	,_cCliDes	, Nil},;
 							{"DTC_LOJDES" 	,_cLojDes	, Nil},;
-							{"DTC_CLIDEV" 	,_cCliRem	, Nil},;
-							{"DTC_LOJDEV" 	,_cLojRem	, Nil},;
-							{"DTC_CLICAL" 	,_cCliRem	, Nil},;
-							{"DTC_LOJCAL" 	,_cLojRem	, Nil},;
-							{"DTC_DEVFRE" 	,"1" 		, Nil},;
-							{"DTC_SERTMS" 	,"3" 		, Nil},;
-							{"DTC_TIPTRA" 	,"1" 		, Nil},;
+							{"DTC_CLIDEV" 	,_cCliDes	, Nil},; //{"DTC_CLIDEV" 	,_cCliRem	, Nil},;
+							{"DTC_LOJDEV" 	,_cLojDes	, Nil},; //{"DTC_LOJDEV" 	,_cLojRem	, Nil},;
+							{"DTC_CLICAL" 	,_cCliDes	, Nil},; //{"DTC_CLICAL" 	,_cCliRem	, Nil}
+							{"DTC_LOJCAL" 	,_cLojDes	, Nil},; //{"DTC_LOJCAL" 	,_cLojRem	, Nil},;
+							{"DTC_DEVFRE" 	,"2" 		, Nil},; //{"DTC_DEVFRE" 	,"1" 		, Nil},;
+							{"DTC_SERTMS" 	,"3" 		, Nil},; //{"DTC_SERTMS" 	,"3" 		, Nil},;
+							{"DTC_TIPTRA" 	,"1" 		, Nil},; 
 							{"DTC_SERVIC" 	,"SNE" 		, Nil},;
 							{"DTC_TIPNFC" 	,"0" 		, Nil},;
-							{"DTC_TIPFRE" 	,"1" 		, Nil},;
+							{"DTC_TIPFRE" 	,"2" 		, Nil},; //{"DTC_TIPFRE" 	,"1" 		, Nil},;
 							{"DTC_CODNEG" 	,"01" 		, Nil},;
 							{"DTC_SELORI" 	,"1" 		, Nil},;
 							{"DTC_CDRORI" 	,_cRegRem	, Nil},;
 							{"DTC_CDRDES" 	,_cRegDes	, Nil},;
 							{"DTC_CDRCAL" 	,_cRegDes	, Nil},;
-							{"DTC_DISTIV" 	,'2'		, Nil}}
-						// {"DTC_VLRINF" ,TRB->VALFRET, Nil},;
-
+							{"DTC_DISTIV" 	,'2'		, Nil},;
+							{"DTC_YPLACA" , TRB->PLACA  , Nil},;
+							{"DTC_YQTLIT" , TRB->QTLITRO, Nil},;
+							{"DTC_YVLUNI" , TRB->VLUNI  , Nil},;
+							{"DTC_YVLTOT" , TRB->VLTOT  , Nil},;
+							{"DTC_YFRCHE" , TRB->VLFRET , Nil}}
+							
 						aItem := {}
 						aItemDTC := {}
 
 						aItem := {;
-							{"DTC_NUMNFC" ,TRB->DOC 	, Nil},;
-							{"DTC_SERNFC" ,TRB->SERIE 	, Nil},;
-							{"DTC_CODPRO" ,_cProdCte	, Nil},;
-							{"DTC_CODEMB" ,"GR" 		, Nil},;
-							{"DTC_EMINFC" ,TRB->EMISSAO , Nil},;
-							{"DTC_QTDVOL" ,TRB->VOLUME 	, Nil},;
-							{"DTC_PESO"   ,TRB->PLIQUI	, Nil},;
-							{"DTC_PESOM3" ,0.0000		, Nil},;
-							{"DTC_VALOR"  ,TRB->VALOR	, Nil},;
-							{"DTC_BASSEG" ,0.00 		, Nil},;
-							{"DTC_METRO3" ,0.0000		, Nil},;
-							{"DTC_QTDUNI" ,0 			, Nil},;
-							{"DTC_EDI" 	  ,"2" 			, Nil},;
-							{"DTC_CF" 	  ,'5932'		, Nil}}
+							{"DTC_NUMNFC" ,TRB->DOC 	 , Nil},;
+							{"DTC_SERNFC" ,TRB->SERIE 	 , Nil},;
+							{"DTC_CODPRO" ,_cProdCte	 , Nil},;
+							{"DTC_CODEMB" ,"GR" 		 , Nil},;
+							{"DTC_EMINFC" ,TRB->EMISSAO  , Nil},;
+							{"DTC_QTDVOL" ,TRB->VOLUME 	 , Nil},;
+							{"DTC_PESO"   ,TRB->PLIQUI	 , Nil},;
+							{"DTC_PESOM3" ,0.0000		 , Nil},;
+							{"DTC_VALOR"  ,TRB->VALOR	 , Nil},;
+							{"DTC_BASSEG" ,0.00 		 , Nil},;
+							{"DTC_METRO3" ,0.0000		 , Nil},;
+							{"DTC_QTDUNI" ,0 			 , Nil},;
+							{"DTC_EDI" 	  ,"2" 			 , Nil},;
+							{"DTC_CF" 	  ,'5932'		 , Nil}}
 
 
 						AAdd(aItemDTC,aClone(aItem))
@@ -530,7 +543,6 @@ Static Function BRI137A()
 						EndIf
 
 					EndIf
-
 
 					If lCont
 
@@ -566,7 +578,7 @@ Static Function BRI137A()
 						AAdd(aVetDoc,{"DT6_TABFRE","0001"})
 						AAdd(aVetDoc,{"DT6_TIPTAB","01"})
 						AAdd(aVetDoc,{"DT6_SEQTAB","00"})
-						AAdd(aVetDoc,{"DT6_TIPFRE","1"})
+						AAdd(aVetDoc,{"DT6_TIPFRE","2"}) //AAdd(aVetDoc,{"DT6_TIPFRE","1"})
 						AAdd(aVetDoc,{"DT6_FILDES","01"})
 						AAdd(aVetDoc,{"DT6_BLQDOC","2"})
 						AAdd(aVetDoc,{"DT6_PRIPER","2"})
@@ -578,11 +590,16 @@ Static Function BRI137A()
 						AAdd(aVetDoc,{"DT6_LOJREM",_cLojRem})
 						AAdd(aVetDoc,{"DT6_CLIDES",_cCliDes})
 						AAdd(aVetDoc,{"DT6_LOJDES",_cLojDes})
-						AAdd(aVetDoc,{"DT6_CLIDEV",_cCliRem})
-						AAdd(aVetDoc,{"DT6_LOJDEV",_cLojRem})
-						AAdd(aVetDoc,{"DT6_CLICAL",_cCliRem})
-						AAdd(aVetDoc,{"DT6_LOJCAL",_cLojRem})
-						AAdd(aVetDoc,{"DT6_DEVFRE","1"})
+						//AAdd(aVetDoc,{"DT6_CLIDEV",_cCliRem})
+						//AAdd(aVetDoc,{"DT6_LOJDEV",_cLojRem})
+						//AAdd(aVetDoc,{"DT6_CLICAL",_cCliRem})//--
+						//AAdd(aVetDoc,{"DT6_LOJCAL",_cLojRem})//--
+						//AAdd(aVetDoc,{"DT6_DEVFRE","1"})//--
+						AAdd(aVetDoc,{"DT6_CLIDEV",_cCliDes})
+						AAdd(aVetDoc,{"DT6_LOJDEV",_cLojDes})
+						AAdd(aVetDoc,{"DT6_CLICAL",_cCliDes})		//ALTERADO POR ALISON - 04/02/20
+						AAdd(aVetDoc,{"DT6_LOJCAL",_cLojDes})		//ALTERADO POR ALISON - 04/02/20
+						AAdd(aVetDoc,{"DT6_DEVFRE","2"})			//ALTERADO POR ALISON - 04/02/20
 						AAdd(aVetDoc,{"DT6_FATURA",""})
 						AAdd(aVetDoc,{"DT6_SERVIC","SNE"})
 						AAdd(aVetDoc,{"DT6_CODMSG",""})
@@ -601,8 +618,9 @@ Static Function BRI137A()
 						AAdd(aVetDoc,{"DT6_REENTR", 0})
 						AAdd(aVetDoc,{"DT6_TIPMAN",""})
 						AAdd(aVetDoc,{"DT6_PRZENT",TRB->EMISSAO})
-						AAdd(aVetDoc,{"DT6_FIMP" ,"0"})
 						AAdd(aVetDoc,{"DT6_YSORIG",TRB->SERIE})
+						AAdd(aVetDoc,{"DT6_FIMP" ,"0"})
+						//AAdd(aVetDoc,{"DT6_YSORIG",TRB->SERIE})
 
 						AAdd(aVetVlr,{{"DT8_CODPAS","07"},;
 							{"DT8_VALPAS", TRB->VALFRET},;
@@ -726,21 +744,27 @@ Static Function GeraTRB()
 	Local _cArqTrb	:= Nil
 	Local _cIndTrb	:= "CNPJTR+DOC+SERIE"
 
-	AADD(_aStru,{"CNPJTR"	, "C" , TAMSX3("A4_CGC")[1], 0 })
-	AADD(_aStru,{"CNPJRE"	, "C" , TAMSX3("A4_CGC")[1], 0 })
-	AADD(_aStru,{"CNPJDE"	, "C" , TAMSX3("A4_CGC")[1], 0 })
+	AADD(_aStru,{"CNPJTR"	, "C" , TAMSX3("A4_CGC")[1]    , 0 })
+	AADD(_aStru,{"CNPJRE"	, "C" , TAMSX3("A4_CGC")[1]    , 0 })
+	AADD(_aStru,{"CNPJDE"	, "C" , TAMSX3("A4_CGC")[1]    , 0 })
 	AADD(_aStru,{"CLIDES"	, "C" , TAMSX3("F2_CLIENTE")[1], 0 })
-	AADD(_aStru,{"LOJDES"	, "C" , TAMSX3("F2_LOJA")[1], 0 })
-	AADD(_aStru,{"DOC"		, "C" , TAMSX3("F2_DOC")[1], 0 })
-	AADD(_aStru,{"SERIE"	, "C" , TAMSX3("F2_SERIE")[1], 0 })
+	AADD(_aStru,{"LOJDES"	, "C" , TAMSX3("F2_LOJA")[1]   , 0 })
+	AADD(_aStru,{"DOC"		, "C" , TAMSX3("F2_DOC")[1]    , 0 })
+	AADD(_aStru,{"SERIE"	, "C" , TAMSX3("F2_SERIE")[1]  , 0 })
 	AADD(_aStru,{"EMISSAO"	, "D" , TAMSX3("F2_EMISSAO")[1], 0 })
-	AADD(_aStru,{"HORA"		, "C" , TAMSX3("F2_HORA")[1], 0 })
+	AADD(_aStru,{"HORA"		, "C" , TAMSX3("F2_HORA")[1]   , 0 })
 	AADD(_aStru,{"VOLUME"	, "N" , TAMSX3("F2_VOLUME1")[1], 0 })
-	AADD(_aStru,{"PLIQUI"	, "N" , TAMSX3("F2_PLIQUI")[1], TAMSX3("F2_PLIQUI")[2] } )
+	AADD(_aStru,{"PLIQUI"	, "N" , TAMSX3("F2_PLIQUI")[1] , TAMSX3("F2_PLIQUI")[2] } )
 	AADD(_aStru,{"VALBRUT"	, "N" , TAMSX3("F2_VALBRUT")[1], TAMSX3("F2_VALBRUT")[2] })
 	AADD(_aStru,{"VALFRET"	, "N" , TAMSX3("DT6_VALFRE")[1], TAMSX3("DT6_VALFRE")[2] })
 	AADD(_aStru,{"VALOR"	, "N" , TAMSX3("F2_VALBRUT")[1], TAMSX3("F2_VALBRUT")[2] })
-	AADD(_aStru,{"NOMETR"	, "C" , TAMSX3("A4_NREDUZ")[1], 0 })
+	AADD(_aStru,{"NOMETR"	, "C" , TAMSX3("A4_NREDUZ")[1] , 0 })
+
+	AADD(_aStru,{"PLACA"	, "C" , TAMSX3("F2_PLACA")[1]  , 0 })
+	AADD(_aStru,{"QTLITRO"	, "N" , TAMSX3("F2_PLIQUI")[1] , TAMSX3("F2_PLIQUI")[2] } )
+	AADD(_aStru,{"VLUNI"	, "N" , TAMSX3("F2_PLIQUI")[1] , TAMSX3("F2_PLIQUI")[2] } )
+	AADD(_aStru,{"VLTOT"	, "N" , TAMSX3("F2_PLIQUI")[1] , TAMSX3("F2_PLIQUI")[2] } )
+	AADD(_aStru,{"VLFRET"	, "N" , TAMSX3("F2_PLIQUI")[1] , TAMSX3("F2_PLIQUI")[2] } )
 
 	_cArqTrb	:= CriaTrab(_aStru,.T.)
 
