@@ -125,13 +125,18 @@ Static Function BRI137A()
 	_dDtIni := MV_PAR01
 	_dDtFim := MV_PAR02
 
+	_cNfIni := MV_PAR05
+	_cNfFim := MV_PAR06
+
 	_AreaSM0:= SM0->(GetArea())
 
 	SM0->(dbGoTop())
 
 	While SM0->(!Eof())
 
-		AAdd(_aSM0,{Alltrim(SM0->M0_CGC),SM0->M0_CODIGO,SM0->M0_CODFIL,Alltrim(SM0->M0_NOME)})
+		If SM0->M0_CODIGO >= MV_PAR03 .And. SM0->M0_CODIGO <= MV_PAR04
+			AAdd(_aSM0,{Alltrim(SM0->M0_CGC),SM0->M0_CODIGO,SM0->M0_CODFIL,Alltrim(SM0->M0_NOME)})
+		Endif
 
 		SM0->(dbSkip())
 	EndDo
@@ -151,9 +156,9 @@ Static Function BRI137A()
 		_cSM0Fil  := _aSM0[_nSM0][3]
 
 		//If !(_cSM0Cnpj $ '17674000000170')
-		If !(_cSM0Cnpj $ '28311497000188')
-			Loop
-		Endif
+		// If !(_cSM0Cnpj $ '28311497000188')
+		// 	Loop
+		// Endif
 
 		RpcClearEnv()
 
@@ -201,6 +206,7 @@ Static Function BRI137A()
 				_cQuery += " WHERE F2.D_E_L_E_T_ = '' AND D2.D_E_L_E_T_ = '' AND A1.D_E_L_E_T_ = ''   AND A4.D_E_L_E_T_ = '' " + CRLF
 				_cQuery += " AND F2_FILIAL = '"+_cFilEmp+"' "// AND D2_FILIAL = '"+_cFilEmp+"' AND A4_FILIAL = '"+_cFilEmp+"' " + CRLF
 				_cQuery += " AND F2_EMISSAO BETWEEN '"+DTOS(_dDtIni)+"' AND '"+DTOS(_dDtFim)+"' " + CRLF
+				_cQuery += " AND F2_DOC		BETWEEN '"+_cNFINI+"'       AND '"+_cNFFIM+"' " + CRLF
 				_cQuery += " AND A1_GRPVEN = '000001' " + CRLF
 				_cQuery += " AND A4_CGC <> '' " + CRLF
 				_cQuery += " AND A4_CGC = '"+_cSM0Cnpj+"'  " + CRLF
@@ -499,12 +505,14 @@ Static Function BRI137A()
 							{"DTC_CDRDES" 	,_cRegDes	, Nil},;
 							{"DTC_CDRCAL" 	,_cRegDes	, Nil},;
 							{"DTC_DISTIV" 	,'2'		, Nil},;
-							{"DTC_YPLACA" , TRB->PLACA  , Nil},;
-							{"DTC_YQTLIT" , TRB->QTLITRO, Nil},;
-							{"DTC_YVLUNI" , TRB->VLUNI  , Nil},;
-							{"DTC_YVLTOT" , TRB->VLTOT  , Nil},;
-							{"DTC_YFRCHE" , TRB->VLFRET , Nil}}
+							{"DTC_YPLACA" 	, TRB->PLACA   , Nil},;
+							{"DTC_YQTLIT" 	, TRB->QTLITRO , Nil},;
+							{"DTC_YVLUNI" 	, TRB->VLUNI   , Nil},;
+							{"DTC_YVLTOT" 	, TRB->VLTOT   , Nil},;
+							{"DTC_YFRCHE" 	, TRB->VLFRET  , Nil}}
 							
+						// {"DTC_VLRINF" ,TRB->VALFRET, Nil},;
+
 						aItem := {}
 						aItemDTC := {}
 
@@ -523,7 +531,7 @@ Static Function BRI137A()
 							{"DTC_QTDUNI" ,0 			 , Nil},;
 							{"DTC_EDI" 	  ,"2" 			 , Nil},;
 							{"DTC_CF" 	  ,'5932'		 , Nil}}
-
+							
 
 						AAdd(aItemDTC,aClone(aItem))
 
@@ -729,10 +737,15 @@ Static Function AtuSX1()
 	_cPerg := "BRI137"
 	_aRegs := {}
 
-	//    	   Grupo/Ordem/Pergunta            /perg_spa /perg_eng/Variavel/Tipo/Tamanho/Decimal/Presel/GSC/Valid     /Var01     /Def01         /defspa1/defeng1/Cnt01/Var02/Def02  /Defspa2/defeng2/Cnt02/Var03/Def03/defspa3/defeng3/Cnt03/Var04/Def04/defspa4/defeng4/Cnt04/Var05/Def05/deefspa5/defeng5/Cnt05/F3     /cPyme/cGrpSxg/cHelp)
-	U_CRIASX1(_cPerg,"01","Data NF De     ?",""       ,""      ,"mv_ch1","D" ,08     ,0      ,0     ,"G",""        ,"MV_PAR01",""            ,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""   ,"" ,""   ,""     ,)
-	U_CRIASX1(_cPerg,"02","Data NF Ate    ?",""       ,""      ,"mv_ch2","D" ,08     ,0      ,0     ,"G",""        ,"MV_PAR02",""            ,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""   ,"" ,""   ,""     ,)
-	// U_CRIASX1(_cPerg,"03","Tipo               ?",""       ,""     ,"mv_ch3","N" ,01     ,0      ,0     ,"C",""        ,"MV_PAR03","Carregamento",""     ,""     ,""   ,""   ,"Descarregamento"     ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""   ,""   ,""   ,""     ,)
+	//    	   Grupo/Ordem/Pergunta         /perg_spa /perg_eng/Variavel/Tipo/Tamanho/Decimal/Presel/GSC/Valid     /Var01     /Def01         /defspa1/defeng1/Cnt01/Var02/Def02  /Defspa2/defeng2/Cnt02/Var03/Def03/defspa3/defeng3/Cnt03/Var04/Def04/defspa4/defeng4/Cnt04/Var05/Def05/deefspa5/defeng5/Cnt05/F3   /cPyme/cGrpSxg/cHelp)
+	U_CRIASX1(_cPerg,"01","Data NF De     ?",""       ,""      ,"mv_ch1","D" ,08     ,0      ,0     ,"G",""        ,"MV_PAR01",""            ,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""   ,""   ,""   ,""     ,)
+	U_CRIASX1(_cPerg,"02","Data NF Ate    ?",""       ,""      ,"mv_ch2","D" ,08     ,0      ,0     ,"G",""        ,"MV_PAR02",""            ,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""   ,""   ,""   ,""     ,)
+
+	U_CRIASX1(_cPerg,"03","Transp De      ?",""       ,""      ,"mv_ch3","C" ,02     ,0      ,0     ,"G",""        ,"MV_PAR03",""            ,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""   ,""   ,""   ,""     ,)
+	U_CRIASX1(_cPerg,"04","TRansp Ate     ?",""       ,""      ,"mv_ch4","C" ,02     ,0      ,0     ,"G",""        ,"MV_PAR04",""            ,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""   ,""   ,""   ,""     ,)
+	U_CRIASX1(_cPerg,"05","NF Venda De    ?",""       ,""      ,"mv_ch5","C" ,09     ,0      ,0     ,"G",""        ,"MV_PAR05",""            ,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""   ,""   ,""   ,""     ,)
+	U_CRIASX1(_cPerg,"06","NF Venda Ate   ?",""       ,""      ,"mv_ch6","C" ,09     ,0      ,0     ,"G",""        ,"MV_PAR06",""            ,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""   ,""   ,""   ,""     ,)
+
 
 Return(Nil)
 
@@ -759,8 +772,7 @@ Static Function GeraTRB()
 	AADD(_aStru,{"VALFRET"	, "N" , TAMSX3("DT6_VALFRE")[1], TAMSX3("DT6_VALFRE")[2] })
 	AADD(_aStru,{"VALOR"	, "N" , TAMSX3("F2_VALBRUT")[1], TAMSX3("F2_VALBRUT")[2] })
 	AADD(_aStru,{"NOMETR"	, "C" , TAMSX3("A4_NREDUZ")[1] , 0 })
-
-	AADD(_aStru,{"PLACA"	, "C" , TAMSX3("F2_PLACA")[1]  , 0 })
+	AADD(_aStru,{"PLACA"	, "C" , 7	                   , 0 })
 	AADD(_aStru,{"QTLITRO"	, "N" , TAMSX3("F2_PLIQUI")[1] , TAMSX3("F2_PLIQUI")[2] } )
 	AADD(_aStru,{"VLUNI"	, "N" , TAMSX3("F2_PLIQUI")[1] , TAMSX3("F2_PLIQUI")[2] } )
 	AADD(_aStru,{"VLTOT"	, "N" , TAMSX3("F2_PLIQUI")[1] , TAMSX3("F2_PLIQUI")[2] } )
