@@ -152,6 +152,8 @@ Return(Nil)
 
 Static Function Fields_XML()
 
+	Local F	:= 0
+
 	_aFldCab := {{"ZA1_OK"		,10,"C","N"},;
 	{"ZA1_STATUS"	,10,"N","N"},;
 	{"ZA1_FILIAL"	,20,"C","N"},;
@@ -265,6 +267,8 @@ User Function AS_GetXML(_nOpc)
 	Local _lFornec	:= .F.
 	Local O
 	Local _aListFile:= {}
+	Local _nCab		:= 0
+	Local _nIt		:= 0
 
 	If Select("TZA1") > 0
 		TZA1->(dbCloseArea())
@@ -341,6 +345,8 @@ Static Function AtuItem(_nOpcIt,_aArrAtu)
 	Local _lAtu		:= _aArrAtu[aScan(_aFldCab,{|x| x[1] == 'ZA1_OK' })]
 
 	Local _cKey		:= _cFilIt+_cSerIt+_cDocIt+_cForIt+_cLojIt
+	Local Fa		:= 0
+	Local _nIt		:= 0
 
 	//Variáveis Private utilizadas em outra função
 	If !_lAtu
@@ -712,6 +718,8 @@ Return
 
 User Function SetArrIT(_oBrw,_aBrw,_aFld)
 
+	Local Fb	:= 0
+
 	_aRet := {}
 	For Fb := 1 To Len(_aFld)
 		If _aFld[Fb][1] == "ZA2_STATUS"
@@ -953,6 +961,7 @@ Static Function Item_PC(_aItem,_oListIt)
 	Local _nVPC		:= 0
 	Local _cSearch	:= Space(TAMSX3("C7_NUM")[1])
 	Local _lCanc	:= .T.
+	Local _nPedido	:= 0
 
 	Private _aPedIt	:= {}
 	Private _oPedIt	:= Nil
@@ -1352,6 +1361,7 @@ Return(Nil)
 Static Function SetLineBox(_oBrw,_aBrw,_aFld)
 
 	Local _aRet := {}
+	Local Fb	:= 0
 
 	For Fb := 1 To Len(_aFld)
 		If _aFld[Fb][1] == "ZA1_OK"
@@ -1408,6 +1418,7 @@ Static Function NF_ORIGINAL(_aItem,_oListIt)
 	Local _cTes		:= ''
 	Local _oListNF	:= Nil
 	Local _cSearch	:= Space(TAMSX3("D2_DOC")[1])
+	Local _nIt		:= 0
 
 	If _cTipo <> "D"
 		ShowHelpDlg("XMLNFORI_3", {'Rotina deve ser utilizada para NF do tipo "Devolução".'},2,{'Não se aplica.'},2)
@@ -1693,6 +1704,7 @@ Static Function GetQtdPed()
 	Local _aPedMarc	:= {}
 	Local _lRet		:= .T.
 	Local _cQtPed	:= 0
+	Local _nIt		:= 0
 
 	For _nIt := 1 to Len(_aPedIt)
 		If _aPedIt[_nIt][1]
