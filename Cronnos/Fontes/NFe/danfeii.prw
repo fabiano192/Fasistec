@@ -1613,7 +1613,7 @@ For nZ := 1 To nLenDet
 		_nLinDescr:=0
 
 	aadd(aItens,{;
-		IIf(Empty(cInf),SubStr(oDet[nX]:_Prod:_cProd:TEXT,1,nMaxCod),AllTrim(cInf)),;
+		SubStr(oDet[nX]:_Prod:_cProd:TEXT,1,nMaxCod),;//IIf(Empty(cInf),SubStr(oDet[nX]:_Prod:_cProd:TEXT,1,nMaxCod),AllTrim(cInf)),;
 		MemoLine(NoChar(oDet[nX]:_Prod:_xProd:TEXT,lConverte),nMaxDes,++_nLinDescr),; //SubStr(NoChar(oDet[nX]:_Prod:_xProd:TEXT,lConverte),1,nMaxDes),;
 		IIF(Type("oDet[nPrivate]:_Prod:_NCM")=="U","",oDet[nX]:_Prod:_NCM:TEXT),;
 		cSitTrib,;

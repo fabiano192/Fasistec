@@ -1226,9 +1226,9 @@ Static Function BR_TMSA200Exc( aDelDocto, cLotNfc, lEnd, lDocto, cLotEst, l500Do
 						(cAliasDVU)->(DbCloseArea())
 					EndIf
 
-					If lTM200Exc
-						ExecBlock('TM200EXC',.F.,.F.)
-					EndIf
+					// If lTM200Exc
+					// 	ExecBlock('TM200EXC',.F.,.F.)
+					// EndIf
 					(cAliasQry)->(DbSkip())
 				EndDo
 				(cAliasQry)->(DbCloseArea())
@@ -1622,3 +1622,28 @@ ResetArr(@aAgend     )
 RestArea( aAreaDT6 )
 RestArea( aAreaDTC )
 Return( .T. )
+
+
+/*/{Protheus.doc} ResetArr
+//TODO Descrição auto-gerada.
+@author caio.y
+@since 11/04/2018
+@version 1.0
+@return ${return}, ${return_description}
+@param aAux, array, descricao
+@type function
+/*/
+Static Function ResetArr(aAux , lOnlySize )
+
+	Default aAux		:= {}
+	Default lOnlySize	:= .F.
+
+	aSize(aAux,0)
+
+	If !lOnlySize
+		aAux	:= Nil
+	Else
+		aAux	:= {}
+	EndIf
+
+Return

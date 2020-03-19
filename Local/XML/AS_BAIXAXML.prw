@@ -12,6 +12,7 @@
 
 User Function AS_BAIXAXML()
 
+	Local _cB
 	Local _cDir		:= SuperGetMv("AS_DIRXML",,"\Gestor_XML\")//"\\SRVCRONNOS01\ERP\EDI\Caterpillar\Exportacao\Download\830\"
 	Local _aListXML	:= Directory( _cDir + '*.xml' )
 	Local _nI		:= 0

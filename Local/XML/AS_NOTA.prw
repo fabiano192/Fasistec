@@ -20,6 +20,7 @@ Return(Nil)
 
 Static Function GeraNF(_oObj,_oCabec,_oItem,_aFldIte)
 
+	local _nB,_nA,F
 	Local _aCabec	:= {}
 	Local _aItens	:= {}
 	Local _aLinha	:= {}

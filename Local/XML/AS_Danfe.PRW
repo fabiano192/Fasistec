@@ -85,6 +85,7 @@ Return(.T.)
 
 Static Function DanfeProc(_oDanfe,lEnd,cVal1,cVal2,lExistNfe,_aDanfe,_aFldCab)
 
+	local _nDanfe
 	Local aArea     := GetArea()
 	Local aXML      := {}
 
