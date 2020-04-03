@@ -54,8 +54,8 @@ Return(Nil)
 
 Static Function EXPDADOS()
 
-	// Local _aTabelas := {'SA1'}
-	Local _aTabelas := {'CT1','CT2','SA1','SA2'}
+	Local _aTabelas := {'SB1'}
+	// Local _aTabelas := {'CT1','CT2','SA1','SA2','SB1'}
 	Local _nTab		:= 0
 	Local _cQry		:= ''
 	Local _nReg		:= 0
@@ -99,7 +99,8 @@ Static Function EXPDADOS()
 
 						_nRegAtu ++
 
-						_oProcess:IncRegua2("Gerando tabela "+_cTab+" - Registro "+Alltrim(str(_nRegAtu))+" de "+Alltrim(str(_nReg)))
+						_oProcess:IncRegua2("Gerando tabela "+_cTab)
+						// _oProcess:IncRegua2("Gerando tabela "+_cTab+" - Registro "+Alltrim(str(_nRegAtu))+" de "+Alltrim(str(_nReg)))
 
 						TRM->(RecLock("TRM",.T.))
 						// TRM->CT1_FILIAL :=
@@ -198,7 +199,8 @@ Static Function EXPDADOS()
 									_nQtLine := MlCount(alltrim(_cHist),_nQtdCar)
 									_nRegAtu ++
 
-									_oProcess:IncRegua2("Gerando tabela "+_cTab+" - Registro "+Alltrim(str(_nRegAtu))+" de "+Alltrim(str(_nReg)))
+									_oProcess:IncRegua2("Gerando tabela "+_cTab)
+									// _oProcess:IncRegua2("Gerando tabela "+_cTab+" - Registro "+Alltrim(str(_nRegAtu))+" de "+Alltrim(str(_nReg)))
 
 									For _nH := 1 to _nQtLine
 
@@ -325,7 +327,8 @@ Static Function EXPDADOS()
 
 								_nRegAtu ++
 
-								_oProcess:IncRegua2("Gerando tabela "+_cTab+" - Registro "+Alltrim(str(_nRegAtu))+" de "+Alltrim(str(_nReg)))
+								_oProcess:IncRegua2("Gerando tabela "+_cTab)
+								// _oProcess:IncRegua2("Gerando tabela "+_cTab+" - Registro "+Alltrim(str(_nRegAtu))+" de "+Alltrim(str(_nReg)))
 
 								_cLoja := Soma1(_cLoja)
 								_cCNPJ := Alltrim(StrTran(StrTran(StrTran(TCLI->CGCCFO,".",""),"-",""),"/",""))
@@ -501,7 +504,8 @@ Static Function EXPDADOS()
 
 								_nRegAtu ++
 
-								_oProcess:IncRegua2("Gerando tabela "+_cTab+" - Registro "+Alltrim(str(_nRegAtu))+" de "+Alltrim(str(_nReg)))
+								_oProcess:IncRegua2("Gerando tabela "+_cTab)
+								// _oProcess:IncRegua2("Gerando tabela "+_cTab+" - Registro "+Alltrim(str(_nRegAtu))+" de "+Alltrim(str(_nReg)))
 
 								_cLoja := Soma1(_cLoja)
 								_cCNPJ := Alltrim(StrTran(StrTran(StrTran(TFOR->CGCCFO,".",""),"-",""),"/",""))
@@ -514,12 +518,11 @@ Static Function EXPDADOS()
 									TRM->A2_YCODRM  := TFOR->CODCFO
 									TRM->A2_COD     := _cCod
 									TRM->A2_LOJA    := _cLoja
-									TRM->A2_PESSOA  := TFOR->PESSOAFISOUJUR
 									TRM->A2_NOME    := UPPER(NOACENTO(TFOR->NOME))
 									TRM->A2_NREDUZ  := UPPER(NOACENTO(TFOR->NOMEFANTASIA))
-									TRM->A2_END     := UPPER(NOACENTO(Alltrim(TFOR->RUA)))+" "+UPPER(NOACENTO(ALLTRIM(TCLI->NUMERO)))
+									TRM->A2_END     := UPPER(NOACENTO(Alltrim(TFOR->RUA)))+" "+UPPER(NOACENTO(ALLTRIM(TFOR->NUMERO)))
 									TRM->A2_COMPLEM := UPPER(NOACENTO(Alltrim(TFOR->COMPLEMENTO)))
-									// TRM->A2_TIPO    := TFOR-> ????
+									TRM->A2_TIPO    := TFOR->PESSOAFISOUJUR
 									TRM->A2_EST     := TFOR->CODETD
 									TRM->A2_COD_MUN := TFOR->CODMUNICIPIO
 									TRM->A2_MUN     := UPPER(NOACENTO(Alltrim(TFOR->CIDADE)))
@@ -535,7 +538,7 @@ Static Function EXPDADOS()
 									TRM->A2_CODPAIS := "01058"
 									TRM->A2_EMAIL   := TFOR->EMAIL
 									TRM->A2_MSBLQL  := If(TFOR->ATIVO=1,"2","1")
-									TRM->A2_LC      := TFOR->LIMITECREDITO
+									// TRM->A2_LC      := TFOR->LIMITECREDITO
 									TRM->A2_INSCRM  := TFOR->INSCRMUNICIPAL
 									TRM->A2_CONTRIB  := If(TFOR->CONTRIBUINTE=1,"2","1")
 									TRM->(MsUnLock())
@@ -616,7 +619,72 @@ Static Function EXPDADOS()
 			Endif
 
 			TFOR->(dbCloseArea())
-			
+
+		ElseIf _cTab = 'SB1'
+
+			If Select("TPROD") > 0
+				TPROD->(dbCloseArea())
+			Endif
+
+			_cQry := " SELECT * FROM DADOSRM..TPRODUTO A " +CRLF
+			_cQry += " INNER JOIN DADOSRM..TPRODUTODEF B ON A.CODCOLPRD = B.CODCOLIGADA  AND A.IDPRD = B.IDPRD " +CRLF
+			_cQry += " WHERE RTRIM(CODCOLPRD) IN  ('0','9','10','11') " +CRLF
+			_cQry += " ORDER BY CODCOLPRD,CODIGOPRD" +CRLF
+
+			TcQuery _cQry New Alias "TPROD"
+
+			_nReg := Contar("TPROD","!EOF()")
+
+			If _nReg > 0
+
+				If CriarDTC(_cTab)
+
+					_oProcess:SetRegua2( _nReg ) //Alimenta a segunda barra de progresso
+
+					_nRegAtu := 0
+
+					TPROD->(dbGoTop())
+
+					While TPROD->(!EOF())
+
+						_nRegAtu ++
+
+						_oProcess:IncRegua2("Gerando tabela "+_cTab)
+						// _oProcess:IncRegua2("Gerando tabela "+_cTab+" - Registro "+Alltrim(str(_nRegAtu))+" de "+Alltrim(str(_nReg)))
+
+						TRM->(RecLock("TRM",.T.))
+						// TRM->B1_FILIAL  :=
+						TRM->B1_COD		:= Alltrim(StrTran(TPROD->CODIGOPRD,".",""))
+						TRM->B1_DESC	:= NoAcento(UPPER(Alltrim(TPROD->DESCRICAO)))
+						TRM->B1_MSBLQL	:= (TPROD->INATIVO=1,"1","2")
+						TRM->B1_PESO	:= TPROD->PESOLIQUIDO
+						TRM->B1_PESBRU	:= TPROD->PESOBRUTO
+						TRM->B1_ORIGEM	:= Alltrim(cValToChar(TPROD->REFERENCIACP))
+						TRM->B1_UPRC	:= TPROD->PRECO1
+						TRM->B1_PRV1	:= TPROD->PRECO2
+						TRM->B1_CUSTD	:= TPROD->CUSTOUNITARIO
+						TRM->B1_UCALSTD	:= TPROD->DATABASEPRECO1
+						TRM->B1_POSIPI	:= TPROD->NUMEROCCF
+						TRM->B1_UM		:= TPROD->CODUNDCONTROLE
+						TRM->B1_LOCPAD	:= "01"
+						// TRM->B1_GRUPO	:= 
+						TRM->B1_EMIN	:= TPROD->PONTODEPEDIDO1
+						TRM->B1_EMAX	:= TPROD->ESTOQUEMAXIMO1
+						TRM->(MsUnLock())
+
+						// _oProcess:IncRegua2("Gerando tabela "+_cTab)
+
+						TPROD->(dbSkip())
+					EndDo
+
+				Endif
+			Endif
+
+			TPROD->(dbCloseArea())
+
+
+			// ElseIf _cTab = 'CT2'
+			// ElseIf _cTab = 'CT2'
 			// ElseIf _cTab = 'CT2'
 		Endif
 
