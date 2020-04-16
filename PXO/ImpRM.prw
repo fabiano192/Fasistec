@@ -54,8 +54,8 @@ Return(Nil)
 
 Static Function EXPDADOS()
 
-	Local _aTabelas := {'SB1'}
-	// Local _aTabelas := {'CT1','CT2','SA1','SA2','SB1'}
+	Local _aTabelas := {'SE4'}
+	// Local _aTabelas := {'CT1','CT2','SA1','SA2','SB1','CTT','SE4'}
 	Local _nTab		:= 0
 	Local _cQry		:= ''
 	Local _nReg		:= 0
@@ -637,54 +637,167 @@ Static Function EXPDADOS()
 
 			If _nReg > 0
 
-				If CriarDTC(_cTab)
+				_oProcess:SetRegua2( _nReg ) //Alimenta a segunda barra de progresso
 
-					_oProcess:SetRegua2( _nReg ) //Alimenta a segunda barra de progresso
+				_nRegAtu := 0
 
-					_nRegAtu := 0
+				TPROD->(dbGoTop())
 
-					TPROD->(dbGoTop())
+				While TPROD->(!EOF())
 
-					While TPROD->(!EOF())
+					_cKey1   := Alltrim(cValToChar(TPROD->CODCOLPRD))
 
-						_nRegAtu ++
+					If CriarDTC(_cTab,_cKey1)
 
-						_oProcess:IncRegua2("Gerando tabela "+_cTab)
-						// _oProcess:IncRegua2("Gerando tabela "+_cTab+" - Registro "+Alltrim(str(_nRegAtu))+" de "+Alltrim(str(_nReg)))
+						While TPROD->(!EOF()) .And. _cKey1 == Alltrim(cValToChar(TPROD->CODCOLPRD))
 
-						TRM->(RecLock("TRM",.T.))
-						// TRM->B1_FILIAL  :=
-						TRM->B1_COD		:= Alltrim(StrTran(TPROD->CODIGOPRD,".",""))
-						TRM->B1_DESC	:= NoAcento(UPPER(Alltrim(TPROD->DESCRICAO)))
-						TRM->B1_MSBLQL	:= (TPROD->INATIVO=1,"1","2")
-						TRM->B1_PESO	:= TPROD->PESOLIQUIDO
-						TRM->B1_PESBRU	:= TPROD->PESOBRUTO
-						TRM->B1_ORIGEM	:= Alltrim(cValToChar(TPROD->REFERENCIACP))
-						TRM->B1_UPRC	:= TPROD->PRECO1
-						TRM->B1_PRV1	:= TPROD->PRECO2
-						TRM->B1_CUSTD	:= TPROD->CUSTOUNITARIO
-						TRM->B1_UCALSTD	:= TPROD->DATABASEPRECO1
-						TRM->B1_POSIPI	:= TPROD->NUMEROCCF
-						TRM->B1_UM		:= TPROD->CODUNDCONTROLE
-						TRM->B1_LOCPAD	:= "01"
-						// TRM->B1_GRUPO	:= 
-						TRM->B1_EMIN	:= TPROD->PONTODEPEDIDO1
-						TRM->B1_EMAX	:= TPROD->ESTOQUEMAXIMO1
-						TRM->(MsUnLock())
+							_nRegAtu ++
 
-						// _oProcess:IncRegua2("Gerando tabela "+_cTab)
+							_oProcess:IncRegua2("Gerando tabela "+_cTab)
+							// _oProcess:IncRegua2("Gerando tabela "+_cTab+" - Registro "+Alltrim(str(_nRegAtu))+" de "+Alltrim(str(_nReg)))
 
-						TPROD->(dbSkip())
-					EndDo
+							TRM->(RecLock("TRM",.T.))
+							// TRM->B1_FILIAL  :=
+							TRM->B1_COD		:= Alltrim(StrTran(TPROD->CODIGOPRD,".",""))
+							TRM->B1_DESC	:= NoAcento(UPPER(Alltrim(TPROD->DESCRICAO)))
+							TRM->B1_MSBLQL	:= (TPROD->INATIVO=1,"1","2")
+							TRM->B1_PESO	:= TPROD->PESOLIQUIDO
+							TRM->B1_PESBRU	:= TPROD->PESOBRUTO
+							TRM->B1_ORIGEM	:= Alltrim(cValToChar(TPROD->REFERENCIACP))
+							TRM->B1_UPRC	:= TPROD->PRECO1
+							TRM->B1_PRV1	:= TPROD->PRECO2
+							TRM->B1_CUSTD	:= TPROD->CUSTOUNITARIO
+							TRM->B1_UCALSTD	:= TPROD->DATABASEPRECO1
+							TRM->B1_POSIPI	:= TPROD->NUMEROCCF
+							TRM->B1_UM		:= TPROD->CODUNDCONTROLE
+							TRM->B1_LOCPAD	:= "01"
+							// TRM->B1_GRUPO	:=
+							TRM->B1_EMIN	:= TPROD->PONTODEPEDIDO1
+							TRM->B1_EMAX	:= TPROD->ESTOQUEMAXIMO1
+							TRM->(MsUnLock())
 
-				Endif
+							// _oProcess:IncRegua2("Gerando tabela "+_cTab)
+
+							TPROD->(dbSkip())
+						EndDo
+
+					Endif
+				EndDo
 			Endif
 
 			TPROD->(dbCloseArea())
 
+		ElseIf _cTab = 'CTT'
 
-			// ElseIf _cTab = 'CT2'
-			// ElseIf _cTab = 'CT2'
+			If Select("TCUSTO") > 0
+				TCUSTO->(dbCloseArea())
+			Endif
+
+			_cQry := " SELECT * FROM DADOSRM..GCCUSTO " +CRLF
+			_cQry += " WHERE RTRIM(CODCOLIGADA) IN  ('0','9','10','11') " +CRLF
+			_cQry += " ORDER BY CODCOLIGADA,CODCCUSTO" +CRLF
+
+			TcQuery _cQry New Alias "TCUSTO"
+
+			_nReg := Contar("TCUSTO","!EOF()")
+
+			If _nReg > 0
+
+				_oProcess:SetRegua2( _nReg ) //Alimenta a segunda barra de progresso
+
+				_nRegAtu := 0
+
+				TCUSTO->(dbGoTop())
+
+				While TCUSTO->(!EOF())
+
+					_cKey1   := Alltrim(cValToChar(TCUSTO->CODCOLIGADA))
+
+					If CriarDTC(_cTab,_cKey1)
+
+						While TCUSTO->(!EOF()) .And. _cKey1 == Alltrim(cValToChar(TCUSTO->CODCOLIGADA))
+
+							_nRegAtu ++
+
+							_oProcess:IncRegua2("Gerando tabela "+_cTab)
+							// _oProcess:IncRegua2("Gerando tabela "+_cTab+" - Registro "+Alltrim(str(_nRegAtu))+" de "+Alltrim(str(_nReg)))
+
+							TRM->(RecLock("TRM",.T.))
+							// TRM->CTT_FILIAL  :=
+							TRM->CTT_CUSTO	:= Alltrim(StrTran(TCUSTO->CODCCUSTO,".",""))
+							TRM->CTT_CLASSE	:= If(Len(Alltrim(StrTran(TCUSTO->CODCCUSTO,".",""))) = 4,"2","1")
+							TRM->CTT_DESC01	:= NoAcento(UPPER(Alltrim(TCUSTO->NOME)))
+							TRM->CTT_DTEXIS	:= CTOD('25/03/2020')
+							TRM->CTT_BLOQ	:= If(TCUSTO->PERMITELANC='T',"2","1")
+							TRM->CTT_MSBLQL	:= If(TCUSTO->ATIVO='T',"2","1")
+							TRM->(MsUnLock())
+
+							// _oProcess:IncRegua2("Gerando tabela "+_cTab)
+
+							TCUSTO->(dbSkip())
+						EndDo
+
+					Endif
+				EndDo
+			Endif
+
+			TCUSTO->(dbCloseArea())
+
+		ElseIf _cTab = 'SE4'
+
+			If Select("TCONPAG") > 0
+				TCONPAG->(dbCloseArea())
+			Endif
+
+			_cQry := " SELECT TOP 5 * FROM DADOSRM..TCPG " +CRLF
+			_cQry += " WHERE RTRIM(CODCOLIGADA) IN  ('0','9','10','11') " +CRLF
+			_cQry += " ORDER BY CODCOLIGADA,CODCPG " +CRLF
+
+			TcQuery _cQry New Alias "TCONPAG"
+
+			_nReg := Contar("TCONPAG","!EOF()")
+
+			If _nReg > 0
+
+				_oProcess:SetRegua2( _nReg ) //Alimenta a segunda barra de progresso
+
+				_nRegAtu := 0
+
+				TCONPAG->(dbGoTop())
+
+				While TCONPAG->(!EOF())
+
+					_cKey1   := Alltrim(cValToChar(TCONPAG->CODCOLIGADA))
+
+					If CriarDTC(_cTab,_cKey1)
+
+						While TCONPAG->(!EOF()) .And. _cKey1 == Alltrim(cValToChar(TCONPAG->CODCOLIGADA))
+
+							_nRegAtu ++
+
+							_oProcess:IncRegua2("Gerando tabela "+_cTab)
+
+							TRM->(RecLock("TRM",.T.))
+							// TRM->E4_FILIAL  :=
+							TRM->E4_CODIGO	:= 
+							TRM->E4_TIPO	:= 
+							TRM->E4_COND	:= 
+							TRM->E4_DESCRI	:= 
+							TRM->E4_DDD		:= 
+							TRM->E4_MSBLQL	:= 
+							TRM->(MsUnLock())
+
+							// _oProcess:IncRegua2("Gerando tabela "+_cTab)
+
+							TCONPAG->(dbSkip())
+						EndDo
+
+					Endif
+				EndDo
+			Endif
+
+			TCONPAG->(dbCloseArea())
+
 			// ElseIf _cTab = 'CT2'
 		Endif
 

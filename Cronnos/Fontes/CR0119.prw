@@ -112,6 +112,8 @@ Static Function CR119IN()
 	Local _lDisableSetup	:= .T.
 	Local _cTitPDF			:= ''
 	Local _cDir				:= GetTempPath()
+	Local _a				:= 0
+	Local _n				:= 0
 
 		/*
 	1 - Percentual do campo conforme tamanho total
@@ -152,7 +154,8 @@ Static Function CR119IN()
 	_cQuery += " 'FAXEXP'  = RTRIM(SA2.A2_DDI)+' '+RTRIM(SA2.A2_DDD)+' '+RTRIM(SA2.A2_FAX), " +CRLF
 	_cQuery += " SA1A.A1_SUPCODE AS 'SUPCODE', " +CRLF
 	_cQuery += " RTRIM(EEC.EEC_PREEMB) AS 'PROCESSO', " +CRLF
-	_cQuery += " (SUBSTRING(EEC.EEC_DTINVO,5,2)+'/'+RIGHT(EEC.EEC_DTINVO,2)+'/'+LEFT(EEC.EEC_DTINVO,4)) AS 'DTPROCES', " +CRLF
+	_cQuery += " (SUBSTRING(EEC.EEC_DTPROC,5,2)+'/'+RIGHT(EEC.EEC_DTPROC,2)+'/'+LEFT(EEC.EEC_DTPROC,4)) AS 'DTPROCES', " +CRLF
+	// _cQuery += " (SUBSTRING(EEC.EEC_DTINVO,5,2)+'/'+RIGHT(EEC.EEC_DTINVO,2)+'/'+LEFT(EEC.EEC_DTINVO,4)) AS 'DTPROCES', " +CRLF
 	_cQuery += " 'NOMEIMP' = (RTRIM(SA1A.A1_NOME)), " +CRLF
 	_cQuery += " 'END1IMP' = (RTRIM(SA1A.A1_ADDRESS)+' - '+RTRIM(SA1A.A1_CITY)+'-'+RTRIM(SA1A.A1_STATE)), " +CRLF
 	_cQuery += " 'END2IMP' = (RTRIM(SA1A.A1_POSCODE)+' - '+RTRIM(YA1.YA_NOIDIOM)), " +CRLF
@@ -358,6 +361,8 @@ Return()
 
 Static Function CabecIN() //Cabeçalho
 
+	Local _a	:= 0
+
 	_oPrinter:StartPage()
 
 
@@ -484,28 +489,28 @@ Static Function FooterIN()
 	_oPrinter:SayAlign(_nLiR,_aCabec[POSDES][3]+3,Alltrim(TEXP->REMARK3),_oFont8N,_aCabec[POSDES][2]-3,7,,0, 0 )
 	_oPrinter:Line(_nLiR,_aCabec[POSDES+1][3],_nLiR,_nColTot)
 	_nBkLi := _nLiR
-	_oPrinter:SayAlign(_nLiR-2,_aCabec[POSDES+1][3]+3,'Total',_oFont8,_aCabec[POSDES+1][2],7,, 0, 0 )	
-	_oPrinter:SayAlign(_nLiR-2,_aCabec[9][3],Alltrim(str(TEXP->TOTAL,,2)) ,_oFont8N,_aCabec[9][2]-3,7,, 1, 0 )	
+	_oPrinter:SayAlign(_nLiR-2,_aCabec[POSDES+1][3]+3,'Total',_oFont8,_aCabec[POSDES+1][2],7,, 0, 0 )
+	_oPrinter:SayAlign(_nLiR-2,_aCabec[9][3],Alltrim(str(TEXP->TOTAL,,2)) ,_oFont8N,_aCabec[9][2]-3,7,, 1, 0 )
 	_nLiR += _nTLin
 	_oPrinter:SayAlign(_nLiR-5,_nCol+3,'Gross Weight (KG)',_oFont8,100,7,, 0, 0 )
 	_oPrinter:SayAlign(_nLiR-5,_aCabec[4][3],Alltrim(str(TEXP->PESBRU,,2)),_oFont8N,_aCabec[4][2]-3,7,, 1, 0 )
 	_oPrinter:SayAlign(_nLiR,_aCabec[POSDES][3]+3,Alltrim(TEXP->REMARK4),_oFont8N,_aCabec[POSDES][2]-3,7,,0, 0 )
 	_oPrinter:Line(_nLiR,_aCabec[POSDES+1][3],_nLiR,_nColTot)
-	_oPrinter:SayAlign(_nLiR-2,_aCabec[POSDES+1][3]+3,'Freight',_oFont8,_aCabec[POSDES+1][2],7,, 0, 0 )	
-	_oPrinter:SayAlign(_nLiR-2,_aCabec[9][3],Alltrim(str(TEXP->FRETE,,2)) ,_oFont8N,_aCabec[9][2]-3,7,, 1, 0 )	
+	_oPrinter:SayAlign(_nLiR-2,_aCabec[POSDES+1][3]+3,'Freight',_oFont8,_aCabec[POSDES+1][2],7,, 0, 0 )
+	_oPrinter:SayAlign(_nLiR-2,_aCabec[9][3],Alltrim(str(TEXP->FRETE,,2)) ,_oFont8N,_aCabec[9][2]-3,7,, 1, 0 )
 	_nLiR += _nTLin
 	_oPrinter:SayAlign(_nLiR,_aCabec[POSDES][3]+3,Alltrim(TEXP->REMARK5),_oFont8N,_aCabec[POSDES][2]-3,7,,0, 0 )
 	_oPrinter:Line(_nLiR,_aCabec[POSDES+1][3],_nLiR,_nColTot)
-	_oPrinter:SayAlign(_nLiR-2,_aCabec[POSDES+1][3]+3,'Insurance',_oFont8,_aCabec[POSDES+1][2],7,, 0, 0 )	
-	_oPrinter:SayAlign(_nLiR-2,_aCabec[9][3],Alltrim(str(TEXP->SEGURO,,2)) ,_oFont8N,_aCabec[9][2]-3,7,, 1, 0 )	
+	_oPrinter:SayAlign(_nLiR-2,_aCabec[POSDES+1][3]+3,'Insurance',_oFont8,_aCabec[POSDES+1][2],7,, 0, 0 )
+	_oPrinter:SayAlign(_nLiR-2,_aCabec[9][3],Alltrim(str(TEXP->SEGURO,,2)) ,_oFont8N,_aCabec[9][2]-3,7,, 1, 0 )
 	_nLiR += _nTLin
 	_oPrinter:SayAlign(_nLiR-5,_nCol+3,'Measurement (M3)',_oFont8,100,7,, 0, 0 )
 	_oPrinter:SayAlign(_nLiR-5,_aCabec[4][3],Alltrim(str(_nTotMea,,4)),_oFont8N,_aCabec[4][2]-3,7,, 1, 0 )
 
 	_oPrinter:SayAlign(_nLiR,_aCabec[POSDES][3]+3,Alltrim(TEXP->REMARK6),_oFont8N,_aCabec[POSDES][2]-3,7,,0, 0 )
 	_oPrinter:Line(_nLiR,_aCabec[POSDES+1][3],_nLiR,_nColTot)
-	_oPrinter:SayAlign(_nLiR,_aCabec[POSDES+1][3]+3,'Others',_oFont8,_aCabec[POSDES+1][2],7,, 0, 0 )	
-	_oPrinter:SayAlign(_nLiR-2,_aCabec[9][3],Alltrim(str(TEXP->OUTROS,,2)) ,_oFont8N,_aCabec[9][2]-3,7,, 1, 0 )	
+	_oPrinter:SayAlign(_nLiR,_aCabec[POSDES+1][3]+3,'Others',_oFont8,_aCabec[POSDES+1][2],7,, 0, 0 )
+	_oPrinter:SayAlign(_nLiR-2,_aCabec[9][3],Alltrim(str(TEXP->OUTROS,,2)) ,_oFont8N,_aCabec[9][2]-3,7,, 1, 0 )
 	_nLiR += _nTLin+2
 	_oPrinter:Line(_nLiR,_nCol,_nLiR,_nColTot)
 	_oPrinter:SayAlign(_nLiR,_nCol+3,Alltrim('Way:'),_oFont8,_aCabec[POSDES][2]-3,7,,0, 0 )
@@ -513,15 +518,15 @@ Static Function FooterIN()
 	_oPrinter:SayAlign(_nLiR,_aCabec[POSDES][3]+3,Alltrim('Incoterms 2000:'),_oFont8,_aCabec[POSDES][2]-3,7,,0, 0 )
 	_oPrinter:SayAlign(_nLiR-1,_aCabec[POSDES][3]+70,Alltrim(TEXP->INCOTE),_oFont8N,100,7,,0, 0 )
 	_oPrinter:SayAlign(_nLiR,_aCabec[POSDES+1][3]+3,'Total Amount',_oFont8,_aCabec[POSDES+1][2],7,, 0, 0 )
-	_oPrinter:SayAlign(_nLiR-1,_aCabec[9][3],Alltrim(str(TEXP->TOTALGER,,2)) ,_oFont8N,_aCabec[9][2]-3,7,, 1, 0 )	
+	_oPrinter:SayAlign(_nLiR-1,_aCabec[9][3],Alltrim(str(TEXP->TOTALGER,,2)) ,_oFont8N,_aCabec[9][2]-3,7,, 1, 0 )
 	_nLiR += _nTLin+2
 	_oPrinter:Line(_nLiR,_nCol,_nLiR,_nColTot)
 
 	_oPrinter:Line(_nBkLi,_aCabec[9][3],_nLiR,_aCabec[9][3])
-	
+
 	_oPrinter:SayAlign(_nLiR,_nCol+3,'Country of Origin: ',_oFont8,100,7,,0, 0 )
 	_oPrinter:SayAlign(_nLiR,_nCol+90,Alltrim(TEXP->PAIS),_oFont8N,100,7,,0, 0 )
-	_oPrinter:SayAlign(_nLiR,_aCabec[POSDES+1][3]+3,'Agent:',_oFont8,_aCabec[POSDES+1][2],7,, 0, 0 )	
+	_oPrinter:SayAlign(_nLiR,_aCabec[POSDES+1][3]+3,'Agent:',_oFont8,_aCabec[POSDES+1][2],7,, 0, 0 )
 	_nLiR += _nTLin+2
 	_oPrinter:Line(_nLiR,_nCol,_nLiR,_aCabec[POSDES+1][3])
 	_oPrinter:SayAlign(_nLiR,_nCol,'Port of Loading',_oFont8,_aCabec[1][2]+_aCabec[2][2]+_aCabec[3][2]+_aCabec[4][2],7,,2, 0 )
@@ -568,6 +573,8 @@ Static Function CR119PL()
 	Local _lDisableSetup	:= .T.
 	Local _cTitPDF			:= ''
 	Local _cDir				:= GetTempPath()
+	Local _a				:= 0
+	// Local _n				:= 0
 
 		/*
 	1 - Percentual do campo conforme tamanho total
@@ -610,7 +617,8 @@ Static Function CR119PL()
 	_cQuery += " 'FAXEXP'  = RTRIM(SA2.A2_DDI)+' '+RTRIM(SA2.A2_DDD)+' '+RTRIM(SA2.A2_FAX), " + CRLF
 	_cQuery += " 'SUPCODE' =  SA1A.A1_SUPCODE, " + CRLF
 	_cQuery += " 'PROCESSO'= RTRIM(EEC.EEC_PREEMB), " + CRLF
-	_cQuery += " 'DTPROCES'= (SUBSTRING(EEC.EEC_DTINVO,5,2)+'/'+RIGHT(EEC.EEC_DTINVO,2)+'/'+LEFT(EEC.EEC_DTINVO,4)), " + CRLF
+	_cQuery += " 'DTPROCES'= (SUBSTRING(EEC.EEC_DTPROC,5,2)+'/'+RIGHT(EEC.EEC_DTPROC,2)+'/'+LEFT(EEC.EEC_DTPROC,4)), " + CRLF
+	// _cQuery += " 'DTPROCES'= (SUBSTRING(EEC.EEC_DTINVO,5,2)+'/'+RIGHT(EEC.EEC_DTINVO,2)+'/'+LEFT(EEC.EEC_DTINVO,4)), " + CRLF
 	_cQuery += " 'NOMEIMP' = (RTRIM(SA1A.A1_NOME)), " + CRLF
 	_cQuery += " 'END1IMP' = (RTRIM(SA1A.A1_ADDRESS)+' - '+RTRIM(SA1A.A1_CITY)+'-'+RTRIM(SA1A.A1_STATE)), " + CRLF
 	_cQuery += " 'END2IMP' = (RTRIM(SA1A.A1_POSCODE)+' - '+RTRIM(YA1.YA_NOIDIOM)), " + CRLF
@@ -739,6 +747,8 @@ Return()
 
 Static Function CabecPL() //Cabeçalho
 
+	Local _a := 0
+
 	_oPrinter:StartPage()
 
 
@@ -866,7 +876,7 @@ Static Function FooterPL()
 	_oPrinter:SayAlign(_nLiR,_aCabec[7][3]+3,'Total',_oFont8N,_aCabec[7][2],7,, 0, 0 )
 	_oPrinter:SayAlign(_nLiR,_aCabec[8][3],Alltrim(str(_nPesLiq,,2)),_oFont8N,_aCabec[8][2]-3,7,, 1, 0 )
 	_oPrinter:SayAlign(_nLiR,_aCabec[9][3],Alltrim(str(_nPesBru,,2)),_oFont8N,_aCabec[9][2]-3,7,, 1, 0 )
-	
+
 	_nLiR += _nTLin+3
 	_oPrinter:Line(_nPosIRod,_aCabec[7][3],_nLiR,_aCabec[7][3])
 	_oPrinter:Line(_nPosIRod,_aCabec[8][3],_nLiR,_aCabec[8][3])

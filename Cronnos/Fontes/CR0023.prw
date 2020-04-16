@@ -1,6 +1,4 @@
 #include "rwmake.ch"
-#include "TOPCONN.CH"
-#include "TOTVS.CH"
 
 /*
 Programa 	: CR0025
@@ -56,7 +54,11 @@ User Function CR0023()
 Return
 
 
+
 Static Function AtuPreco()
+
+	LOCAL I
+	LOCAL F
 
 	dbSeLectArea("SZ2")
 	dbSetOrder(2)  //Produto + Cliente + Loja
@@ -70,8 +72,8 @@ Static Function AtuPreco()
 		IncProc()
 
 		If SZ2->Z2_CLIENTE < MV_PAR01 .Or. SZ2->Z2_CLIENTE > MV_PAR02 .Or.;
-		SZ2->Z2_LOJA    < MV_PAR03 .Or. SZ2->Z2_LOJA    > MV_PAR04 .Or.;
-		SZ2->Z2_PRODUTO < MV_PAR05 .OR. SZ2->Z2_PRODUTO > MV_PAR06
+				SZ2->Z2_LOJA    < MV_PAR03 .Or. SZ2->Z2_LOJA    > MV_PAR04 .Or.;
+				SZ2->Z2_PRODUTO < MV_PAR05 .OR. SZ2->Z2_PRODUTO > MV_PAR06
 			dbSelectarea("SZ2")
 			dbSkip()
 			Loop
@@ -86,6 +88,26 @@ Static Function AtuPreco()
 		_nFator := MV_PAR14
 
 		If Empty(SZ2->Z2_PRECO01)
+			dbSelecTarea("SZ2")
+			dbSkip()
+			Loop
+		Endif
+
+		If SZ2->Z2_ATIVO == "2" // INATIVO
+			dbSelecTarea("SZ2")
+			dbSkip()
+			Loop
+		Endif
+
+		_lGo := .T.
+		For F:=1 to 12
+			If &("SZ2->Z2_DTREF"+StrZero(F,2)) = MV_PAR16
+				_lGo := .F.
+				F:= 12
+			Endif
+		Next F
+
+		If !_lGo
 			dbSelecTarea("SZ2")
 			dbSkip()
 			Loop
@@ -167,15 +189,15 @@ Static Function AtuPed()
 			Loop
 		Endif
 
-//		If Alltrim(SC6->C6_PEDCLI) <> Alltrim(SZ2->Z2_PEDCLI)
-//			SC6->(dbSkip())
-//			Loop
-//		Endif
+		If Alltrim(SC6->C6_PEDCLI) <> Alltrim(SZ2->Z2_PEDCLI)
+			SC6->(dbSkip())
+			Loop
+		Endif
 
 		If SC6->C6_CLI     <  MV_PAR01 .Or. SC6->C6_CLI     > MV_PAR02 .Or.;
-		SC6->C6_LOJA    <  MV_PAR03 .Or. SC6->C6_LOJA    > MV_PAR04 .Or.;
-		SC6->C6_PRODUTO <  MV_PAR05 .Or. SC6->C6_PRODUTO > MV_PAR06 .Or.;
-		SC6->C6_ENTREG  <  MV_PAR10 .Or. SC6->C6_ENTREG  > MV_PAR11
+				SC6->C6_LOJA    <  MV_PAR03 .Or. SC6->C6_LOJA    > MV_PAR04 .Or.;
+				SC6->C6_PRODUTO <  MV_PAR05 .Or. SC6->C6_PRODUTO > MV_PAR06 .Or.;
+				SC6->C6_ENTREG  <  MV_PAR10 .Or. SC6->C6_ENTREG  > MV_PAR11
 			SC6->(dbSkip())
 			Loop
 		Endif
@@ -229,104 +251,8 @@ Return
 
 Static Function DescPreco()
 
+	LOCAL I
 
-	If Select("TSZ2") > 0
-		TSZ2->(dbCloseArea())
-	Endif
-
-	_cQuery := " SELECT Z2.R_E_C_N_O_ AS Z2RECNO,* FROM "+RetSQLName("SZ2")+" Z2 " +CRLF
-	_cQuery += " WHERE D_E_L_E_T_ = '' " +CRLF
-	_cQuery += " AND Z2_FILIAL = '"+xFilial("SZ2")+"' " +CRLF
-	_cQuery += " AND Z2_PRECO01 > 0 " +CRLF
-	_cQuery += " AND Z2_CLIENTE BETWEEN '"+MV_PAR01+"' AND '"+MV_PAR02+"' " +CRLF
-	_cQuery += " AND Z2_LOJA BETWEEN '"+MV_PAR03+"' AND '"+MV_PAR04+"' " +CRLF
-	_cQuery += " AND Z2_PRODUTO BETWEEN '"+MV_PAR05+"' AND '"+MV_PAR06+"' " +CRLF
-
-	TcQuery _cQuery New Alias "TSZ2"
-
-	TSZ2->(dbGoTop())
-
-	While TSZ2->(!EOF())
-
-		_lEnt := .F.
-
-		SZ2->(dbGoTo(TSZ2->Z2RECNO))
-
-		For I := 12 To 2 Step -1
-			_nValor2 :=  &("SZ2->Z2_PRECO"+StrZero(i-1,2))
-			_dData   := "SZ2->Z2_DTREF"+strZero(I,2)
-			_dDat2   := "SZ2->Z2_DTREF"+strZero(I-1,2)
-			If &_dData == MV_PAR16 .And. &_dData = &_dDat2
-			// If &_dData == MV_PAR16
-				_nPreco := "SZ2->Z2_PRECO"+strZero(I,2)
-				_nTaxa  := "SZ2->Z2_TXCAM"+strZero(I,2)
-				_dDtRef := "SZ2->Z2_DTREF"+strZero(I,2)
-				_dDtBas := "SZ2->Z2_DTBAS"+strZero(I,2)
-
-				// dbSelectArea("SZ2")
-				SZ2->(RecLock("SZ2",.F.))
-				&_nPreco  := 0
-				&_nTaxa   := 0
-				&_dDtRef  := CTOD("  /  /  ")
-				&_dDtBas  := CTOD("  /  /  ")
-				SZ2->(MsUnlock())
-				I:= 2
-				_lEnt := .T.
-			Endif
-		Next I
-
-		If MV_PAR07 == 1 .And. _lEnt
-
-			_cUPD := " UPDATE "+RetSqlName("SC6")+" SET "
-			_cUPD += " C6_PRCVEN = "+cValtoChar(_nValor2)+", "
-			_cUPD += " C6_PRUNIT = "+cValtoChar(_nValor2)+", "
-			_cUPD += " C6_VALOR = C6_QTDVEN * "+cValtoChar(_nValor2)+" "
-			_cUPD += " FROM "+RetSqlName("SC6")+" C6 "
-			_cUPD += " INNER JOIN "+RetSqlName("SC5")+" C5 ON C5_NUM = C6_NUM "
-			_cUPD += " WHERE C6.D_E_L_E_T_ = '' AND C5.D_E_L_E_T_ = '' "
-			_cUPD += " AND C6_FILIAL = '"+xFilial("SC6")+"' AND  C5_FILIAL = '"+xFilial("SC5")+"'"
-			_cUPD += " AND C6_QTDVEN > C6_QTDENT "
-			_cUPD += " AND C6_BLQ = '' "
-			_cUPD += " AND C6_CLI = '"+SZ2->Z2_CLIENTE+"' "
-			_cUPD += " AND C6_LOJA = '"+SZ2->Z2_LOJA+"' "
-			_cUPD += " AND C6_PRODUTO = '"+SZ2->Z2_PRODUTO+"' "
-			_cUPD += " AND C6_NUM BETWEEN '"+MV_PAR08+"' AND '"+MV_PAR09+"' "
-			_cUPD += " AND C6_ENTREG BETWEEN '"+dTos(MV_PAR10)+"' AND '"+dTos(MV_PAR11)+"' "
-			_cUPD += " AND C5_EMISSAO BETWEEN '"+dTos(MV_PAR12)+"' AND '"+dTos(MV_PAR13)+"' "
-			If SZ2->Z2_CLIENTE $ '000017|000018'
-				_cUPD += " AND C6_PEDCLI = '"+SZ2->Z2_PEDCLI+"' "
-			Endif
-
-			TCSQLEXEC(_cUPD)
-
-
-			_cUPD := " UPDATE "+RetSqlName("SC9")+" SET "
-			_cUPD += " C9_PRCVEN = "+cValtoChar(_nValor2)+" "
-			_cUPD += " FROM "+RetSqlName("SC9")+" C9 "
-			_cUPD += " INNER JOIN "+RetSqlName("SC5")+" C5 ON C5_NUM = C9_PEDIDO "
-			_cUPD += " WHERE C9.D_E_L_E_T_ = '' AND C5.D_E_L_E_T_ = '' "
-			_cUPD += " AND C9_FILIAL = '"+xFilial("SC9")+"' AND  C5_FILIAL = '"+xFilial("SC5")+"'"
-			_cUPD += " AND C9_NFISCAL = '' "
-			_cUPD += " AND C9_CLIENTE = '"+SZ2->Z2_CLIENTE+"' "
-			_cUPD += " AND C9_LOJA = '"+SZ2->Z2_LOJA+"' "
-			_cUPD += " AND C9_PRODUTO = '"+SZ2->Z2_PRODUTO+"' "
-			_cUPD += " AND C9_PEDIDO BETWEEN '"+MV_PAR08+"' AND '"+MV_PAR09+"' "
-			_cUPD += " AND C5_EMISSAO BETWEEN '"+dTos(MV_PAR12)+"' AND '"+dTos(MV_PAR13)+"' "
-			If SZ2->Z2_CLIENTE $ '000017|000018'
-				_cUPD += " AND C9_PEDCLI = '"+SZ2->Z2_PEDCLI+"' "
-			Endif
-
-			TCSQLEXEC(_cUPD)
-
-			// DescPed()
-		Endif
-
-		TSZ2->(dbSkip())
-	EndDo
-
-	TSZ2->(dbCloseArea())
-
-	/*
 	dbSeLectArea("SZ2")
 	dbSetOrder(2)  //Produto + Cliente+Loja
 	dbSeek(xFilial()+MV_PAR05+MV_PAR01+MV_PAR03,.T.)
@@ -339,8 +265,8 @@ Static Function DescPreco()
 		IncProc()
 
 		If SZ2->Z2_CLIENTE < MV_PAR01 .Or. SZ2->Z2_CLIENTE > MV_PAR02 .Or.;
-		SZ2->Z2_LOJA    < MV_PAR03 .Or. SZ2->Z2_LOJA    > MV_PAR04 .Or.;
-		SZ2->Z2_PRODUTO < MV_PAR05 .OR. SZ2->Z2_PRODUTO > MV_PAR06
+				SZ2->Z2_LOJA    < MV_PAR03 .Or. SZ2->Z2_LOJA    > MV_PAR04 .Or.;
+				SZ2->Z2_PRODUTO < MV_PAR05 .OR. SZ2->Z2_PRODUTO > MV_PAR06
 			dbSelectarea("SZ2")
 			dbSkip()
 			Loop
@@ -349,6 +275,12 @@ Static Function DescPreco()
 		_nFator := MV_PAR14
 
 		If Empty(SZ2->Z2_PRECO01)
+			dbSelecTarea("SZ2")
+			dbSkip()
+			Loop
+		Endif
+
+		If SZ2->Z2_ATIVO == "2" // INATIVO
 			dbSelecTarea("SZ2")
 			dbSkip()
 			Loop
@@ -380,7 +312,7 @@ Static Function DescPreco()
 		dbSelectArea("SZ2")
 		dbSkip()
 	EndDo
-*/
+
 Return
 
 
@@ -399,18 +331,18 @@ Static Function DescPed()
 		Endif
 
 		If SC6->C6_CLI     <  MV_PAR01 .Or. SC6->C6_CLI     > MV_PAR02 .Or.;
-		SC6->C6_LOJA    <  MV_PAR03 .Or. SC6->C6_LOJA    > MV_PAR04 .Or.;
-		SC6->C6_PRODUTO <  MV_PAR05 .Or. SC6->C6_PRODUTO > MV_PAR05 .Or.;
-		SC6->C6_ENTREG  <  MV_PAR10 .Or. SC6->C6_ENTREG  > MV_PAR11
+				SC6->C6_LOJA    <  MV_PAR03 .Or. SC6->C6_LOJA    > MV_PAR04 .Or.;
+				SC6->C6_PRODUTO <  MV_PAR05 .Or. SC6->C6_PRODUTO > MV_PAR05 .Or.;
+				SC6->C6_ENTREG  <  MV_PAR10 .Or. SC6->C6_ENTREG  > MV_PAR11
 			dbSelectArea("SC6")
 			dbSkip()
 			Loop
 		Endif
 
-//		If Alltrim(SC6->C6_PEDCLI) <> Alltrim(SZ2->Z2_PEDCLI)
-//			SC6->(dbSkip())
-//			Loop
-//		Endif
+		If Alltrim(SC6->C6_PEDCLI) <> Alltrim(SZ2->Z2_PEDCLI)
+			SC6->(dbSkip())
+			Loop
+		Endif
 
 		dbSelectArea("SC5")
 		dbSetOrder(1)
