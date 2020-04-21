@@ -224,7 +224,7 @@ Static Function GERAMOVS()
 // ALTERADO EM 30/03/20
 
 	If cEmpAnt + cFilAnt $ "5001/5002/5004/5005/5006/5007/5008/5013/5016" .AND. SA1->A1_YTPCLI = "2"
-		nFrtTot	 := QRYSF2->D2_QUANT * QRYSF2->D2_YFREGER
+	nFrtTot	 := Round(QRYSF2->D2_QUANT * QRYSF2->D2_YFREGER,2)
 		nFrtUni  := QRYSF2->D2_YFREGER
 	Else
 		nFrtTot	 := 0 // QRYSF2->D2_VALFRE  alterado em 16/04/20
@@ -1305,7 +1305,7 @@ nFrtTot	 := ZZ->D1_VALFRE * - 1
 	
 	SZ2->(dbSetOrder(4))
 		If SZ2->(dbSeek(ZZ->D1_FILIAL + ZZ->D1_FORNECE + ZZ->D1_LOJA + ZZ->D1_COD))
-		nFrtTot	 := (ZZ->D1_QUANT * SZ2->Z2_FRETGER ) * -1
+		nFrtTot	 := Round((ZZ->D1_QUANT * SZ2->Z2_FRETGER ),2) * -1
 		nFrtUni  := SZ2->Z2_FRETGER * -1
 		Endif
 	ENDIF

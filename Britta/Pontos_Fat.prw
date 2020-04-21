@@ -723,10 +723,12 @@ User Function Mt410Ace()
 	Local _nOpc			:= PARAMIXB [1] //  1 - Excluir | 2 - Visualizar / Residuo | 3 - Copiar | 4 - Alterar
 
 	If Alltrim(cEmpAnt)+Alltrim(cFilAnt) $ '1306|1307' .And. SC5->C5_CLIENTE = '000276'
-		IF _nOpc == 1
-			_lContinua := u_ChkAcesso("Mt410Ace",5,.T.)
-		ElseIf _nOpc == 4
-			_lContinua := u_ChkAcesso("Mt410Ace",4,.T.)
+		If SC5->C5_EMISSAO <> dDataBase .And. SC5->C5_XOPER = 'V'
+			IF _nOpc == 1
+				_lContinua := u_ChkAcesso("Mt410Ace",5,.T.)
+			ElseIf _nOpc == 4
+				_lContinua := u_ChkAcesso("Mt410Ace",4,.T.)
+			Endif
 		Endif
 	Endif
 

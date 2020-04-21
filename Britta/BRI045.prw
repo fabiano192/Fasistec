@@ -112,7 +112,7 @@ Static Function fGeraTRB()
 			EndIf
 		EndIf
 	EndIf
-/*
+
 	cQuery := "  DELETE "
 	cQuery += "  FROM "+RetSqlName("ZZD")+" "
 	cQuery += "  WHERE ZZD_CODEMP    = '"+cEmpAnt+"'"
@@ -177,7 +177,7 @@ Static Function fGeraTRB()
 	cQry += " AND D_E_L_E_T_ =  ' ' AND D1_TIPO = 'D' "
 	cQry += " ORDER BY D1_DTDIGIT,D1_SERIE,D1_DOC "
 
-	MemoWrite("\CFGLOG\BRI045C.TXT",cqry)
+MemoWrite("\CFGLOG\BRI045D.TXT",cqry)
 
 	TCQUERY cQry NEW ALIAS "ZZ"
 
@@ -210,7 +210,6 @@ Static Function fGeraTRB()
 	Enddo
 
 	ZZ->(dbCloseArea())
-*/
 
 
 	If Alltrim(cEmpAnt)+Alltrim(cFilAnt) $ '1306|1307'
@@ -482,6 +481,54 @@ cQry += " ORDER BY F2_EMISSAO,F2_SERIE,F2_DOC "
 	ZZ->(dbCloseArea())
 
 //cFilAnt := _cFilBkp
+
+
+	If Alltrim(cEmpAnt)+Alltrim(cFilAnt) $ '1306|1307'
+		cQry := " "
+		cQry := " SELECT * "
+		cQry += " FROM "+RetSqlName("SC5")+" A "
+		cQry += " INNER JOIN "+ RetSqlName("SC6")+ " B ON C5_FILIAL = C6_FILIAL  "
+		cQry += " AND C5_NUM = C6_NUM"
+		cQry += " WHERE A.D_E_L_E_T_ =  '' AND B.D_E_L_E_T_ =  ''"
+		cQry += " AND C5_EMISSAO BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"' "
+//cQry += " AND F2_DOC = '000026810' "
+		cQry += " AND C5_FILIAL " + BRI45FIL()
+		cQry += " AND C5_CLIENTE = '000276' "
+		cQry += " ORDER BY C5_FILIAL,C5_EMISSAO,C5_NUM "
+
+		MemoWrite("\CFGLOG\BRI045C.TXT",cqry)
+
+		TcQuery cQry New Alias "QRYSC5"
+
+		TCSETFIELD("QRYSC5","C5_EMISSAO","D")
+
+		_cFilBkp := cFilAnt
+
+		cTipo := "SC5"
+
+		QRYSC5->(dbGoTop())
+
+		While !QRYSC5->(Eof())
+
+			cFilAnt  := QRYSC5->C5_FILIAL
+			_cFilial := QRYSC5->C6_FILIAL
+			cDoc     := QRYSC5->C5_NUM
+			cSerie   := 'ROM'
+			cCliente := QRYSC5->C5_CLIENTE
+			cLoja    := QRYSC5->C5_LOJACLI
+			_cProduto:= QRYSC5->C6_PRODUTO
+
+			U_BRI049(_cfilial,cDoc,cSERIE,cCliente,cLoja,_cProduto)
+
+			QRYSC5->(dbSkip())
+		Enddo
+
+		dbCloseArea("QRYSC5")
+
+	Endif
+
+
+
 
 	If _cEmpresa != cEmpAnt .And. _cFilial != cFilAnt
 		If Select("SX2") > 0
