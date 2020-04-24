@@ -253,7 +253,8 @@ Static Function CR119IN()
 	_cQuery += " 'FRETE'   = EEC.EEC_FRPREV, " +CRLF
 	_cQuery += " 'SEGURO'  = EEC.EEC_SEGPRE, " +CRLF
 	_cQuery += " 'OUTROS'  = EEC.EEC_FRPCOM+EEC.EEC_DESPIN-EEC.EEC_DESCON, " +CRLF
-	_cQuery += " 'TOTALGER'= (EEC.EEC_TOTPED+EEC.EEC_DESCON)-(EEC.EEC_FRPREV+EEC.EEC_FRPCOM+EEC.EEC_SEGPRE+EEC.EEC_DESPIN) " +CRLF
+	_cQuery += " 'TOTALGER'= (EEC.EEC_TOTPED+EEC.EEC_DESCON)-(EEC.EEC_FRPREV+EEC.EEC_FRPCOM+EEC.EEC_SEGPRE+EEC.EEC_DESPIN), " +CRLF
+	_cQuery += " EEC_IMPORT, EEC_IMLOJA " + CRLF
 	_cQuery += " FROM "+RetSqlName("EE9")+" EE9 " +CRLF
 	_cQuery += " INNER JOIN "+RetSqlName("EEC")+" EEC ON EE9_PREEMB = EEC_PREEMB " +CRLF
 	_cQuery += " INNER JOIN "+RetSqlName("SA1")+" SA1A ON SA1A.A1_COD = EEC_IMPORT AND SA1A.A1_LOJA = EEC_IMLOJA " +CRLF
@@ -322,6 +323,33 @@ Static Function CR119IN()
 		If aScan(_aNF,Alltrim(TEXP->NF)) = 0
 			AAdd(_aNF,Alltrim(TEXP->NF))
 		Endif
+
+		EEM->(dbSetOrder(1))
+		If EEM->(MsSeek(xFilial("EEM")+TEXP->PROCESSO))
+
+			While EEM->(!Eof() .And. EEM_FILIAL == xFilial("EEM")) .And. EEM->EEM_PREEMB = TEXP->PROCESSO .And. EEM->EEM_TIPOCA == "N"
+
+				SE1->(dbSetOrder(2))
+				If SE1->(MsSeek(xFilial("SE1")+TEXP->EEC_IMPORT+TEXP->EEC_IMLOJA + Substr(EEM->EEM_SERIE,1,3)+Substr(EEM->EEM_NRNF,1,9)))
+
+					_cKeySE1 := SE1->E1_FILIAL + SE1->E1_CLIENTE + SE1->E1_LOJA + SE1->E1_PREFIXO + SE1->E1_NUM
+
+					While SE1->(!EOF()) .And. _cKeySE1 == SE1->E1_FILIAL + SE1->E1_CLIENTE + SE1->E1_LOJA + SE1->E1_PREFIXO + SE1->E1_NUM
+
+						SE1->(RecLock("SE1",.F.))
+						SE1->E1_NUMINVO := EEM->EEM_PREEMB
+						SE1->(MsUnlock())
+
+						SE1->(dbSkip())
+					EndDo
+				Endif
+
+				EEM->(dbSkip())
+			Enddo
+		Endif
+
+
+
 
 		TEXP->(dbskip())
 	ENDDO

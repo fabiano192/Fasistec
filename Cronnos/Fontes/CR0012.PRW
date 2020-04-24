@@ -1,21 +1,24 @@
 #INCLUDE "TOTVS.CH"
+#INCLUDE "TOPCONN.CH"
 #INCLUDE "TBICONN.CH"
 
 /*/
-Funçao    	³ CR0012
+Fun?ao    	³ CR0012
 Data 		³ 19.03.12
 Descricao 	³ Programacao de entrega Caterpillar Brasil(000017)
 /*/
 
-User Function CR0012()
+User Function CR0012(_aParam)
 
-	PREPARE ENVIRONMENT EMPRESA "01" FILIAL "01"
+	If ValType( _aParam ) <> "U"
+		PREPARE ENVIRONMENT EMPRESA _aParam[1] FILIAL _aParam[2]
+	Endif
 
 	PRIVATE cTitulo    	:= "Programacao Entrega"
 	Private _cAnexo
 	Private _cCATFold	:= GetMV("CR_CATFOLD")
 
-	Private _nPula,_lPrim,_cItem,_lAchou,_nPrcVen,_cNum,_lVerFat, _lIncSC6, _cPedido
+	Private _lPrim,_cItem,_lAchou,_nPrcVen,_cNum,_lVerFat, _lIncSC6, _cPedido
 
 	Private _lIncSC6 		:= .F.
 	Private _nTotQt  		:= 0
@@ -42,17 +45,17 @@ User Function CR0012()
 		_cq3  += " AND C6_XRESIDU <> 'N' "
 	Endif
 
-
 	TCSQLEXEC(_cq3)
 
-	CONOUT("Final da integraçðo CBL - CR0012")
+	CONOUT("Final da integra??o CBL - CR0012")
 
-Return
+Return(Nil)
 
 
 
 Static Function CR12A(_lFim)
 
+	local A,B,I,Z
 	Pergunte("",.F.)
 
 	aStru := {}
@@ -363,6 +366,7 @@ Return
 
 Static Function CR12B(_lFim)
 
+	LOCAL i
 	Private _lPrim,_cItem,_cItemExp,_lAchou,_nPrcVen,_cNum,_lVerFat, _lIncSC6, _cPedido
 	Private _lIncSC6 := .F.
 	Private _nTotQt  := 0
@@ -483,83 +487,127 @@ Return
 
 Static Function IntSC6C()
 
+	Local _nDiasEnt := SuperGetMV("CR_DIAENT",,3)
+	Local _cQry     := ''
+
 	_nFatur := 0
 
 	_cNF := SZ4->Z4_ULTNF
-	_lOk := .F.
-	SF2->(dbSetOrder(1))
-	If SF2->(dbSeek(xFilial("SF2")+SZ4->Z4_ULTNF+SZ4->Z4_SERIE))
-		_cNF := SZ4->Z4_ULTNF
-		_lOk := .T.
-	Endif
 
-	If !_lOk
-		SF2->(dbSetOrder(1))
-		If SF2->(dbSeek(xFilial("SF2")+Substr(SZ4->Z4_ULTNF,4,6)+"   "+SZ4->Z4_SERIE))
-			_cNF := Substr(SZ4->Z4_ULTNF,4,6)+"   "
+	If SZ4->Z4_LOJA  = '02' .And. Val(_cNF) = 0
+
+		If Select("TSD2") > 0
+			TSD2->(dbCloseArea())
 		Endif
-	Endif
 
-	If VAL(_cNF) > 0
-		_cUltNf := _cNF + "01"
+		_cQry += " SELECT * FROM "+RetSqlName("SD2")+" D2 " +CRLF
+		_cQry += " WHERE D2.D_E_L_E_T_ = '' AND D2_FILIAL = '"+xFilial("SD2")+"' " +CRLF
+		_cQry += " AND D2_COD 		= '"+Alltrim(SZ4->Z4_PRODPAS)+"' " +CRLF
+		_cQry += " AND D2_PROCLI 	= '"+Alltrim(SZ4->Z4_PRODCLI)+"' " +CRLF
+		_cQry += " AND D2_PEDCLI 	= '"+Alltrim(SZ4->Z4_PEDIDO)+"' " +CRLF
+		_cQry += " AND D2_CLIENTE 	= '"+Alltrim(SZ4->Z4_CODCLI)+"' " +CRLF
+		_cQry += " AND D2_LOJA 		= '"+Alltrim(SZ4->Z4_LOJA)+"' " +CRLF
+		_cQry += " AND D2_EMISSAO	>= '"+dTos(dDataBase-_nDiasEnt)+"' " +CRLF
+
+		TcQuery _cQry New Alias "TSD2"
+
+		TcSetField("TSD2","EMISSAO","D")
+
+		If Contar("TSD2","!EOF()") > 0
+
+			TSD2->(dbGoTop())
+
+			While TSD2->(!EOF())
+
+				_nFatur  += TSD2->D2_QUANT
+
+				If _nFatur >= SZ4->Z4_QTENT
+					Return(Nil)
+				Endif
+
+				TSD2->(dbSkip())
+			EndDo
+		Endif
+
+		TSD2->(dbCloseArea())
+
 	Else
-		_cUltNf := "000000001"
-	Endif
 
-	SD2->(dbOrderNickName("INDSD23"))
-	SD2->(dbSeek(xFilial("SD2")+ SZ4->Z4_CODCLI + SZ4->Z4_LOJA + SZ4->Z4_PRODPAS + SZ4->Z4_SERIE + _cUltNf,.T.))
-
-	_cChav  := SZ4->Z4_CODCLI + SZ4->Z4_LOJA + SZ4->Z4_PRODPAS
-
-	While SD2->(!Eof()) .And. _cChav == SD2->D2_CLIENTE + SD2->D2_LOJA + SD2->D2_COD
-
-		If SD2->D2_DOC <= _cNF .And. SD2->D2_EMISSAO <= SZ4->Z4_DTULTNF
-			SD2->(dbSkip())
-			Loop
+		_lOk := .F.
+		SF2->(dbSetOrder(1))
+		If SF2->(dbSeek(xFilial("SF2")+SZ4->Z4_ULTNF+SZ4->Z4_SERIE))
+			_cNF := SZ4->Z4_ULTNF
+			_lOk := .T.
 		Endif
 
-		If SD2->D2_EMISSAO < SZ4->Z4_DTULTNF
-			SD2->(dbSkip())
-			Loop
-		Endif
-
-		If SD2->D2_QUANT == SD2->D2_PROGENT
-			SD2->(dbSkip())
-			Loop
-		Endif
-
-		If SD2->D2_VALDEV == SD2->D2_TOTAL
-			SD2->(dbSkip())
-			Loop
-		Endif
-
-		SC6->(dbSetOrder(1))
-		If SC6->(dbSeek(xFilial("SC6")+SD2->D2_PEDIDO + SD2->D2_ITEMPV))
-			If Alltrim(SC6->C6_PEDCLI) != Alltrim(SZ4->Z4_PEDIDO)
-				SD2->(dbSkip())
-				Loop
+		If !_lOk
+			SF2->(dbSetOrder(1))
+			If SF2->(dbSeek(xFilial("SF2")+Substr(SZ4->Z4_ULTNF,4,6)+"   "+SZ4->Z4_SERIE))
+				_cNF := Substr(SZ4->Z4_ULTNF,4,6)+"   "
 			Endif
 		Endif
 
-		_nFatur2 := _nFatur
-		_nFatur  += SD2->D2_QUANT - SD2->D2_PROGENT
-
-		If _nFatur >= SZ4->Z4_QTENT
-			_nDif  := SZ4->Z4_QTENT - _nFatur2
+		If VAL(_cNF) > 0
+			_cUltNf := _cNF + "01"
 		Else
-			_nDif  := SD2->D2_QUANT - SD2->D2_PROGENT
+			_cUltNf := "000000001"
 		Endif
 
-		SD2->(RecLock("SD2",.F.))
-		SD2->D2_PROGENT += _nDif
-		SD2->(MsUnlock())
+		SD2->(dbOrderNickName("INDSD23"))
+		SD2->(dbSeek(xFilial("SD2")+ SZ4->Z4_CODCLI + SZ4->Z4_LOJA + SZ4->Z4_PRODPAS + SZ4->Z4_SERIE + _cUltNf,.T.))
 
-		If _nFatur >= SZ4->Z4_QTENT
-			Return
-		Endif
+		_cChav  := SZ4->Z4_CODCLI + SZ4->Z4_LOJA + SZ4->Z4_PRODPAS
 
-		SD2->(dbSkip())
-	EndDo
+		While SD2->(!Eof()) .And. _cChav == SD2->D2_CLIENTE + SD2->D2_LOJA + SD2->D2_COD
+
+			If SD2->D2_DOC <= _cNF .And. SD2->D2_EMISSAO <= SZ4->Z4_DTULTNF
+				SD2->(dbSkip())
+				Loop
+			Endif
+
+			If SD2->D2_EMISSAO < SZ4->Z4_DTULTNF
+				SD2->(dbSkip())
+				Loop
+			Endif
+
+			If SD2->D2_QUANT == SD2->D2_PROGENT
+				SD2->(dbSkip())
+				Loop
+			Endif
+
+			If SD2->D2_VALDEV == SD2->D2_TOTAL
+				SD2->(dbSkip())
+				Loop
+			Endif
+
+			SC6->(dbSetOrder(1))
+			If SC6->(dbSeek(xFilial("SC6")+SD2->D2_PEDIDO + SD2->D2_ITEMPV))
+				If Alltrim(SC6->C6_PEDCLI) != Alltrim(SZ4->Z4_PEDIDO)
+					SD2->(dbSkip())
+					Loop
+				Endif
+			Endif
+
+			_nFatur2 := _nFatur
+			_nFatur  += SD2->D2_QUANT - SD2->D2_PROGENT
+
+			If _nFatur >= SZ4->Z4_QTENT
+				_nDif  := SZ4->Z4_QTENT - _nFatur2
+			Else
+				_nDif  := SD2->D2_QUANT - SD2->D2_PROGENT
+			Endif
+
+			SD2->(RecLock("SD2",.F.))
+			SD2->D2_PROGENT += _nDif
+			SD2->(MsUnlock())
+
+			If _nFatur >= SZ4->Z4_QTENT
+				Return
+			Endif
+
+			SD2->(dbSkip())
+		EndDo
+	Endif
 
 	_lAchou   := .F.
 
@@ -584,6 +632,9 @@ Static Function IntSC6C()
 			SC6->C6_IDENCAT := SZ4->Z4_SEMATU
 			If SZ4->Z4_TPPED = "1"
 				SC6->C6_PEDAMOS := "N"
+				SC6->C6_PRCVEN  := _nPrcVen
+				SC6->C6_PRUNIT  := _nPrcVen
+				SC6->C6_VALOR   := Round(( SC6->C6_QTDVEN * _nPrcVen ),2)
 			Endif
 			SC6->(MsUnlock())
 
@@ -860,9 +911,9 @@ Static Function CR012D()
 
 	oHTML := oProcess:oHTML
 
-	oProcess:cSubject := "Inconsistencia Programaçðo - CBL - "+Dtoc(dDataBase)+" Hora : "+Substr(Time(),1,5)
+	oProcess:cSubject := "Inconsistencia Programa??o - CBL - "+Dtoc(dDataBase)+" Hora : "+Substr(Time(),1,5)
 
-	oProcess:fDesc := "Inconsistencia Programaçðo - CBL"
+	oProcess:fDesc := "Inconsistencia Programa??o - CBL"
 
 	Private _cTo := _cCC := ""
 
