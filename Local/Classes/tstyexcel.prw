@@ -178,6 +178,9 @@ user function tstYExcel()
 	oTabela:Finish()	//Fecha a edição da tabela
 	oExcel:Gravar(GetTempPath(),.T.,.T.)
 return
+
+
+
 User Function tst2Excel()
 	Local nStart, nElapsed
 	Local nMemIni,nMemCon
@@ -212,6 +215,8 @@ User Function tst2Excel()
 	conout( "Memoria: " + LTrim( Str( Round(nMemCon/1024/1024,3) ) ) + " MB" )
 	conout( "Tamanho Arquivo: " + LTrim( Str( Round(ntam/1024/1024,3) ) ) + " MB" )
 Return
+
+
 Static Function TesteYExcel()
 	Local nCont,nCont2
 	Local oExcel		:= YExcel():new("Pasta1")
@@ -235,6 +240,8 @@ Static Function TesteYExcel()
 	Next
 	oExcel:Gravar("c:\temp",.F.,.T.)
 Return
+
+
 Static Function Test2YExcel()
 	Local nCont,nCont2
 	Local oExcel		:= YExcel():new("Pasta1")
@@ -267,6 +274,9 @@ Static Function Test2YExcel()
 	oTabela:Finish()	//Fecha a edição da tabela
 	oExcel:Gravar("c:\temp",.F.,.T.)
 Return
+
+
+
 Static Function TestFwMsExcel()
 	Local oExcel := FWMSEXCEL():New()
 	Local nCont
@@ -287,6 +297,9 @@ Static Function TestFwMsExcel()
 	oExcel:Activate()
 	oExcel:GetXMLFile("Pasta2.xml")
 Return
+
+
+
 Static Function TestTreport()
 	Local nCont
 	RPCSetEnv("01","010101","","","","",{},,,.T.)
@@ -324,6 +337,9 @@ Static Function TestTreport()
 	oReport:Finish()
 	oReport:FreeAllObjs()
 Return
+
+
+
 /*/{Protheus.doc} YxlsRead
 Testa leitura simples do xlsx
 @author Saulo Gomes Martins
@@ -339,6 +355,7 @@ User Function YxlsRead()
 	Local dData		:= date()
 	Local oDateTime := oExcel:GetDateTime(date(),time())	//Formatando DateTime
 	Local nColuna,nLinha
+	
 	oExcel:ADDPlan()
 	oExcel:Cell(1,1,cTexto,,)
 	oExcel:Cell(2,1,nNumero,,)

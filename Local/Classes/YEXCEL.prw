@@ -43,8 +43,6 @@ RECURSOS DISPONIVEIS
 //Dummy Function
 User Function YExcel()
 Return .T.
-
-
 CLASS YExcel
 	Data oString			//String compartilhadas
 	Data nQtdString			//Quantidade de string conmpartilhadas
@@ -170,8 +168,6 @@ CLASS YExcel
 		METHOD Finish()
 	*/
 ENDCLASS
-
-
 /*/{Protheus.doc} AddNome
 Cria nome para refencia de célula ou intervalo
 @author Saulo Gomes Martins
@@ -217,9 +213,6 @@ METHOD AddNome(cNome,nLinha,nColuna,nLinha2,nColuna2,cRefPar,cPlanilha,cEscopo) 
 		::oworkbook:XPathAddAtt( "/xmlns:workbook/xmlns:definedNames/xmlns:definedName[last()]", "localSheetId"		, cValToChar(nPos-1))
 	EndIf
 Return
-
-
-
 /*/{Protheus.doc} SetPrintTitles
 Repetir linhas na impressão
 @author Saulo Gomes Martins
@@ -236,9 +229,6 @@ METHOD SetPrintTitles(nLinha,nLinha2,cRefPar,cPlanilha) CLASS YExcel
 	Default nLinha2	:= nLinha
 	::AddNome("_xlnm.Print_Titles",nLinha,,nLinha2,,cRefPar,cPlanilha,::cPlanilhaAt)
 Return
-
-
-
 /*/{Protheus.doc} SetPagOrientation
 Informa a orientação do papel na impressão
 @author Saulo Gomes Martins
@@ -254,13 +244,8 @@ METHOD SetPagOrientation(cOrientation) CLASS YExcel
 		::cPagOrientation	:= cOrientation
 	EndIf
 Return ::cPagOrientation
-
-
 METHOD ClassName() CLASS YExcel
-Return "YExcel"
-
-
-
+Return "YEXCEL"
 /*/{Protheus.doc} New
 Construtor da classe
 @author Saulo Gomes Martins
@@ -275,8 +260,8 @@ METHOD New(cNomeFile) CLASS YExcel
 		cAr7Zip := GetPvProfString("GENERAL", "LOCAL7ZIP" , "C:\Program Files\7-Zip\7z.exe" , GetAdv97() )
 	Endif
 	PARAMTYPE 0	VAR cNomeFile  AS CHARACTER 		OPTIONAL DEFAULT lower(CriaTrab(,.F.))
-	::cClassName	:= "YExcel"
-	::cName			:= "YExcel"
+	::cClassName	:= "YEXCEL"
+	::cName			:= "YEXCEL"
 	::oString		:= tHashMap():new()
 	::oCell			:= tHashMap():new()	//Usado no leitura simples
 	::nQtdString	:= 0
@@ -329,10 +314,6 @@ METHOD New(cNomeFile) CLASS YExcel
 	::add_rels(nPos,"http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles","styles.xml")
 	::add_rels(nPos,"http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings","sharedStrings.xml")
 Return self
-
-
-
-
 /*/{Protheus.doc} ADDImg
 Adiciona imagem para ser usado
 @author Saulo Gomes Martins
@@ -362,10 +343,6 @@ METHOD ADDImg(cImg) CLASS YExcel
 	AADD(::aFiles,cDirImg+"image"+cValToChar(::nIDMedia)+cExt)
 	AADD(::aImagens,{::nIDMedia,"image"+cValToChar(::nIDMedia)+cExt})
 Return ::nIDMedia
-
-
-
-
 /*/{Protheus.doc} Img
 Usa imagem
 @author Saulo Gomes Martins
@@ -469,9 +446,6 @@ METHOD Img(nID,nLinha,nColuna,nX,nY,cUnidade,nRot,nQtdPlan) CLASS YExcel
 	AADD(::aImgdraw,Len(::aImgdraw)+1)
 	::add_rels("\xl\drawings\_rels\drawing"+cValToChar(::odrawing:xDados)+".xml.rels","http://schemas.openxmlformats.org/officeDocument/2006/relationships/image","../media/"+::aImagens[nID][2])
 Return
-
-
-
 /*/{Protheus.doc} OpenRead
 Abrir planilha e armazena conteudo para leitura
 @author Saulo Gomes Martins
@@ -620,7 +594,7 @@ METHOD OpenRead(cFile,nPlanilha) Class YExcel
     					cnumfmtid	:= aAtrr[nPos][2]
     					If "|"+cnumfmtid+"|" $ "|14|15|16|17|18|19|20|21|22|45|46|47|"
     						cTipo		:= "D"
-    						oDataTime	:= YExcel_DateTime():New(,,oXML:XPathGetNodeValue("/"+cNomeNS+":worksheet/"+cNomeNS+":sheetData/"+cNomeNS+":row["+cValToChar(nCont)+"]/"+cNomeNS+":c["+cValToChar(nCont2)+"]/"+cNomeNS+":v"))
+    						oDataTime	:= yExcel_DateTime():New(,,oXML:XPathGetNodeValue("/"+cNomeNS+":worksheet/"+cNomeNS+":sheetData/"+cNomeNS+":row["+cValToChar(nCont)+"]/"+cNomeNS+":c["+cValToChar(nCont2)+"]/"+cNomeNS+":v"))
     						cRet		:= oDataTime:GetDate()
     						::oCell:Set(cRef+"_H",oDataTime:GetTime())
 							FreeObj(oDataTime)
@@ -636,10 +610,6 @@ METHOD OpenRead(cFile,nPlanilha) Class YExcel
     	Next
     Next
 Return nRet==0
-
-
-
-
 /*/{Protheus.doc} CellRead
 Retorna o valor de uma celula, após o uso do método OpenRead()
 @author Saulo Gomes Martins
@@ -662,10 +632,6 @@ Method CellRead(nLinha,nColuna,xDefault,lAchou,cOutro) Class YExcel
 		lAchou	:= .F.
 	EndIf
 Return xValor
-
-
-
-
 /*/{Protheus.doc} CloseRead
 Limpa a pasta temporaria
 @author Saulo Gomes Martins
@@ -679,10 +645,6 @@ METHOD CloseRead() Class YExcel
 	::nQtdString := 0
 	DelPasta("\tmpxls\"+::cTmpFile)
 Return
-
-
-
-
 /*/{Protheus.doc} ADDPlan
 Adiciona nova planilha ao arquivo
 @author Saulo Gomes Martins
@@ -715,7 +677,7 @@ METHOD ADDPlan(cNome,cCor) CLASS YExcel
 	cNome	:= EncodeUTF8(cNome)
 	If nQtdPlanilhas>0	//Grava a Planilha anterior
 		If Empty(::oCols:GetValor())
-			::oCols:AddValor(YExcelTag():New("col"))
+			::oCols:AddValor(yExcelTag():New("col"))
 			::oCols:GetValor(1):SetAtributo("min",::adimension[2][2])
 			::oCols:GetValor(1):SetAtributo("max",::adimension[1][2])
 			::oCols:GetValor(1):SetAtributo("width",12.00)
@@ -742,14 +704,14 @@ METHOD ADDPlan(cNome,cCor) CLASS YExcel
 		If Len(cCor)==6
 			cCor	:= "FF"+cCor
 		EndIf
-		oCorPlan		:= YExcelTag():New("tabColor",,{{"rgb",cCor}})
+		oCorPlan		:= yExcelTag():New("tabColor",,{{"rgb",cCor}})
 	EndIf
-	::osheetPr		:= YExcelTag():New("sheetPr",{oCorPlan},{{"codeName",cNome}})
-	::osheetPr:AddValor(YExcelTag():New("pageSetUpPr",,{{"fitToPage","1"}}))	//Flag indicating whether the Fit to Page print option is enabled. pag 1675
+	::osheetPr		:= yExcelTag():New("sheetPr",{oCorPlan},{{"codeName",cNome}})
+	::osheetPr:AddValor(yExcelTag():New("pageSetUpPr",,{{"fitToPage","1"}}))	//Flag indicating whether the Fit to Page print option is enabled. pag 1675
 	::adimension	:= {{0,0},{999999,999999}}
-	::osheetData	:= YExcelsheetData():New(self)
-	::osheetViews	:= YExcelTag():New("sheetViews",YExcelTag():New("sheetView",{}))
-	oSelection	:= YExcelTag():New("selection",nil)
+	::osheetData	:= yExcelsheetData():New(self)
+	::osheetViews	:= yExcelTag():New("sheetViews",yExcelTag():New("sheetView",{}))
+	oSelection	:= yExcelTag():New("selection",nil)
 	If nQtdPlanilhas==0
 		::osheetViews:GetValor():SetAtributo("tabSelected",1)
 		//oSelection:SetAtributo("activeCell","A1")
@@ -760,15 +722,15 @@ METHOD ADDPlan(cNome,cCor) CLASS YExcel
 	::osheetViews:GetValor():SetAtributo("workbookViewId",0)
 	::nColunaAtual				:= 0
 	::oAutoFilter				:= nil
-	::oMergeCells				:= YExcelTag():New("mergeCells",{})
+	::oMergeCells				:= yExcelTag():New("mergeCells",{})
 	::aConditionalFormatting	:= {}
 	::nPriodFormCond			:= 1
 //	::osheetViews:GetValor():SetAtributo("tabSelected","1")
 	::osheetViews:GetValor():SetAtributo("workbookViewId","0")
-	::oCols			:= YExcelTag():New("cols",{})
-	::otableParts	:= YExcelTag():New("tableParts",{})
+	::oCols			:= yExcelTag():New("cols",{})
+	::otableParts	:= yExcelTag():New("tableParts",{})
 	::atable		:= {}
-	::odrawing		:= YExcelTag():New("drawing",)
+	::odrawing		:= yExcelTag():New("drawing",)
 	::adrawing		:= {}
 	::aImgdraw		:= {}
 	::nRowoutlineLevel	:= nil
@@ -791,10 +753,6 @@ METHOD ADDPlan(cNome,cCor) CLASS YExcel
 	::ocontent_types:XPathAddAtt( "/xmlns:Types/xmlns:Override[last()]", "PartName"	, "/xl/worksheets/sheet"+cValToChar(nQtdPlanilhas)+".xml" )
 	::ocontent_types:XPathAddAtt( "/xmlns:Types/xmlns:Override[last()]", "ContentType", "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml" )
 Return nQtdPlanilhas
-
-
-
-
 /*/{Protheus.doc} Cell
 Grava o conteudo de uma célula
 @author Saulo Gomes Martins
@@ -856,10 +814,6 @@ METHOD Cell(nLinha,nColuna,xValor,cFormula,nStyle) CLASS YExcel
 		EndIf
 	EndIf
 Return self
-
-
-
-
 /*/{Protheus.doc} SetDefRow
 Defini as colunas da linha. Habilita a gravação automatica de cada coluna. Importante para prover performace na gravação de varias linhas
 @author Saulo Gomes Martins
@@ -874,9 +828,6 @@ METHOD SetDefRow(lHabilitar,aSpanRow) CLASS YExcel
 	::lRowDef		:= lHabilitar
 	::aSpanRow		:= aSpanRow
 Return
-
-
-
 METHOD NivelLinha(nNivel,lFechado,lOculto) CLASS YExcel
 	Default lFechado	:= .F.
 	Default lOculto		:= .F.
@@ -884,10 +835,6 @@ METHOD NivelLinha(nNivel,lFechado,lOculto) CLASS YExcel
 	::lRowcollapsed		:= lFechado
 	::lRowHidden		:= lOculto
 Return
-
-
-
-
 /*/{Protheus.doc} showGridLines
 Se vai exibir ou ocultar linhas de grade na planilha
 @author Saulo Gomes Martins
@@ -900,10 +847,6 @@ Se vai exibir ou ocultar linhas de grade na planilha
 METHOD showGridLines(lView) CLASS YExcel
 	::osheetViews:GetValor():SetAtributo("showGridLines",If(lView,"1","0"))
 Return
-
-
-
-
 /*/{Protheus.doc} AutoFilter
 Cria os Filtros na planilha
 @author Saulo Gomes Martins
@@ -920,13 +863,9 @@ Method AutoFilter(nLinha,nColuna,nLinha2,nColuna2) CLASS YExcel
 	Local cColuna,cColuna2
 	cColuna		:= NumToString(nColuna)
 	cColuna2	:= NumToString(nColuna2)
-	::oAutoFilter	:= YExcelTag():New("autoFilter",)
+	::oAutoFilter	:= yExcelTag():New("autoFilter",)
 	::oAutoFilter:SetAtributo("ref",cColuna+cValToChar(nLinha)+":"+cColuna2+cValToChar(nLinha2))
 Return
-
-
-
-
 /*/{Protheus.doc} mergeCells
 Mescla células
 @author Saulo Gomes Martins
@@ -953,7 +892,7 @@ Method mergeCells(nLinha,nColuna,nLinha2,nColuna2) CLASS YExcel
 	If nPos>0
 		UserException("YExcel - metodo mergeCells. Célula "+cColuna+cValToChar(nLinha)+":"+cColuna2+cValToChar(nLinha2)+" não pode ser mesclada, essa célula já foi mesclada!")
 	EndIf
-	oMergeCell	:= YExcelTag():New("mergeCell",)
+	oMergeCell	:= yExcelTag():New("mergeCell",)
 	oMergeCell:SetAtributo("ref",cColuna+cValToChar(nLinha)+":"+cColuna2+cValToChar(nLinha2))
 	::oMergeCells:AddValor(oMergeCell)
 	::oMergeCells:SetAtributo("count",Len(::oMergeCells:GetValor()))
@@ -964,10 +903,6 @@ Method mergeCells(nLinha,nColuna,nLinha2,nColuna2) CLASS YExcel
 		EndIf
 	EndIf
 Return
-
-
-
-
 /*/{Protheus.doc} Font
 Cria objeto de fonte para ser usado na criação de estilos para formatação condicional
 @author Saulo Gomes Martins
@@ -986,9 +921,6 @@ Cria objeto de fonte para ser usado na criação de estilos para formatação condic
 /*/
 METHOD Font(nTamanho,cCorRGB,cNome,cfamily,cScheme,lNegrito,lItalico,lSublinhado,lTachado) CLASS YExcel
 Return {nTamanho,cCorRGB,cNome,cfamily,cScheme,lNegrito,lItalico,lSublinhado,lTachado}
-
-
-
 /*/{Protheus.doc} Preenc
 Cria objeto de preenchimento para ser usado na criação de estilos para formatação condicional
 @author Saulo Gomes Martins
@@ -1002,9 +934,6 @@ Cria objeto de preenchimento para ser usado na criação de estilos para formataçã
 METHOD Preenc(cBgCor,cFgCor,cType) CLASS YExcel
 Default cType	:= "solid"
 Return {cFgCor,cBgCor,cType}
-
-
-
 /*/{Protheus.doc} ObjBorda
 Cria objeto de bordas para ser usado na criação de estilos para formatação condicional
 @author Saulo Gomes Martins
@@ -1018,9 +947,6 @@ Cria objeto de bordas para ser usado na criação de estilos para formatação condi
 /*/
 METHOD ObjBorda(cTipo,cCor,cModelo) CLASS YExcel
 Return {cTipo,cCor,cModelo}
-
-
-
 /*/{Protheus.doc} ADDdxf
 Cria estilo para formatação condicional
 @author Saulo Gomes Martins
@@ -1050,9 +976,6 @@ METHOD ADDdxf(aFont,aCorPreenc,aBorda) CLASS YExcel
 		::Borda(aBorda[1],aBorda[2],aBorda[3],"xmlns:styleSheet/xmlns:dxfs/xmlns:dxf[last()]")
 	EndIf
 Return nTamdxfs-1
-
-
-
 /*/{Protheus.doc} FormatCond
 Cria uma regra para formatação condicional
 @author Saulo Gomes Martins
@@ -1119,9 +1042,6 @@ METHOD FormatCond(cRefDe,cRefAte,nEstilo,operator,xFormula) CLASS YExcel
 	EndIf
 	::nPriodFormCond++
 Return
-
-
-
 //NÃO DOCUMENTAR
 METHOD AddFormatCond(cRefDe,cRefAte,nEstilo,cType,xFormula,operator,nPrioridade) CLASS YExcel
 	Local cRef	:= cRefDe+If(!Empty(cRefAte),":"+cRefAte,"")
@@ -1146,13 +1066,13 @@ METHOD AddFormatCond(cRefDe,cRefAte,nEstilo,cType,xFormula,operator,nPrioridade)
 		If ValType(xFormula)=="A"
 			oFormula	:= {}
 			For nCont:=1 to Len(xFormula)
-				AADD(oFormula,YExcelTag():New("formula",xFormula[nCont]))
+				AADD(oFormula,yExcelTag():New("formula",xFormula[nCont]))
 			Next
 		Else
-			oFormula	:= YExcelTag():New("formula",xFormula)
+			oFormula	:= yExcelTag():New("formula",xFormula)
 		EndIf
 	EndIf
-	oRule	:= YExcelTag():New("cfRule",oFormula)
+	oRule	:= yExcelTag():New("cfRule",oFormula)
 	oRule:SetAtributo("type",cType)
 	oRule:SetAtributo("dxfId",nEstilo)
 	oRule:SetAtributo("priority",nPrioridade)
@@ -1161,15 +1081,12 @@ METHOD AddFormatCond(cRefDe,cRefAte,nEstilo,cType,xFormula,operator,nPrioridade)
 	EndIf
 	nPos	:= aScan(::aConditionalFormatting,{|x| x:GetAtributo("sqref")==cRef})
 	If nPos==0
-		AADD(::aConditionalFormatting,YExcelTag():New("conditionalFormatting",{oRule},{{"sqref",cRef}}))
+		AADD(::aConditionalFormatting,yExcelTag():New("conditionalFormatting",{oRule},{{"sqref",cRef}}))
 	Else
 		::aConditionalFormatting[nPos]:AddValor(oRule)
 		aSort(::aConditionalFormatting[nPos]:GetValor(),,,{|x,y| x:GetAtributo("priority")>y:GetAtributo("priority")})
 	EndIf
 Return
-
-
-
 /*/{Protheus.doc} AddFont
 Adiciona fonte para ser usado no estilo das células
 @author Saulo Gomes Martins
@@ -1245,9 +1162,6 @@ METHOD AddFont(nTamanho,cCorRGB,cNome,cfamily,cScheme,lNegrito,lItalico,lSublinh
 	::oStyle:XPathAddNode( cLocal+"/xmlns:font[last()]", "scheme", "" )
 	::oStyle:XPathAddAtt( cLocal+"/xmlns:font[last()]/xmlns:scheme", "val"	, cScheme )
 return nTamFonts-1
-
-
-
 /*/{Protheus.doc} CorPreenc
 Adiciona cor de preenchimento para ser usado no estilo das células
 @author Saulo Gomes Martins
@@ -1315,10 +1229,6 @@ METHOD CorPreenc(cFgCor,cBgCor,cType,cLocal) CLASS YExcel
 		EndIf
 	EndIf
 Return nPos-1
-
-
-
-
 /*/{Protheus.doc} EfeitoPreenc
 Adiciona cor com efeito de preenchimento
 @author Saulo Gomes Martins
@@ -1344,9 +1254,6 @@ METHOD EfeitoPreenc(nAngulo,aCores,ctype,nleft,nright,ntop,nbottom,cLocal) CLASS
 	EndIf
 	::gradientFill(nAngulo,aCores,ctype,nleft,nright,ntop,nbottom,cLocal+"/xmlns:fill[last()]")
 Return nPos-1
-
-
-
 METHOD gradientFill(nAngulo,aCores,ctype,nleft,nright,ntop,nbottom,cLocal) CLASS YExcel	//Pag 1779
 	Local nCont
 	PARAMTYPE 0	VAR nAngulo 		AS NUMERIC		OPTIONAL
@@ -1400,10 +1307,6 @@ METHOD gradientFill(nAngulo,aCores,ctype,nleft,nright,ntop,nbottom,cLocal) CLASS
 		::oStyle:XPathAddAtt( cLocal+"/xmlns:gradientFill[last()]/xmlns:stop[last()]", "position"	, cValToChar(aCores[nCont][2]) )
 	Next
 Return
-
-
-
-
 /*/{Protheus.doc} Borda
 Cria borda para ser usado no estilo das células
 @author Saulo Gomes Martins
@@ -1445,9 +1348,6 @@ METHOD Borda(cTipo,cCor,cModelo,cLocal) CLASS YExcel
 		nPos	:= ::Border(cLeft,cRight,cTop,cBottom,cDiagonal,cCor,cCor,cCor,cCor,cCor,cLocal)
 	EndIf
 Return nPos-1
-
-
-
 METHOD Border(cleft,cright,ctop,cbottom,cdiagonal,cCorleft,cCorright,cCortop,cCorbottom,cCordiagonal,cLocal) CLASS YExcel
 	Local nPos
 	PARAMTYPE 10	VAR cLocal	  		AS CHARACTER			OPTIONAL DEFAULT "/xmlns:styleSheet/xmlns:borders"	///xmlns:styleSheet/xmlns:dxfs/xmlns:dxf[last()]
@@ -1517,10 +1417,6 @@ METHOD Border(cleft,cright,ctop,cbottom,cdiagonal,cCorleft,cCorright,cCortop,cCo
 		EndIf
 	EndIf
 Return nPos
-
-
-
-
 /*/{Protheus.doc} AddFmtNum
 Formatação para numeros
 @author Saulo Gomes Martins
@@ -1638,10 +1534,6 @@ Method AddFmtNum(nDecimal,lMilhar,cPrefixo,cSufixo,cNegINI,cNegFim,cValorZero,cC
 	EndIf
 	::oStyle:XPathAddAtt( "/xmlns:styleSheet/xmlns:numFmts/xmlns:numFmt[@numFmtId='"+cValToChar(nNumFmtId)+"']", "formatCode"	, cformatCode )
 Return nNumFmtId	//Não retorna a posição, mas o atributo numFmtId
-
-
-
-
 /*/{Protheus.doc} AddStyles
 Cria um estilo para ser usado nas células
 @author Saulo Gomes Martins
@@ -1754,10 +1646,6 @@ METHOD AddStyles(numFmtId,fontId,fillId,borderId,xfId,aValores,aOutrosAtributos)
 		::oStyle:XPathSetAtt( cLocal+"/xmlns:xf[last()]", aOutrosAtributos[nCont][1]	, cValToChar(aOutrosAtributos[nCont][2]) )
 	Next
 return nPos-1
-
-
-
-
 /*/{Protheus.doc} Alinhamento
 Cria objeto de alinhamento da célula para ser usado na criação de estilo
 @author Saulo Gomes Martins
@@ -1786,7 +1674,7 @@ Cria objeto de alinhamento da célula para ser usado na criação de estilo
 	top
 /*/
 METHOD Alinhamento(cHorizontal,cVertical,lReduzCaber,lQuebraTexto,ntextRotation) CLASS YExcel
-	Local oAlinhamento	:= YExcelTag():New("alignment",)
+	Local oAlinhamento	:= yExcelTag():New("alignment",)
 	Default cVertical	:= "general"
 	Default cHorizontal	:= "bottom"
 	Default lReduzCaber	:= .F.
@@ -1803,9 +1691,6 @@ METHOD Alinhamento(cHorizontal,cVertical,lReduzCaber,lQuebraTexto,ntextRotation)
 		oAlinhamento:SetAtributo("wrapText","1")	//Um valor booleano indicando se o texto em uma célula deve ser envolvido na linha dentro da célula.
 	EndiF
 Return oAlinhamento
-
-
-
 /*/{Protheus.doc} AddPane
 Congelar Painéis
 @author Saulo Gomes Martins
@@ -1827,10 +1712,6 @@ METHOD AddPane(nySplit,nxSplit) CLASS YExcel
 		nPos	:= ::Pane("topRight","frozen",::Ref(nySplit+1,nxSplit+1),,nxSplit)
 	Endif
 Return nPos
-
-
-
-
 //NÃO DOCUMENTAR
 METHOD Pane(cActivePane,cState,cRef,nySplit,nxSplit) CLASS YExcel
 	Local osheetView
@@ -1838,7 +1719,7 @@ METHOD Pane(cActivePane,cState,cRef,nySplit,nxSplit) CLASS YExcel
 	Default cActivePane	:= "bottomLeft"
 	osheetView	:= ::osheetViews:GetValor()
 	osheetView:SetValor({})	//Limpa o osheetView
-	osheetView:AddValor(YExcelTag():New("pane",))
+	osheetView:AddValor(yExcelTag():New("pane",))
 	nPos	:= Len(osheetView:GetValor())
 	/*
 	bottomLeft	- Painel inferior esquerdo, quando ambos verticais e horizontais são aplicadas. Esse valor também é usado quando apenas uma divisão horizontal foi aplicada, dividindo o painel em superior e inferior. Nesse caso, esse valor especifica painel inferior
@@ -1859,12 +1740,9 @@ METHOD Pane(cActivePane,cState,cRef,nySplit,nxSplit) CLASS YExcel
 	osheetView:GetValor(nPos):SetAtributo("xSplit",nxSplit)
 	//Posição vertical da divisão, em 1/20º de um ponto; 0 (zero) se nenhum. Se o painel estiver congelado, este valor indica o número de linhas visíveis no painel esquerdo.
 	osheetView:GetValor(nPos):SetAtributo("ySplit",nySplit)
-	osheetView:AddValor(YExcelTag():New("selection",,{{"pane",cActivePane}}))
+	osheetView:AddValor(yExcelTag():New("selection",,{{"pane",cActivePane}}))
 	aSort(osheetView:xValor,,,{|x,y| If(x:getnome()=="pane",1,2)<If(y:getnome()=="pane",1,2) })
 Return nPos
-
-
-
 /*METHOD Addhyperlink(nLinha,nColuna,cLocation,cId,ctooltip,cDisplay) CLASS YExcel
 	PARAMTYPE 0	VAR cRef			AS CHARACTER 		OPTIONAL
 	PARAMTYPE 1	VAR cLocation		AS CHARACTER 		OPTIONAL
@@ -1886,10 +1764,6 @@ METHOD GravaRow(nLinha) CLASS YExcel
 		::osheetData:GetValor():Del(nLinha)	//Exclui a chave
 	EndIf
 Return
-
-
-
-
 /*/{Protheus.doc} Ref
 Retorna a referencia do excel de acordo com posição da linha e coluna em formato numerico
 @author Saulo Gomes Martins
@@ -1922,9 +1796,6 @@ METHOD Ref(nLinha,nColuna,llinha,lColuna) CLASS YExcel
 		cRet	+= cLinha+cValToChar(nLinha)
 	EndIf
 Return cRet
-
-
-
 /*/{Protheus.doc} LocRef
 Retorna linha e coluna de acordo com informação da referencia
 @author Saulo Gomes Martins
@@ -1950,9 +1821,6 @@ METHOD LocRef(cRef) CLASS YExcel
 		EndIf
 	Next
 Return {Val(cLinha),If(!Empty(cColuna),::StringToNum(cColuna),0)}
-
-
-
 /*/{Protheus.doc} NumToString
 Retorna a letra da coluna de acordo com a posição numerica
 @author Saulo Gomes Martins
@@ -1963,9 +1831,6 @@ Retorna a letra da coluna de acordo com a posição numerica
 /*/
 METHOD NumToString(nNum) Class YExcel
 Return NumToString(nNum)
-
-
-
 /*/{Protheus.doc} StringToNum
 Retorna a posição da coluna de acordo com a letra da coluna
 @author Saulo Gomes Martins
@@ -1976,9 +1841,6 @@ Retorna a posição da coluna de acordo com a letra da coluna
 /*/
 METHOD StringToNum(cString) Class YExcel
 Return StringToNum(cString)
-
-
-
 /*/{Protheus.doc} AddTabela
 Adiciona tabela com formatação
 @author Saulo Gomes Martins
@@ -1998,16 +1860,16 @@ METHOD AddTabela(cNome,nLinha,nColuna,nQtdPlan) CLASS YExcel
 	PARAMTYPE 2	VAR nColuna  AS NUMERIC
 	::nIdRelat++
 	nPos	:= ::nIdRelat
-	oTable	:= YExcel_Table():New(self,nLinha,nColuna,cNome) //YExcelTag():New("table",{},)
+	oTable	:= yExcel_Table():New(self,nLinha,nColuna,cNome) //yExcelTag():New("table",{},)
 	oTable:nIdRelat	:= nPos
 	oTable:SetAtributo("xmlns","http://schemas.openxmlformats.org/spreadsheetml/2006/main")
 	oTable:SetAtributo("id",nPos)
 	oTable:SetAtributo("name",cNome)
 	oTable:SetAtributo("displayName",cNome)
-	oTable:AddValor(YExcelTag():New("autoFilter",{}))
-	oTable:oTableColumns	:= YExcelTag():New("tableColumns",{},{{"count",0}})	//Pag 1743
+	oTable:AddValor(yExcelTag():New("autoFilter",{}))
+	oTable:oTableColumns	:= yExcelTag():New("tableColumns",{},{{"count",0}})	//Pag 1743
 	oTable:AddValor(oTable:oTableColumns)
-	oTable:otableStyleInfo	:= YExcelTag():New("tableStyleInfo",nil,)
+	oTable:otableStyleInfo	:= yExcelTag():New("tableStyleInfo",nil,)
 	oTable:otableStyleInfo:SetAtributo("name","TableStyleMedium2")
 	oTable:otableStyleInfo:SetAtributo("showFirstColumn",0)
 	oTable:otableStyleInfo:SetAtributo("showLastColumn",0)
@@ -2016,16 +1878,13 @@ METHOD AddTabela(cNome,nLinha,nColuna,nQtdPlan) CLASS YExcel
 	oTable:AddValor(oTable:otableStyleInfo)
 	AADD(::atable,oTable)
 	cID		:= ::add_rels("\xl\worksheets\_rels\sheet"+cValToChar(nQtdPlan)+".xml.rels","http://schemas.openxmlformats.org/officeDocument/2006/relationships/table","../tables/table"+cValToChar(oTable:nIdRelat)+".xml")
-	::otableParts:AddValor(YExcelTag():New("tablePart",nil,{{"r:id",cID}}))
+	::otableParts:AddValor(yExcelTag():New("tablePart",nil,{{"r:id",cID}}))
 	::otableParts:SetAtributo("count",Len(::atable)+1)
 	//Adiciona um nova Tabela
 	::ocontent_types:XPathAddNode( "/xmlns:Types", "Override", "" )
 	::ocontent_types:XPathAddAtt( "/xmlns:Types/xmlns:Override[last()]", "PartName"	, "/xl/tables/table"+cValToChar(oTable:nIdRelat)+".xml" )
 	::ocontent_types:XPathAddAtt( "/xmlns:Types/xmlns:Override[last()]", "ContentType", "application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml" )
 Return oTable
-
-
-
 /*/{Protheus.doc} Gravar
 Grava o excel processado
 @author Saulo Gomes Martins
@@ -2147,10 +2006,6 @@ Method Gravar(cLocal,lAbrir,lDelSrv) Class YExcel
 		EndIf
 	EndIf
 Return cArquivo
-
-
-
-
 /*/{Protheus.doc} DelPasta
 Deleta uma pasta e qualquer arquivo ou pasta que esteja dentro dela
 @author Saulo Gomes Martins
@@ -2182,10 +2037,6 @@ Static Function DelPasta(cCaminho)
 		ConOut("Ferror:"+cValToChar(ferror()))
 	EndIf
 Return
-
-
-
-
 //NÃO DOCUMENTAR
 METHOD CriarFile(cLocal,cNome,cString) Class YExcel
 	Local cDirServ	:= "\tmpxls\"+::cTmpFile
@@ -2214,15 +2065,9 @@ METHOD CriarFile(cLocal,cNome,cString) Class YExcel
 	EndIf
 	fClose(nFile)
 Return lOk
-
-
-
 //NÃO DOCUMENTAR, USADO NA GRAVAÇÃO DO SHEET
 METHOD GravaFile(nFile,cString,cLocal,cArquivo) Class YExcel
 Return GravaFile(nFile,cString,cLocal,cArquivo)
-
-
-
 Static Function GravaFile(nFile,cString,cLocal,cArquivo)
 	Local lOk			:= .T.
 	If ValType(cString)=="C"
@@ -2236,24 +2081,18 @@ Static Function GravaFile(nFile,cString,cLocal,cArquivo)
 	 	lOk	:= .F.
 	EndIf
 Return lOk
-
-
-
 //EM DESENVOLVIMENTO
 Method AddAgrCol(nMin,nMax,outlineLevel,collapsed) Class YExcel
 	Local nPos
 	Default outlineLevel	:= 1
 	Default collapsed		:= 1
-	::oCols:AddValor(YExcelTag():New("col"))
+	::oCols:AddValor(yExcelTag():New("col"))
 	nPos	:= Len(::oCols:GetValor())
 	::oCols:GetValor(nPos):SetAtributo("min",nMin)
 	::oCols:GetValor(nPos):SetAtributo("max",nMax)
 	::oCols:GetValor(nPos):SetAtributo("outlineLevel",nWidth)
 //	::oCols:GetValor(nPos):SetAtributo("collapsed",bestFit)
 Return
-
-
-
 /*/{Protheus.doc} AddTamCol
 Defini o tamanho de uma coluna ou varias colunas
 @author Saulo Gomes Martins
@@ -2273,7 +2112,7 @@ Method AddTamCol(nMin,nMax,nWidth,lbestFit,lcustomWidth) Class YExcel
 	PARAMTYPE 2	VAR nWidth	  		AS NUMERIC		OPTIONAL DEFAULT "Calibri"
 	PARAMTYPE 3	VAR lbestFit	  	AS LOGICAL		OPTIONAL DEFAULT .T.
 	PARAMTYPE 4	VAR lcustomWidth	AS LOGICAL		OPTIONAL DEFAULT .T.
-	::oCols:AddValor(YExcelTag():New("col"))
+	::oCols:AddValor(yExcelTag():New("col"))
 	nPos	:= Len(::oCols:GetValor())
 	::oCols:GetValor(nPos):SetAtributo("min",nMin)
 	::oCols:GetValor(nPos):SetAtributo("max",nMax)
@@ -2285,53 +2124,47 @@ Method AddTamCol(nMin,nMax,nWidth,lbestFit,lcustomWidth) Class YExcel
 		::oCols:GetValor(nPos):SetAtributo("customWidth","1")
 	EndIf
 Return
-
-
-
 //----------------------------------------------------------------------
 //CLASSE DAS CÉLULAS
 //----------------------------------------------------------------------
-Class YExcelc From YExcelTag
+Class yExcelc From yExcelTag
 	Data nLinha
 	Data nColuna
-	Data oYExcel
+	Data oyExcel
 	Method New() constructor
 	Method SetVal()
 	Method SetFormula()
 	Method SetV()
 EndClass
-
-
-
-Method New(oYExcel,nLinha,nColuna) Class YExcelc
+Method New(oyExcel,nLinha,nColuna) Class yExcelc
 	_Super:New("c",tHashMap():New())
-	::oYExcel	:= oYExcel
+	::oyExcel	:= oyExcel
 	::nLinha	:= nLinha
 	::nColuna	:= nColuna
 	::SetAtributo("r", NumToString(nColuna)+cValToChar(nLinha))
 Return self
-Method SetFormula(f) Class YExcelc
+Method SetFormula(f) Class yExcelc
 	f	:= replace(f,"<","&lt;")
-	::GetValor():Set("f",YExcelTag():New("f",f))
+	::GetValor():Set("f",yExcelTag():New("f",f))
 Return
-Method SetV(v) Class YExcelc
-	::GetValor():Set("v",YExcelTag():New("v",v))
+Method SetV(v) Class yExcelc
+	::GetValor():Set("v",yExcelTag():New("v",v))
 Return
-Method SetVal(v,f,nStyle) Class YExcelc
+Method SetVal(v,f,nStyle) Class yExcelc
 	Local cTipo	:= ValType(v)
 	Local nPos
-	Default ::oYExcel:oString	:= tHashMap():New()
+	Default ::oyExcel:oString	:= tHashMap():New()
 	If !Empty(f)
 		::SetFormula(f)
 	EndIf
 	If cTipo=="C"
 		::SetAtributo("t","s")
-		If ::oYExcel:oString:Get(v,@nPos)//nPos>0
+		If ::oyExcel:oString:Get(v,@nPos)//nPos>0
 			::SetV(nPos)
 		Else
-			::oYExcel:oString:Set(v,::oYExcel:nQtdString)
-			::SetV(::oYExcel:nQtdString)
-			::oYExcel:nQtdString++
+			::oyExcel:oString:Set(v,::oyExcel:nQtdString)
+			::SetV(::oyExcel:nQtdString)
+			::oyExcel:nQtdString++
 		EndIf
 	ElseIf cTipo=="L"
 		::SetAtributo("t","b")
@@ -2347,14 +2180,14 @@ Method SetVal(v,f,nStyle) Class YExcelc
 		Else
 			::SetV(" ")
 		EndIf
-	ElseIf cTipo=="O" .and. GetClassName(v)=="YExcel_DATETIME"
+	ElseIf cTipo=="O" .and. GetClassName(v)=="YEXCEL_DATETIME"
 		::SetAtributo("s","2")			//Adiciona o estilo padrão de data time
 		::SetV(v:GetStrNumber())
 	Else
 		::SetV(v)
 	EndIf
 	If ValType(nStyle)=="N"
-		If nStyle+1>Val(::oYExcel:oStyle:XPathGetAtt("/xmlns:styleSheet/xmlns:cellXfs","count"))
+		If nStyle+1>Val(::oyExcel:oStyle:XPathGetAtt("/xmlns:styleSheet/xmlns:cellXfs","count"))
 			UserException("YExcel - Estilo informado("+cValToChar(nStyle)+") não definido. Utilize o indice informado pelo metodo AddStyles")
 		Else
 			::SetAtributo("s",nStyle)
@@ -2362,72 +2195,72 @@ Method SetVal(v,f,nStyle) Class YExcelc
 	EndIf
 Return self
 //CLASSE DAS LINHAS
-Class YExcelRow From YExcelTag
+Class yExcelRow From yExcelTag
 	Data	nLinha
 	Data	aspans
-	Data	oYExcel
+	Data	oyExcel
 	Method New() constructor
 	Method SetVal()
 EndClass
-Method New(oYExcel,r,spans,x14ac_dyDescent) Class YExcelRow
+Method New(oyExcel,r,spans,x14ac_dyDescent) Class yExcelRow
 	Default spans	:= {1,1}
 	Default x14ac_dyDescent	:= 0.25
-	Default oYExcel:lRowcollapsed	:= .F.
-	Default oYExcel:lRowhidden		:= .F.
+	Default oyExcel:lRowcollapsed	:= .F.
+	Default oyExcel:lRowhidden		:= .F.
 	_Super:New("row",tHashMap():New())
-	::oYExcel		:= oYExcel
+	::oyExcel		:= oyExcel
 	::nLinha		:= r
 	::SetAtributo("r",r)
 	::SetAtributo("spans",cValToChar(spans[1])+":"+cValToChar(spans[2]))
 	::aspans	:= spans
 	::SetAtributo("x14ac:dyDescent",x14ac_dyDescent)
-	If ValType(::oYExcel:nRowoutlineLevel)=="N"
-		::SetAtributo("outlineLevel",::oYExcel:nRowoutlineLevel)
+	If ValType(::oyExcel:nRowoutlineLevel)=="N"
+		::SetAtributo("outlineLevel",::oyExcel:nRowoutlineLevel)
 	EndIf
-	If ::oYExcel:lRowcollapsed
+	If ::oyExcel:lRowcollapsed
 		::SetAtributo("collapsed",1)
 	EndIf
-	If ::oYExcel:lRowhidden
+	If ::oyExcel:lRowhidden
 		::SetAtributo("hidden",1)
 	EndIf
 Return self
-Method SetVal(nColuna,xValor,cFormula,nStyle) Class YExcelRow
+Method SetVal(nColuna,xValor,cFormula,nStyle) Class yExcelRow
 	Local oExcelC
 	If !::GetValor():Get(nColuna,@oExcelC)
 	EndIf
-	oExcelC	:= YExcelC():New(::oYExcel,::nLinha,nColuna)
+	oExcelC	:= yExcelC():New(::oyExcel,::nLinha,nColuna)
 	::GetValor():Set(nColuna,oExcelC)
 	oExcelC:SetVal(xValor,cFormula,nStyle)		//Passa alteração para a celula
 	If nColuna>::aspans[2]
 		::aspans[2]	:= nColuna
 		::SetAtributo("spans","1:"+cValToChar(nColuna))
 	EndIF
-	If ValType(::oYExcel:nTamLinha)<>"U"
+	If ValType(::oyExcel:nTamLinha)<>"U"
 		::SetAtributo("customHeight",1)
-		::SetAtributo("ht",::oYExcel:nTamLinha)
+		::SetAtributo("ht",::oyExcel:nTamLinha)
 	Endif
 Return
 //----------------------------------------------------------
-Class YExcelsheetData From YExcelTag
-	Data oYExcel
+Class yExcelsheetData From yExcelTag
+	Data oyExcel
 	Method New() constructor
 	Method SetVal()
 	Method Add()
 EndClass
-Method New(oYExcel) Class YExcelsheetData
+Method New(oyExcel) Class yExcelsheetData
 	_Super:New("sheetData",tHashMap():New())
-	::oYExcel	:= oYExcel
+	::oyExcel	:= oyExcel
 Return self
-Method Add(nLinha,aSpan) Class YExcelsheetData
+Method Add(nLinha,aSpan) Class yExcelsheetData
 	Local oExcelRow
 	If !::GetValor():Get(nLinha,@oExcelRow)
-		oExcelRow	:= YExcelRow():New(::oYExcel,nLinha,::oYExcel:aSpanRow)
+		oExcelRow	:= yExcelRow():New(::oyExcel,nLinha,::oyExcel:aSpanRow)
 	EndIf
 Return oExcelRow
-Method SetVal(nLinha,nColuna,xValor,cFormula,nStyle) Class YExcelsheetData
+Method SetVal(nLinha,nColuna,xValor,cFormula,nStyle) Class yExcelsheetData
 	Local oExcelRow
 	If !::GetValor():Get(nLinha,@oExcelRow)
-		oExcelRow	:= YExcelRow():New(::oYExcel,nLinha,::oYExcel:aSpanRow)
+		oExcelRow	:= yExcelRow():New(::oyExcel,nLinha,::oyExcel:aSpanRow)
 		::GetValor():Set(nLinha,oExcelRow)
 	EndIf
 	oExcelRow:SetVal(nColuna,xValor,cFormula,nStyle)	//Passa a alteração para a linha
@@ -2508,20 +2341,20 @@ Return cRet
 //----------------------------------------------------------------------
 //CLASSE DE TAGS
 //----------------------------------------------------------------------
-/*/{Protheus.doc} YExcelTag
+/*/{Protheus.doc} yExcelTag
 Criação de Tag
 @author Saulo Gomes Martins
 @since 22/04/2017
 @version p11.8
 @type class
 /*/
-Class YExcelTag
+Class yExcelTag
 	Data cNome
 	Data cClassName
 	Data oAtributos
 	Data oIndice
 	Data xValor
-	Data oExcel			//Objeto referencia do YExcel
+	Data oExcel			//Objeto referencia do yexcel
 	Data xDados			//Outros dados
 	Method New()			Constructor
 	Method ClassName()
@@ -2535,7 +2368,7 @@ Class YExcelTag
 //	Method GetPosAtributo()
 	Method GetTag()
 EndClass
-Method New(cNome,xValor,oAtributo) Class YExcelTag
+Method New(cNome,xValor,oAtributo) Class yExcelTag
 	Local nCont
 	PARAMTYPE 0	VAR cNome  AS CHARACTER
 	PARAMTYPE 1	VAR xValor  AS ARRAY, CHARACTER, DATE, NUMERIC, LOGICAL, OBJECT 		OPTIONAL DEFAULT Nil
@@ -2551,13 +2384,13 @@ Method New(cNome,xValor,oAtributo) Class YExcelTag
 	ElseIf ValType(oAtributo)=="O"
 		::oAtributos		:= oAtributo
 	EndIf
-	::cClassName	:= "YExcelTAG"
+	::cClassName	:= "YEXCELTAG"
 Return self
-Method GetNome() Class YExcelTag
+Method GetNome() Class yExcelTag
 Return ::cNome
-Method ClassName() Class YExcelTag
-Return "YExcelTAG"
-Method SetValor(xValor,xIndice) Class YExcelTag
+Method ClassName() Class yExcelTag
+Return "YEXCELTAG"
+Method SetValor(xValor,xIndice) Class yExcelTag
 	If ValType(xIndice)=="U"
 		::xValor	:= xValor
 	ElseIf ValType(xIndice)=="N"
@@ -2568,7 +2401,7 @@ Method SetValor(xValor,xIndice) Class YExcelTag
 		::xValor	:= xValor
 	EndIf
 Return
-Method GetValor(xIndice,xDefault) Class YExcelTag
+Method GetValor(xIndice,xDefault) Class yExcelTag
 	Local nPos
 	If ValType(xIndice)=="U"
 		xDefault	:=  ::xValor
@@ -2580,7 +2413,7 @@ Method GetValor(xIndice,xDefault) Class YExcelTag
 		EndIf
 	EndIf
 Return xDefault
-Method AddValor(xValor,xIndice) Class YExcelTag
+Method AddValor(xValor,xIndice) Class yExcelTag
 	Local nPos
 	If ValType(xIndice)=="C"
 		If ::oIndice:Get(xIndice,@nPos)
@@ -2595,11 +2428,11 @@ Method AddValor(xValor,xIndice) Class YExcelTag
 		AADD(::xValor,xValor)
 	EndIf
 Return
-Method AddAtributo(cAtributo,xValor) Class YExcelTag
+Method AddAtributo(cAtributo,xValor) Class yExcelTag
 	PARAMTYPE 0	VAR cAtributo  AS CHARACTER
 	::oAtributos:Set(cAtributo,xValor)
 Return
-Method SetAtributo(cAtributo,xValor) Class YExcelTag
+Method SetAtributo(cAtributo,xValor) Class yExcelTag
 	PARAMTYPE 0	VAR cAtributo  AS CHARACTER
 	If ValType(xValor)=="U"
 		::oAtributos:Del(cAtributo)
@@ -2607,14 +2440,14 @@ Method SetAtributo(cAtributo,xValor) Class YExcelTag
 		::oAtributos:Set(cAtributo,xValor)
 	EndIf
 Return
-Method GetAtributo(cAtributo,cDefault) Class YExcelTag
+Method GetAtributo(cAtributo,cDefault) Class yExcelTag
 	Local xValor
 	PARAMTYPE 0	VAR cAtributo  AS CHARACTER
 	If ::oAtributos:Get(cAtributo,@xValor)
 		Return xValor
 	EndIf
 Return cDefault
-Method GetTag(nFile,lFechaTag,lSoValor) Class YExcelTag
+Method GetTag(nFile,lFechaTag,lSoValor) Class yExcelTag
 	Local cRet	:= ""
 	Local nCont
 	Local aListAtt
@@ -2692,14 +2525,14 @@ Return cRet
 //----------------------------------------------------------------------
 //CLASSE DE TABELAS
 //----------------------------------------------------------------------
-/*/{Protheus.doc} YExcel_Table
-CLASSE PARA CRIAÇÃO DE TABELAS PARA A CLASSE YExcel
+/*/{Protheus.doc} yExcel_Table
+CLASSE PARA CRIAÇÃO DE TABELAS PARA A CLASSE YEXCEL
 @author Saulo Gomes Martins
 @since 08/05/2017
 @type class
 /*/
-Class YExcel_Table from YExcelTag
-	Data oYExcel
+Class yExcel_Table from yExcelTag
+	Data oyExcel
 	Data lAutoFilter
 	Data aRef
 	Data nPrimLinha
@@ -2720,9 +2553,9 @@ Class YExcel_Table from YExcelTag
 	METHOD AddTotais()
 	METHOD Finish()
 EndClass
-Method new(oYExcel,nLinha,nColuna,cNome) Class YExcel_Table
+Method new(oyExcel,nLinha,nColuna,cNome) Class yExcel_Table
 	_Super:New("table",{})
-	::oYExcel	:= oYExcel
+	::oyExcel	:= oyExcel
 	::aRef		:= {{nLinha,nColuna},{0,0}}
 	::nPrimLinha:= nLinha
 	::oColunas	:= tHashMap():New()
@@ -2737,7 +2570,7 @@ Adiciona filtro a tabela
 @since 08/05/2017
 @type function
 /*/
-Method AddFilter() Class YExcel_Table
+Method AddFilter() Class yExcel_Table
 	::lAutoFilter:= .T.
 Return
 /*/{Protheus.doc} Cell
@@ -2751,7 +2584,7 @@ Preenche informação da célula
 @param [nStyle], numeric, posição da formatação
 @type function
 /*/
-METHOD Cell(cColuna,xValor,cFormula,nStyle) CLASS YExcel_Table
+METHOD Cell(cColuna,xValor,cFormula,nStyle) CLASS yExcel_Table
 	Local aColuna,nColuna
 	If ValType(cColuna)=="C"
 		If !::oColunas:Get(cColuna,@aColuna)
@@ -2764,7 +2597,7 @@ METHOD Cell(cColuna,xValor,cFormula,nStyle) CLASS YExcel_Table
 	Else
 		nColuna	:= cColuna
 	EndIf
-	::oYExcel:Cell(::nLinha,nColuna,xValor,cFormula,nStyle)
+	::oyExcel:Cell(::nLinha,nColuna,xValor,cFormula,nStyle)
 Return
 /*/{Protheus.doc} AddLine
 Adiciona uma nova linha
@@ -2773,7 +2606,7 @@ Adiciona uma nova linha
 @param nQtd, numeric, Quantidade de linhas para avançar
 @type function
 /*/
-Method AddLine(nQtd) CLASS YExcel_Table
+Method AddLine(nQtd) CLASS yExcel_Table
 	Default nQtd	:= 1
 	::nLinha		+= nQtd
 	::aRef[2][1]	:= ::nLinha
@@ -2787,12 +2620,12 @@ Adiciona uma nova coluna a tabela
 @param nStyle, numeric, descricao
 @type function
 /*/
-METHOD AddColumn(cNome,nStyle) CLASS YExcel_Table
+METHOD AddColumn(cNome,nStyle) CLASS yExcel_Table
 	Local otableColumn
 //	Local nPosCol		:= aScan(self:GetValor(),{|x| x:GetNome()=="tableColumns"})
 	::aRef[2][2]	+= 1
 	nCont	:= Len(self:oTableColumns:GetValor())+1
-	otableColumn	:= YExcelTag():New("tableColumn",{},)
+	otableColumn	:= yExcelTag():New("tableColumn",{},)
 	otableColumn:SetAtributo("id",nCont)
 	otableColumn:SetAtributo("name",cNome)
 	self:oTableColumns:SetAtributo("count",nCont)
@@ -2827,7 +2660,7 @@ function-number				function-number					Function
 10 							110 							VAR		VAR
 11 							111 							VARP	VARP
 /*/
-Method AddTotal(cColuna,xValor,cFunction,nStyle) CLASS YExcel_Table
+Method AddTotal(cColuna,xValor,cFunction,nStyle) CLASS yExcel_Table
 	Local aColuna
 	If ::oColunas:Get(cColuna,@aColuna)
 		otableColumn	:= aColuna[3]
@@ -2863,7 +2696,7 @@ Method AddTotal(cColuna,xValor,cFunction,nStyle) CLASS YExcel_Table
 //				otableColumn:SetAtributo("totalsRowFunction",lower("VARP"))
 			Else
 				otableColumn:SetAtributo("totalsRowFunction","custom")
-				otableColumn:AddValor(YExcelTag():New("totalsRowFormula",cFunction,),"totalsRowFormula")
+				otableColumn:AddValor(yExcelTag():New("totalsRowFormula",cFunction,),"totalsRowFormula")
 			EndIf
 		EndIf
 	EndIf
@@ -2874,10 +2707,10 @@ Inclui a linha de totalizador
 @since 08/05/2017
 @type function
 /*/
-Method AddTotais() CLASS YExcel_Table
+Method AddTotais() CLASS yExcel_Table
 	Local nCont,xValor,cFormula
 	Local aColuna,cRef
-	cRef		:= ::oYExcel:Ref(::aRef[1][1],::aRef[1][2])+":"+::oYExcel:Ref(::aRef[2][1]+1,::aRef[2][2])
+	cRef		:= ::oyExcel:Ref(::aRef[1][1],::aRef[1][2])+":"+::oyExcel:Ref(::aRef[2][1]+1,::aRef[2][2])
 	::SetAtributo("ref",cRef)
 	::SetAtributo("totalsRowCount",1)
 	//::SetAtributo("totalsRowShown",1)
@@ -2918,7 +2751,7 @@ Method AddTotais() CLASS YExcel_Table
 		If ValType(xValor)=="U" .and. ValType(cFormula)=="U"
 			Loop
 		Else
-			::oYExcel:Cell(::aRef[2][1]+1,aColuna[2],xValor,cFormula,aColuna[5])
+			::oyExcel:Cell(::aRef[2][1]+1,aColuna[2],xValor,cFormula,aColuna[5])
 		EndIf
 	Next
 Return
@@ -2929,10 +2762,10 @@ Finaliza a tabela criada
 @version undefined
 @type function
 /*/
-METHOD Finish() CLASS YExcel_Table
+METHOD Finish() CLASS yExcel_Table
 	Local nPosCol
 	Local cRef
-	cRef		:= ::oYExcel:Ref(::aRef[1][1],::aRef[1][2])+":"+::oYExcel:Ref(::aRef[2][1],::aRef[2][2])
+	cRef		:= ::oyExcel:Ref(::aRef[1][1],::aRef[1][2])+":"+::oyExcel:Ref(::aRef[2][1],::aRef[2][2])
 	nPosCol		:= aScan(self:GetValor(),{|x| x:GetNome()=="autoFilter"})
 	If ::lAutoFilter
 		self:GetValor(nPosCol):SetAtributo("ref",cRef)
@@ -2940,7 +2773,7 @@ METHOD Finish() CLASS YExcel_Table
 		aDel(self:GetValor(),nPosCol)
 		aSize(self:GetValor(),Len(self:GetValor())-1)
 	EndIf
-	cRef		:= ::oYExcel:Ref(::aRef[1][1],::aRef[1][2])+":"+::oYExcel:Ref(::aRef[2][1]+::GetAtributo("totalsRowCount",0),::aRef[2][2])
+	cRef		:= ::oyExcel:Ref(::aRef[1][1],::aRef[1][2])+":"+::oyExcel:Ref(::aRef[2][1]+::GetAtributo("totalsRowCount",0),::aRef[2][2])
 	::SetAtributo("ref",cRef)
 Return
 /*/{Protheus.doc} AddStyle
@@ -2967,7 +2800,7 @@ PAG 4426
 	TableStyleLight15	- BRANCO|LINHA1-CINZA_CLARO|LINHA2-BRANCO|COM BORDA
 	TableStyleLight1	- BRANCO|LINHA1-CINZA_CLARO|LINHA2-BRANCO|SEM BORDA
 /*/
-METHOD AddStyle(cNome,lLinhaTiras,lColTiras,lFormPrimCol,lFormUltCol) CLASS YExcel_Table
+METHOD AddStyle(cNome,lLinhaTiras,lColTiras,lFormPrimCol,lFormUltCol) CLASS yExcel_Table
 	Default cNome		:= nil
 	Default lLinhaTiras	:= .F.
 	Default lColTiras	:= .F.
@@ -3005,16 +2838,16 @@ Retorna objeto para manipulação de DateTime
 @param nData, numeric, DataTime em formato numerico
 @type function
 /*/
-METHOD GetDateTime(dData,cTime,nData) Class YExcel
-Return YExcel_DateTime():New(dData,cTime,nData)
-/*/{Protheus.doc} YExcel_DateTime
-Classe YExcel_DateTime para manipulação de DateTime
+METHOD GetDateTime(dData,cTime,nData) Class yExcel
+Return yExcel_DateTime():New(dData,cTime,nData)
+/*/{Protheus.doc} yExcel_DateTime
+Classe yExcel_DateTime para manipulação de DateTime
 @author Saulo Gomes Martins
 @since 10/12/2019
 @version 1.0
 @type class
 /*/
-Class YExcel_DateTime
+Class yExcel_DateTime
 	Data dData
 	Data cTime
 	Data cNumero
@@ -3028,8 +2861,8 @@ Class YExcel_DateTime
 	METHOD GetTime()
 	METHOD StrNumber()
 EndClass
-/*/{Protheus.doc} YExcel_DateTime:New
-Construtor da classe YExcel_DateTime
+/*/{Protheus.doc} yExcel_DateTime:New
+Construtor da classe yExcel_DateTime
 @author Saulo Gomes Martins
 @since 10/12/2019
 @version 1.0
@@ -3040,18 +2873,18 @@ Construtor da classe YExcel_DateTime
 @type function
 @obs enviar dData e cTime ou somente nData
 /*/
-Method New(dData,cTime,nData) class YExcel_DateTime
+Method New(dData,cTime,nData) class yExcel_DateTime
 	::dData	:= dData
 	::cTime	:= cTime
-	::cClassName	:= "YExcel_DATETIME"
-	::cName			:= "YExcel_DATETIME"
+	::cClassName	:= "YEXCEL_DATETIME"
+	::cName			:= "YEXCEL_DATETIME"
 	If ValType(::dData)=="D" .AND. ValType(cTime)=="C"
 		::StrNumber()
 	ElseIf ValType(nData)=="N" .OR. ValType(nData)=="C"
 		::NumToDateTime(nData)
 	EndIf
 Return Self
-/*/{Protheus.doc} YExcel_DateTime:NumToDateTime
+/*/{Protheus.doc} yExcel_DateTime:NumToDateTime
 Converte numero do excel em data e hora
 @author Saulo Gomes Martins
 @since 10/12/2019
@@ -3059,7 +2892,7 @@ Converte numero do excel em data e hora
 @param nData, numeric, numero da hora, aceita também string
 @type function
 /*/
-Method NumToDateTime(nData) Class YExcel_DateTime
+Method NumToDateTime(nData) Class yExcel_DateTime
 	Local nInt
 	Local nDec
 	Local nHora
@@ -3093,41 +2926,41 @@ Method NumToDateTime(nData) Class YExcel_DateTime
 	::cTime	+= ":"+StrZero(nSegundo,2)		//Segundos
 	//IntToHora(nDec*86400/60/60)
 Return Self
-/*/{Protheus.doc} YExcel_DateTime:GetStrNumber
+/*/{Protheus.doc} yExcel_DateTime:GetStrNumber
 Retorna o numero em formato string
 @author Saulo Gomes Martins
 @since 10/12/2019
 @version 1.0
 @type function
 /*/
-Method GetStrNumber() Class YExcel_DateTime
+Method GetStrNumber() Class yExcel_DateTime
 Return ::cNumero
-/*/{Protheus.doc} YExcel_DateTime:GetDate
+/*/{Protheus.doc} yExcel_DateTime:GetDate
 Retorna a data
 @author Saulo Gomes Martins
 @since 10/12/2019
 @version 1.0
 @type function
 /*/
-Method GetDate() Class YExcel_DateTime
+Method GetDate() Class yExcel_DateTime
 Return ::dData
-/*/{Protheus.doc} YExcel_DateTime:GetTime
+/*/{Protheus.doc} yExcel_DateTime:GetTime
 Retorna a Hora no formato HH:MM:SS
 @author Saulo Gomes Martins
 @since 10/12/2019
 @version 1.0
 @type function
 /*/
-Method GetTime() Class YExcel_DateTime
+Method GetTime() Class yExcel_DateTime
 Return ::cTime
-/*/{Protheus.doc} YExcel_DateTime:StrNumber
+/*/{Protheus.doc} yExcel_DateTime:StrNumber
 Converte data e hora em string com numero representando data e hora do excel
 @author Saulo Gomes Martins
 @since 10/12/2019
 @version 1.0
 @type function
 /*/
-Method StrNumber() Class YExcel_DateTime
+Method StrNumber() Class yExcel_DateTime
 	Local nHora	:= 0
 	Local aHora	:= SeparaHora(::cTime)
 	nHora		+= (aHora[1]*100000000)				//Hora
@@ -3142,8 +2975,8 @@ Method StrNumber() Class YExcel_DateTime
 	EndIf
 	::cNumero	:= cValToChar(::dData-STOD("19000101")+2)+"."+cNum
 Return ::cNumero
-METHOD ClassName() CLASS YExcel_DateTime
-Return "YExcel_DATETIME"
+METHOD ClassName() CLASS yExcel_DateTime
+Return "YEXCEL_DATETIME"
 /*/{Protheus.doc} SeparaHora
 Retorna Hora,Minuto,Segundo,Milesimo.
 @author Saulo Gomes Martins

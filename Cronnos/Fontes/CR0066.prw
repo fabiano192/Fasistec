@@ -120,6 +120,7 @@ Return
 
 Static Function GeraTRB1() //Pedidos de Vendas em Aberto
 
+local C
 	Private nUsad1 := 0
 
 //	If !_cCliente $ '000017|000018'
@@ -220,6 +221,7 @@ Return
 
 Static Function GeraTRB2() //NF Saída
 
+local C
 	Private nUsad2 := 0
 
 //	If !_cCliente $ '000017|000018'
@@ -342,6 +344,7 @@ Return
 
 Static Function GeraTRB3() //NF de Entrada
 
+local C
 	Private nUsad3 := 0
 
 //	If !_cCliente $ '000017|000018'
@@ -428,6 +431,7 @@ Return
 
 Static Function GeraTRB4() //Acumulado
 
+local C
 	Private nUsad4 := 0
 
 	_aCamp4 := {'ZD_TIPO','ZD_DOC','ZD_DATA','ZD_QUANT','ZD_MOTIVO'}
@@ -499,9 +503,10 @@ Return
 
 Static Function GeraTRB5() //Programações
 
+local C
 	Private nUsad5 := 0
 
-	_aCamp5 := {'Z4_DTDIGIT','Z4_POLINE','Z4_TPPED','Z4_ULTNF','Z4_SERIE','Z4_DTULTNF','Z4_ULQTENF','Z4_DTENT','Z4_DTFECH','Z4_QTENT','Z4_QTACUM','Z4_NOMARQ'}
+	_aCamp5 := {'Z4_DTDIGIT','Z4_POLINE','Z4_SEMATU','Z4_TPPED','Z4_ULTNF','Z4_SERIE','Z4_DTULTNF','Z4_ULQTENF','Z4_DTENT','Z4_DTFECH','Z4_QTENT','Z4_QTACUM','Z4_NOMARQ'}
 
 	For C := 1 To Len(_aCamp5)
 		SX3->(dbsetOrder(2))
@@ -514,6 +519,7 @@ Static Function GeraTRB5() //Programações
 
 	nPosDtD := aScan(aHead5,{|x| Alltrim(x[2]) == "Z4_DTDIGIT"})
 	nPosPOL := aScan(aHead5,{|x| Alltrim(x[2]) == "Z4_POLINE"})
+	nPosSeA := aScan(aHead5,{|x| Alltrim(x[2]) == "Z4_SEMATU"})
 	nPosTip := aScan(aHead5,{|x| Alltrim(x[2]) == "Z4_TPPED"})
 	nPosNF  := aScan(aHead5,{|x| Alltrim(x[2]) == "Z4_ULTNF"})
 	nPosSer := aScan(aHead5,{|x| Alltrim(x[2]) == "Z4_SERIE"})
@@ -557,6 +563,7 @@ Static Function GeraTRB5() //Programações
 
 		aCols5[Len(aCols5),nPosDtD]:= TRB5->Z4_DTDIGIT
 		aCols5[Len(aCols5),nPosPOL]:= TRB5->Z4_POLINE
+		aCols5[Len(aCols5),nPosSeA]:= TRB5->Z4_SEMATU
 		aCols5[Len(aCols5),nPosTip]:= TRB5->Z4_TPPED
 		aCols5[Len(aCols5),nPosNF] := TRB5->Z4_ULTNF
 		aCols5[Len(aCols5),nPosSer]:= TRB5->Z4_SERIE
@@ -945,6 +952,7 @@ Static Function GeraExcel()
 
 				_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Data Pedido" 	, 1,4,.F.)
 				_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Tipo"  			, 1,1,.F.)
+				_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Release" 		, 1,1,.F.)
 				_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "NF" 			, 1,1,.F.)
 				_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "Serie NF"  		, 1,1,.T.)
 				_oFwMsEx:AddColumn( _cWorkSheet, _cTable , "DT. Ult. NF"  	, 1,4,.F.)
@@ -962,6 +970,7 @@ Static Function GeraExcel()
 					_oFwMsEx:AddRow( _cWorkSheet, _cTable,{;
 						TRB5->Z4_DTDIGIT	,;
 						TRB5->Z4_TPPED		,;
+						TRB5->Z4_SEMATU		,;
 						TRB5->Z4_ULTNF		,;
 						TRB5->Z4_SERIE		,;
 						TRB5->Z4_DTULTNF	,;

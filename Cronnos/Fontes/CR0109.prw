@@ -4,10 +4,10 @@
 
 
 /*/
-Funçao    	³ CR0109
-Autor 		³ Fabiano da Silva
-Data 		³ 10.09.18
-Descricao 	³ Programacao de entrega John Deere(000063)
+Função    	Â³ CR0109
+Autor 		Â³ Fabiano da Silva
+Data 		Â³ 10.09.18
+Descricao 	Â³ Programacao de entrega John Deere(000063)
 /*/
 
 User Function CR0109(_aParam)
@@ -28,6 +28,8 @@ User Function CR0109(_aParam)
 
 	Private _nTotQt  		:= 0
 
+	CONOUT("Início da integração John Deere - CR0109 - "+TIME())
+
 	Private _lFim      := .F.
 	Private _cMsg01    := ''
 	Private _lAborta01 := .T.
@@ -47,7 +49,7 @@ User Function CR0109(_aParam)
 	//		EndIf
 	//	Endif
 
-	_bAcao01   := {|_lFim| CR109C(@_lFim) }
+	_bAcao01   := {|_lFim| CR109C() }
 	_cTitulo01 := 'Gerando relatório de inconsistências...'
 	Processa( _bAcao01, _cTitulo01, _cMsg01, _lAborta01 )
 
@@ -68,6 +70,7 @@ Return
 
 Static Function CR109A(_lFim)
 
+	local A,B,I
 	Local _cCont     := ""
 	Local _cUM       := ""
 	Local _dDtMov    := Ctod("")
@@ -89,8 +92,8 @@ Static Function CR109A(_lFim)
 	Local _nQtEnt    := 0
 	Local _aDtEnt    := {}
 	Local _cPedido   := ""
-	Local _cDesenho  := ""
-	Local _dDt       := dDataBase - 20
+	//Local _cDesenho  := ""
+	//Local _dDt       := dDataBase - 20
 	Local _cLine     := 0
 	Local _nQt       := 0
 	Local _cChavProg := ''
@@ -120,7 +123,7 @@ Static Function CR109A(_lFim)
 
 	_cData2    := GravaData(dDataBase,.f.,8)
 	_cHora2    := Substr(Time(),1,2) + Substr(Time(),4,2) + Substr(Time(),7,2)
-	
+
 	ProcRegua(20)
 
 	IncProc()
@@ -133,7 +136,7 @@ Static Function CR109A(_lFim)
 
 		_lProx     := .F.
 
-		_cArqBkp   := _cJDeFold+"Brasil\Entrada\Programacao\BKP_EM"+_cData2+_cHora2+"_"+Alltrim(_aArqTxt[I])
+		_cArqBkp   := _cJDeFold+"Brasil\Entrada\Programacao\BKP_"+_cData2+_cHora2+"_"+Alltrim(_aArqTxt[I])
 		_cArq      := _cJDeFold+"Brasil\Entrada\"+Alltrim(_aArqTxt[i])
 
 		_lExit     := .F.
@@ -278,7 +281,9 @@ Static Function CR109A(_lFim)
 
 						While SZ4->(!Eof()) .And. _cChavProg == DTOS(SZ4->Z4_DTDIGIT) +SZ4->Z4_CODCLI + SZ4->Z4_LOJA + SZ4->Z4_PRODPAS
 
-							If _cSemAtu == _cSemAtu2 .And. UPPER(SZ4->Z4_NOMARQ)  != DTOS(_dDt)+"\"+UPPER(Alltrim(_aArqTxt[i]))
+							If (_cSemAtu == _cSemAtu2 .And. UPPER(Alltrim(SZ4->Z4_NOMARQ))  != UPPER(Alltrim("bkp_"+_cData2+_cHora2+"_"+Alltrim(_aArqTxt[I])))) .Or.;
+									(Val(_cSemAtu) > Val(SZ4->Z4_SEMATU))
+								// If _cSemAtu == _cSemAtu2 .And. UPPER(SZ4->Z4_NOMARQ)  != DTOS(_dDt)+"\"+UPPER(Alltrim(_aArqTxt[i]))
 								SZ4->(RecLock("SZ4",.F.))
 								SZ4->(dbDelete())
 								SZ4->(MsUnlock())
@@ -301,7 +306,9 @@ Static Function CR109A(_lFim)
 
 								While SZ4->(!Eof()) .And. _cChavProg == DTOS(SZ4->Z4_DTDIGIT) +SZ4->Z4_CODCLI + SZ4->Z4_LOJA + SZ4->Z4_PRODPAS + DTOS(SZ4->Z4_DTENT)
 
-									If _cSemAtu == _cSemAtu2 .And. UPPER(SZ4->Z4_NOMARQ)  != DTOS(_dDt)+"\"+UPPER(Alltrim(_aArqTxt[i]))
+									If (_cSemAtu == _cSemAtu2 .And. UPPER(Alltrim(SZ4->Z4_NOMARQ))  != UPPER(Alltrim("bkp_"+_cData2+_cHora2+"_"+Alltrim(_aArqTxt[I])))) .Or.;
+											(Val(_cSemAtu) > Val(SZ4->Z4_SEMATU))
+										// If _cSemAtu == _cSemAtu2 .And. UPPER(SZ4->Z4_NOMARQ)  != DTOS(_dDt)+"\"+UPPER(Alltrim(_aArqTxt[i]))
 										SZ4->(RecLock("SZ4",.F.))
 										SZ4->(dbDelete())
 										SZ4->(MsUnlock())
@@ -340,7 +347,8 @@ Static Function CR109A(_lFim)
 						SZ4->Z4_TPPED   := _cTpPed
 						SZ4->Z4_CONTATO := _cContato
 						SZ4->Z4_DTDIGIT := dDataBase
-						SZ4->Z4_NOMARQ  := DTOS(_dDt)+"\"+UPPER(Alltrim(_aArqTxt[i]))
+						SZ4->Z4_NOMARQ  := "bkp_"+_cData2+_cHora2+"_"+Alltrim(_aArqTxt[I])
+						// SZ4->Z4_NOMARQ  := DTOS(_dDt)+"\"+UPPER(Alltrim(_aArqTxt[i]))
 						SZ4->Z4_ALTTEC  := _cSemAtu
 						SZ4->Z4_INTEGR  := 'N'
 						SZ4->(MsUnlock())
@@ -371,13 +379,13 @@ Static Function CR109A(_lFim)
 				_cCodCai := SZ2->Z2_PRODUTO
 
 				SZ2->(dbSetOrder(8))
-				If SZ2->(msSeek(xFilial("SZ2")+_cCliente + _cLoja + _cProdCli+Left(_cPedido+Space(20),20)+"1"))
+					If SZ2->(msSeek(xFilial("SZ2")+_cCliente + _cLoja + _cProdCli+Left(_cPedido+Space(20),20)+"1"))
 
 				SZ2->(RecLock('SZ2',.F.))
 				SZ2->Z2_CODEMB	:= _cCodCai
 				SZ2->Z2_QTPEMB	:= _cQtCai
 				SZ2->(MsUnlock())
-				Endif
+					Endif
 				Endif*/
 			Endif
 
@@ -437,7 +445,7 @@ Static Function CR109B(_lFim)
 		_cItem     := "00"
 		_cClieLoja := TSZ4->Z4_CODCLI + TSZ4->Z4_LOJA
 
-		While !TSZ4->(Eof()) .And. _cClieLoja == TSZ4->Z4_CODCLI + TSZ4->Z4_LOJA 
+		While !TSZ4->(Eof()) .And. _cClieLoja == TSZ4->Z4_CODCLI + TSZ4->Z4_LOJA
 
 			IncProc()
 
@@ -585,15 +593,15 @@ Static Function IntSC6C()
 
 	While SD2->(!Eof()) .And. _cChav == SD2->D2_CLIENTE + SD2->D2_LOJA + SD2->D2_COD
 
-		If SD2->D2_DOC <= _cNF .And. SD2->D2_EMISSAO <= TSZ4->Z4_DTULTNF
+		If SD2->D2_DOC <= _cNF //.And. SD2->D2_EMISSAO <= TSZ4->Z4_DTULTNF
 			SD2->(dbSkip())
 			Loop
 		Endif
 
-		If SD2->D2_EMISSAO < TSZ4->Z4_DTULTNF
-			SD2->(dbSkip())
-			Loop
-		Endif
+		//If SD2->D2_EMISSAO < TSZ4->Z4_DTULTNF
+		//	SD2->(dbSkip())
+		//	Loop
+		//Endif
 
 		If SD2->D2_QUANT == SD2->D2_PROGENT
 			SD2->(dbSkip())
@@ -640,29 +648,29 @@ Static Function IntSC6C()
 
 	_cChavSC62 := SC6->C6_CLI + SC6->C6_LOJA + SC6->C6_PRODUTO + SC6->C6_CPROCLI + SC6->C6_PEDCLI + DTOS(SC6->C6_ENTREG)
 
-	While SC6->(!Eof()) .And. 	_cChavSC62 == SC6->C6_CLI + SC6->C6_LOJA + SC6->C6_PRODUTO + SC6->C6_CPROCLI + SC6->C6_PEDCLI +DTOS(SC6->C6_ENTREG)
+		While SC6->(!Eof()) .And. 	_cChavSC62 == SC6->C6_CLI + SC6->C6_LOJA + SC6->C6_PRODUTO + SC6->C6_CPROCLI + SC6->C6_PEDCLI +DTOS(SC6->C6_ENTREG)
 
-	If (SC6->C6_QTDVEN == SC6->C6_QTDENT) .Or. !Empty(SC6->C6_BLQ)
+			If (SC6->C6_QTDVEN == SC6->C6_QTDENT) .Or. !Empty(SC6->C6_BLQ)
 	SC6->(dbSkip())
 	Loop
-	Endif
+			Endif
 
-	If (SC6->C6_QTDVEN - SC6->C6_QTDENT) != TSZ4->Z4_QTENT - _nFatur
+			If (SC6->C6_QTDVEN - SC6->C6_QTDENT) != TSZ4->Z4_QTENT - _nFatur
 	SC6->(dbSkip())
 	Loop
-	Endif
+			Endif
 
 	SC6->(RecLock("SC6",.F.))
 	SC6->C6_IDENCAT := TSZ4->Z4_SEMATU
-	If TSZ4->Z4_TPPED = "1"
+			If TSZ4->Z4_TPPED = "1"
 	SC6->C6_PEDAMOS := "N"
-	Endif
+			Endif
 	SC6->(MsUnlock())
 
 	_lAchou := .T.
 
 	SC6->(dbSkip())
-	EndDo
+		EndDo
 	Endif
 	*/
 	//	If !_lAchou
@@ -826,11 +834,11 @@ Static Function CR109C()
 		Endif
 
 		oFwMsEx:AddRow( cWorkSheet, cTable,{;
-		TRB->CLIENTE	,;
-		TRB->LOJA    	,;
-		TRB->PRODUTO   	,;
-		TRB->PRODCLI    ,;
-		TRB->PEDCLI    	})
+			TRB->CLIENTE	,;
+			TRB->LOJA    	,;
+			TRB->PRODUTO   	,;
+			TRB->PRODCLI    ,;
+			TRB->PEDCLI    	})
 
 		TRB->(dbSkip())
 	EndDo
@@ -871,9 +879,9 @@ Static Function CR109D()
 	_oProcess:bTimeOut := ""
 	_oHTML := _oProcess:oHTML
 
-	_oProcess:cSubject := "Inconsistencia Programação - John Deere - "+Dtoc(dDataBase)+" Hora : "+Substr(Time(),1,5)
+	_oProcess:cSubject := "Inconsistencia Programacao - John Deere - "+Dtoc(dDataBase)+" Hora : "+Substr(Time(),1,5)
 
-	_oProcess:fDesc := "Inconsistencia Programação - John Deere"
+	_oProcess:fDesc := "Inconsistencia Programacao - John Deere"
 
 	Private _cTo := _cCC := ""
 
@@ -893,7 +901,7 @@ Static Function CR109D()
 
 	_oProcess:AttachFile(_cAnexo)
 
-	//	_oProcess:cTo := 'fabiano.silva@cronnos.com.br'
+	//_oProcess:cTo := 'fabiano@fasistec.com.br'
 	_oProcess:cTo := _cTo
 	_oProcess:cCC := _cCC
 

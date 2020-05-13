@@ -54,8 +54,8 @@ Return(Nil)
 
 Static Function EXPDADOS()
 
-	Local _aTabelas := {'SE4'}
-	// Local _aTabelas := {'CT1','CT2','SA1','SA2','SB1','CTT','SE4'}
+	Local _aTabelas := {'SE1'}
+	// Local _aTabelas := {'CT1','CT2','SA1','SA2','SB1','CTT','SA6'}//'SE4'
 	Local _nTab		:= 0
 	Local _cQry		:= ''
 	Local _nReg		:= 0
@@ -744,7 +744,7 @@ Static Function EXPDADOS()
 			TCUSTO->(dbCloseArea())
 
 		ElseIf _cTab = 'SE4'
-
+/*
 			If Select("TCONPAG") > 0
 				TCONPAG->(dbCloseArea())
 			Endif
@@ -797,11 +797,302 @@ Static Function EXPDADOS()
 			Endif
 
 			TCONPAG->(dbCloseArea())
+			*/
 
-			// ElseIf _cTab = 'CT2'
+		ElseIf _cTab = 'SA6'
+
+			If Select("TBANCO") > 0
+				TBANCO->(dbCloseArea())
+			Endif
+
+			_cQry := " SELECT * FROM DADOSRM..FCONTA A " + CRLF
+			_cQry += " INNER JOIN DADOSRM..GBANCO B ON A.NUMBANCO = B.NUMBANCO " + CRLF
+			_cQry += " WHERE RTRIM(A.CODCOLIGADA) IN  ('0','9','10','11')  " + CRLF
+			_cQry += " ORDER BY A.CODCOLIGADA " + CRLF
+
+			TcQuery _cQry New Alias "TBANCO"
+
+			_nReg := Contar("TBANCO","!EOF()")
+
+			If _nReg > 0
+
+				_oProcess:SetRegua2( _nReg ) //Alimenta a segunda barra de progresso
+
+				_nRegAtu := 0
+
+				TBANCO->(dbGoTop())
+
+				While TBANCO->(!EOF())
+
+					_cKey1   := Alltrim(cValToChar(TBANCO->CODCOLIGADA))
+
+					If CriarDTC(_cTab,_cKey1)
+
+						While TBANCO->(!EOF()) .And. _cKey1 == Alltrim(cValToChar(TBANCO->CODCOLIGADA))
+
+							_nRegAtu ++
+
+							_oProcess:IncRegua2("Gerando tabela "+_cTab)
+							// _oProcess:IncRegua2("Gerando tabela "+_cTab+" - Registro "+Alltrim(str(_nRegAtu))+" de "+Alltrim(str(_nReg)))
+
+							TRM->(RecLock("TRM",.T.))
+							// TRM->A6_FILIAL
+							TRM->A6_COD     := Alltrim(TBANCO->NUMBANCO)
+							TRM->A6_AGENCIA := Alltrim(TBANCO->NUMAGENCIA)
+							TRM->A6_NOMEAGE := NoAcento(UPPER(Alltrim(TBANCO->NOMEREDUZIDO)))
+							// TRM->A6_DVAGE   := 
+							TRM->A6_NUMCON  := Alltrim(TBANCO->NROCONTA)
+							TRM->A6_DVCTA   := TBANCO->DIGCONTA
+							TRM->A6_NOME    := NoAcento(UPPER(Alltrim(TBANCO->NOME)))
+							TRM->A6_NREDUZ  := NoAcento(UPPER(Alltrim(TBANCO->NOMEREDUZIDO)))
+							// TRM->A6_END     := 
+							// TRM->A6_BAIRRO  := 
+							// TRM->A6_MUN     := 
+							// TRM->A6_CEP     := 
+							// TRM->A6_EST     := 
+							// TRM->A6_TEL     := 
+							// TRM->A6_CONTATO := 
+							TRM->(MsUnLock())
+
+							// _oProcess:IncRegua2("Gerando tabela "+_cTab)
+
+							TBANCO->(dbSkip())
+						EndDo
+
+					Endif
+				EndDo
+			Endif
+
+			TBANCO->(dbCloseArea())
+		ElseIf _cTab = 'SRA'
+
+			If Select("TFUNC") > 0
+				TFUNC->(dbCloseArea())
+			Endif
+
+			_cQry := " SELECT * FROM DADOSRM..FCONTA A " + CRLF
+			_cQry += " INNER JOIN DADOSRM..GBANCO B ON A.NUMBANCO = B.NUMBANCO " + CRLF
+			_cQry += " WHERE RTRIM(A.CODCOLIGADA) IN  ('0','9','10','11')  " + CRLF
+			_cQry += " ORDER BY A.CODCOLIGADA " + CRLF
+
+			TcQuery _cQry New Alias "TFUNC"
+
+			_nReg := Contar("TFUNC","!EOF()")
+
+			If _nReg > 0
+
+				_oProcess:SetRegua2( _nReg ) //Alimenta a segunda barra de progresso
+
+				_nRegAtu := 0
+
+				TFUNC->(dbGoTop())
+
+				While TFUNC->(!EOF())
+
+					_cKey1   := Alltrim(cValToChar(TFUNC->CODCOLIGADA))
+
+					If CriarDTC(_cTab,_cKey1)
+
+						While TFUNC->(!EOF()) .And. _cKey1 == Alltrim(cValToChar(TFUNC->CODCOLIGADA))
+/*
+							_nRegAtu ++
+
+							_oProcess:IncRegua2("Gerando tabela "+_cTab)
+							// _oProcess:IncRegua2("Gerando tabela "+_cTab+" - Registro "+Alltrim(str(_nRegAtu))+" de "+Alltrim(str(_nReg)))
+
+							TRM->(RecLock("TRM",.T.))
+							// TRM->A6_FILIAL
+							TRM->A6_COD     := Alltrim(TBANCO->NUMBANCO)
+							TRM->A6_AGENCIA := Alltrim(TBANCO->NUMAGENCIA)
+							TRM->A6_NOMEAGE := NoAcento(UPPER(Alltrim(TBANCO->NOMEREDUZIDO)))
+							// TRM->A6_DVAGE   := 
+							TRM->A6_NUMCON  := Alltrim(TBANCO->NROCONTA)
+							TRM->A6_DVCTA   := TBANCO->DIGCONTA
+							TRM->A6_NOME    := NoAcento(UPPER(Alltrim(TBANCO->NOME)))
+							TRM->A6_NREDUZ  := NoAcento(UPPER(Alltrim(TBANCO->NOMEREDUZIDO)))
+							// TRM->A6_END     := 
+							// TRM->A6_BAIRRO  := 
+							// TRM->A6_MUN     := 
+							// TRM->A6_CEP     := 
+							// TRM->A6_EST     := 
+							// TRM->A6_TEL     := 
+							// TRM->A6_CONTATO := 
+							TRM->(MsUnLock())
+*/
+							TFUNC->(dbSkip())
+						EndDo
+
+					Endif
+				EndDo
+			Endif
+
+			TFUNC->(dbCloseArea())
+
+		ElseIf _cTab = 'SE1'
+
+			If Select("TREC") > 0
+				TREC->(dbCloseArea())
+			Endif
+
+			_cQry := " SELECT CODFILIAL AS FILIAL,* FROM DADOSRM..FLAN " + CRLF
+			_cQry += " WHERE RTRIM(CODCOLIGADA) IN  ('0','9','10','11')  " + CRLF
+			_cQry += " AND PAGREC = '1' " + CRLF
+			_cQry += " ORDER BY CODCOLIGADA,CODFILIAL " + CRLF
+
+			TcQuery _cQry New Alias "TREC"
+
+			_nReg := Contar("TREC","!EOF()")
+
+			If _nReg > 0
+
+				_oProcess:SetRegua2( _nReg ) //Alimenta a segunda barra de progresso
+
+				_nRegAtu := 0
+
+				TREC->(dbGoTop())
+
+				While TREC->(!EOF())
+
+					_cKey1   := Alltrim(cValToChar(TREC->CODCOLIGADA))
+
+					If CriarDTC(_cTab,_cKey1)
+
+						While TREC->(!EOF()) .And. _cKey1 == Alltrim(cValToChar(TREC->CODCOLIGADA))
+
+							_nRegAtu ++
+
+							_oProcess:IncRegua2("Gerando tabela "+_cTab)
+
+							TRM->(RecLock("TRM",.T.))
+							TRM->E1_FILIAL    := TREC->ODFILIAL
+							TRM->E1_PREFIXO   := Alltrim(TREC->SERIEDOCUMENTO)
+							TRM->E1_NUM       := Alltrim(TREC->NUMERODOCUMENTO) ????
+							TRM->E1_PARCELA   := UPPER(Alltrim(TREC->PARCELA))
+							TRM->E1_TIPO      := ?
+							TRM->E1_NATUREZ   := Alltrim(TBANCO->NROCONTA)
+							TRM->E1_PORTADO   := TBANCO->DIGCONTA
+							TRM->E1_AGEDEP    := NoAcento(UPPER(Alltrim(TBANCO->NOME)))
+							TRM->E1_CLIENTE   := NoAcento(UPPER(Alltrim(TBANCO->NOMEREDUZIDO)))
+							TRM->E1_LOJA      := 
+							TRM->E1_NOMCLI    := 
+							TRM->E1_EMISSAO     := 
+							TRM->E1_VENCTO     := 
+							TRM->E1_VENCREA     := 
+							TRM->E1_VALOR     := 
+							TRM->E1_BASEIRF := 
+							TRM->E1_ISS := 
+							TRM->E1_IRRF := 
+							TRM->E1_NUMBCO := 
+							TRM->E1_INDICE := 
+							TRM->E1_BAIXA := 
+							TRM->E1_NUMBOR := 
+							TRM->E1_DATABOR := 
+							TRM->E1_EMIS1 := 
+							TRM->E1_HIST := 
+							TRM->E1_LA := 
+							TRM->E1_LOTE := 
+							TRM->E1_MOTIVO := 
+							TRM->E1_MOVIMEN := 
+							TRM->E1_OP := 
+							TRM->E1_SITUACA := 
+							TRM->E1_CONTRAT := 
+							TRM->E1_SALDO := 
+							TRM->E1_SUPERVI := 
+							TRM->E1_VEND1 := 
+							TRM->E1_VEND2 := 
+							TRM->E1_VEND3 := 
+							TRM->E1_VEND4 := 
+							TRM->E1_VEND5 := 
+							TRM->E1_COMIS1 := 
+							TRM->E1_COMIS2 := 
+							TRM->E1_COMIS3 := 
+							TRM->E1_COMIS4 := 
+							TRM->E1_DESCONT := 
+							TRM->E1_COMIS5 := 
+							TRM->E1_MULTA := 
+							TRM->E1_JUROS := 
+							TRM->E1_CORREC := 
+							TRM->E1_VALLIQ := 
+							TRM->E1_VENCORI := 
+							TRM->E1_CONTA := 
+							TRM->E1_VALJUR := 
+							TRM->E1_PORCJUR := 
+							TRM->E1_MOEDA := 
+							TRM->E1_BASCOM1 := 
+							TRM->E1_BASCOM2 := 
+							TRM->E1_BASCOM3 := 
+							TRM->E1_BASCOM4 := 
+							TRM->E1_BASCOM5 := 
+							TRM->E1_FATPREF := 
+							TRM->E1_FATURA := 
+							TRM->E1_OK := 
+							TRM->E1_PROJETO := 
+							TRM->E1_CLASCON := 
+							TRM->E1_VALCOM1 := 
+							TRM->E1_VALCOM2 := 
+							TRM->E1_VALCOM3 := 
+							TRM->E1_VALCOM4 := 
+							TRM->E1_VALCOM5 := 
+							TRM->E1_OCORREN := 
+							TRM->E1_INSTR1 := 
+							TRM->E1_INSTR2 := 
+							TRM->E1_PEDIDO := 
+							TRM->E1_DTVARIA := 
+							TRM->E1_VARURV := 
+							TRM->E1_VLCRUZ := 
+							TRM->E1_DTFATUR := 
+							TRM->E1_NUMNOTA := 
+							TRM->E1_SERIE := 
+							TRM->E1_STATUS := 
+							TRM->E1_ORIGEM := 
+							TRM->E1_IDENTEE := 
+							TRM->E1_NUMCART := 
+							TRM->E1_FLUXO := 
+							TRM->E1_DESCFIN := 
+							TRM->E1_DIADESC := 
+							TRM->E1_TIPODES := 
+							TRM->E1_CARTAO := 
+							TRM->E1_CARTVAL := 
+							TRM->E1_CARTAUT := 
+							TRM->E1_ADM := 
+							TRM->E1_VLRREAL := 
+							TRM->E1_TRANSF := 
+							TRM->E1_BCOCHQ := 
+							TRM->E1_AGECHQ := 
+							TRM->E1_CTACHQ := 
+							TRM->E1_NUMLIQ := 
+							TRM->E1_RECIBO := 
+							TRM->E1_ORDPAGO := 
+							TRM->E1_INSS := 
+							TRM->E1_FILORIG := 
+							TRM->E1_DTACRED := 
+							TRM->E1_TIPOFAT := 
+							TRM->E1_TIPOLIQ := 
+							TRM->E1_CSLL := 
+							TRM->E1_COFINS := 
+							TRM->E1_PIS := 
+							TRM->E1_FLAGFAT := 
+							TRM->E1_MODSPB := "1"
+							TRM->E1_DESDOBR := "2"
+							TRM->E1_PROJPMS := "2"
+							TRM->E1_MSEMP :=
+							TRM->E1_MSFIL := 
+							TRM->E1_MULTNAT := "2"
+							TRM->E1_MSFIL := 
+							TRM->E1_MSFIL := 
+							TRM->E1_MSFIL := 
+							TRM->(MsUnLock())
+//E1_MESBASE E1_ANOBASE E1_PLNUCOB   E1_CODEMP E1_CODINT E1_MATRIC E1_TXMOEDA             E1_ACRESC              E1_SDACRES             E1_DECRESC             E1_SDDECRE             E1_MULTNAT E1_MSFIL E1_MSEMP E1_PROJPMS  E1_NRDOC                                           E1_MODSPB E1_EMITCHQ                               E1_IDCNAB  E1_PLCOEMP   E1_PLTPCOE E1_CODCOR E1_PARCCSS E1_CODORCA E1_CODIMOV   E1_FILDEB E1_NUMRA        E1_NUMSOL E1_INSCRIC E1_SERREC E1_CODBAR                                    E1_DATAEDI E1_CODDIG                                        E1_CHQDEV E1_LIDESCF E1_VLBOLSA             E1_NUMCRD  E1_VLFIES              E1_DEBITO            E1_CCD    E1_ITEMD  E1_CLVLDB E1_CREDIT            E1_CCC    E1_ITEMC  E1_CLVLCR E1_DESCON1             E1_DESCON2             E1_DTDESC3 E1_DTDESC1 E1_DTDESC2 E1_VLMULTA             E1_DESCON3             E1_MOTNEG E1_SABTPIS             E1_SABTCOF             E1_SABTCSL             E1_FORNISS E1_PARTOT E1_SITFAT E1_BASEPIS             E1_BASECOF             E1_BASECSL             E1_VRETISS             E1_PARCIRF E1_SCORGP E1_FRETISS E1_TXMDCOR             E1_SATBIRF             E1_TIPREG E1_CONEMP    E1_VERCON E1_SUBCON E1_VERSUB E1_PLLOTE  E1_PLOPELT E1_CODRDA E1_FORMREC E1_BCOCLI E1_AGECLI E1_CTACLI  E1_PARCFET E1_FETHAB              E1_MDCRON E1_MDCONTR      E1_MEDNUME E1_MDPLANI E1_MDPARCE E1_MDREVIS E1_NUMMOV E1_PREFORI E1_NODIA   E1_TITPAI                                          E1_DOCTEF            E1_MDMULT              E1_JURFAT                                          E1_MDBONI              E1_MDDESC              E1_RELATO E1_BASEINS             E1_MULTDIA             E1_NFELETR           E1_RETCNTR             E1_NUMCON            E1_TURMA             E1_IDLAN               E1_NSUTEF    E1_SABTIRF             E1_IDAPLIC             E1_PROCEL              E1_NOPER               E1_SERVICO E1_DIACTB E1_IDBOLET             E1_VRETIRF             E1_BASEISS             E1_VLBOLP              E1_APLVLMN E1_LTCXA   E1_NUMINSC             E1_CODISS E1_SEQBX D_E_L_E_T_ R_E_C_N_O_  R_E_C_D_E_L_ E1_VLMINIS E1_TPDP                E1_PARTPDP E1_CODIRRF E1_USERLGI        E1_USERLGA        E1_YFORBKP E1_NUMPRO  E1_INDPRO E1_PRISS               E1_PRINSS              E1_PARCFAC E1_FACS                E1_PARCFAB E1_FABOV               E1_PERLET E1_CHAVENF   E1_PRODUTO      E1_FAMAD               E1_PARCFAM E1_FMPEQ               E1_PARCFMP E1_TPDESC E1_FUNDESA             E1_IMAMT               E1_FASEMT              E1_PARFUND E1_PARIMA E1_PARFASE E1_CODRET E1_CTRBCO                                          E1_IDMOV   E1_BOLETO E1_DESCJUR             E1_CCUSTO E1_CDRETCS E1_CDRETIR E1_CLVL   E1_ITEMCTA E1_TPESOC E1_CNO E1_CONHTL                        E1_TCONHTL E1_SDOC E1_SDOCREC E1_VRETBIS             E1_CODSERV E1_BTRISS              E1_RATFIN
+							TREC->(dbSkip())
+						EndDo
+
+					Endif
+				EndDo
+			Endif
+
+			TREC->(dbCloseArea())
+
 		Endif
-
-		// _oProcess:IncRegua1("Tabelas RM")
 
 	Next _nTab
 

@@ -5,7 +5,7 @@
 Programa CR0119
 Autor 		: Fabiano da Silva	-	08/01/20
 Uso 		: SIGAEEC
-Descrição 	: Gerar relatório de Exportação
+Descri??o 	: Gerar relatório de Exportaçã
 */
 
 #Define Verde "#9AFF9A"
@@ -118,12 +118,12 @@ Static Function CR119IN()
 		/*
 	1 - Percentual do campo conforme tamanho total
 	2 - Tamanho da coluna (calculado)
-	3 - Posição Inicial da coluna (calculado)
+	3 - Posi??o Inicial da coluna (calculado)
 	4 - Nome
 	5 - Alinhamento Horizontal (0=Esquerda, 1=Direita, 2 = Centralizado)
-	6 - Qtde a somar na posição inicial
+	6 - Qtde a somar na posi??o inicial
 	7 - Qtde a diminuir no tamanho da coluna
-	8 - Campo que será impresso na coluna
+	8 - Campo que ser? impresso na coluna
 	9 - Picture do campo
 	10- Campo SubTotal
 	11- Campo Total Geral
@@ -253,8 +253,7 @@ Static Function CR119IN()
 	_cQuery += " 'FRETE'   = EEC.EEC_FRPREV, " +CRLF
 	_cQuery += " 'SEGURO'  = EEC.EEC_SEGPRE, " +CRLF
 	_cQuery += " 'OUTROS'  = EEC.EEC_FRPCOM+EEC.EEC_DESPIN-EEC.EEC_DESCON, " +CRLF
-	_cQuery += " 'TOTALGER'= (EEC.EEC_TOTPED+EEC.EEC_DESCON)-(EEC.EEC_FRPREV+EEC.EEC_FRPCOM+EEC.EEC_SEGPRE+EEC.EEC_DESPIN), " +CRLF
-	_cQuery += " EEC_IMPORT, EEC_IMLOJA " + CRLF
+	_cQuery += " 'TOTALGER'= (EEC.EEC_TOTPED+EEC.EEC_DESCON)-(EEC.EEC_FRPREV+EEC.EEC_FRPCOM+EEC.EEC_SEGPRE+EEC.EEC_DESPIN) " +CRLF
 	_cQuery += " FROM "+RetSqlName("EE9")+" EE9 " +CRLF
 	_cQuery += " INNER JOIN "+RetSqlName("EEC")+" EEC ON EE9_PREEMB = EEC_PREEMB " +CRLF
 	_cQuery += " INNER JOIN "+RetSqlName("SA1")+" SA1A ON SA1A.A1_COD = EEC_IMPORT AND SA1A.A1_LOJA = EEC_IMLOJA " +CRLF
@@ -280,7 +279,7 @@ Static Function CR119IN()
 	Count to _nTEXP
 
 	If _nTEXP = 0
-		MsgAlert("Não foram encontrados dados para geração da INVOICE.")
+		MsgAlert("N?o foram encontrados dados para gera??o da INVOICE.")
 		Return(Nil)
 	Endif
 
@@ -324,33 +323,6 @@ Static Function CR119IN()
 			AAdd(_aNF,Alltrim(TEXP->NF))
 		Endif
 
-		EEM->(dbSetOrder(1))
-		If EEM->(MsSeek(xFilial("EEM")+TEXP->PROCESSO))
-
-			While EEM->(!Eof() .And. EEM_FILIAL == xFilial("EEM")) .And. EEM->EEM_PREEMB = TEXP->PROCESSO .And. EEM->EEM_TIPOCA == "N"
-
-				SE1->(dbSetOrder(2))
-				If SE1->(MsSeek(xFilial("SE1")+TEXP->EEC_IMPORT+TEXP->EEC_IMLOJA + Substr(EEM->EEM_SERIE,1,3)+Substr(EEM->EEM_NRNF,1,9)))
-
-					_cKeySE1 := SE1->E1_FILIAL + SE1->E1_CLIENTE + SE1->E1_LOJA + SE1->E1_PREFIXO + SE1->E1_NUM
-
-					While SE1->(!EOF()) .And. _cKeySE1 == SE1->E1_FILIAL + SE1->E1_CLIENTE + SE1->E1_LOJA + SE1->E1_PREFIXO + SE1->E1_NUM
-
-						SE1->(RecLock("SE1",.F.))
-						SE1->E1_NUMINVO := EEM->EEM_PREEMB
-						SE1->(MsUnlock())
-
-						SE1->(dbSkip())
-					EndDo
-				Endif
-
-				EEM->(dbSkip())
-			Enddo
-		Endif
-
-
-
-
 		TEXP->(dbskip())
 	ENDDO
 
@@ -387,7 +359,7 @@ Return()
 
 
 
-Static Function CabecIN() //Cabeçalho
+Static Function CabecIN() //Cabe?alho
 
 	Local _a	:= 0
 
@@ -607,12 +579,12 @@ Static Function CR119PL()
 		/*
 	1 - Percentual do campo conforme tamanho total
 	2 - Tamanho da coluna (calculado)
-	3 - Posição Inicial da coluna (calculado)
+	3 - Posi??o Inicial da coluna (calculado)
 	4 - Nome
 	5 - Alinhamento Horizontal (0=Esquerda, 1=Direita, 2 = Centralizado)
-	6 - Qtde a somar na posição inicial
+	6 - Qtde a somar na posi??o inicial
 	7 - Qtde a diminuir no tamanho da coluna
-	8 - Campo que será impresso na coluna
+	8 - Campo que ser? impresso na coluna
 	9 - Picture do campo
 	10- Campo SubTotal
 	11- Campo Total Geral
@@ -625,8 +597,8 @@ Static Function CR119PL()
 		{23,0,0,{'Description of the Goods'}	,0,3,0,'DESCPRO'	,'@!'				,''		,''	},;
 		{08,0,0,{'QTY'}							,1,0,3,'QUANTI'		,"@E 9.999.999,99"	,''		,''	},;
 		{12,0,0,{'Cubic Meter'}					,2,0,0,'CUBIC'		,"@!"				,''		,''	},;
-		{08,0,0,{'Net Weight','Kilo'}			,1,0,3,'PESLIQ'		,"@E 9.999.999,99"	,''		,''	},;
-		{09,0,0,{'Gross Weight','Kilo'}			,1,0,3,'PESBRU'		,"@E 9.999.999,99"	,''		,''	}}
+		{08,0,0,{'Net Weight','Kilo'}			,1,0,3,'PESLIQ'		,"@E 9.999.999,999"	,''		,''	},;
+		{09,0,0,{'Gross Weight','Kilo'}			,1,0,3,'PESBRU'		,"@E 9.999.999,999"	,''		,''	}}
 
 	_nTamRod	:= 60
 
@@ -700,7 +672,7 @@ Static Function CR119PL()
 	Count to _nTEXP
 
 	If _nTEXP = 0
-		MsgAlert("Não foram encontrados dados para geração do PACKING LIST.")
+		MsgAlert("N?o foram encontrados dados para gera??o do PACKING LIST.")
 		Return(Nil)
 	Endif
 
@@ -728,8 +700,10 @@ Static Function CR119PL()
 					Else
 						_cImp := Alltrim(str(_xConteud)) + ' Cardboard Boxes'
 					Endif
-				else
+				ElseIf _a = 6
 					_cImp := Alltrim(str(_xConteud,,2))
+				Else
+					_cImp := Alltrim(str(_xConteud,,3))
 				Endif
 				// _cImp := Alltrim(Transform(_xConteud,_aCabec[_a][9]))
 			ElseIf Valtype(_xConteud) = 'C'
@@ -773,7 +747,7 @@ Static Function CheckPL()
 Return()
 
 
-Static Function CabecPL() //Cabeçalho
+Static Function CabecPL() //Cabe?alho
 
 	Local _a := 0
 
@@ -902,8 +876,8 @@ Static Function FooterPL()
 		_oPrinter:SayAlign(_nLiR,_nCol+80,Alltrim(str(_nTCaixa)) + ' CARDBOARD BOXES',_oFont8N,200,7,, 0, 0 )
 	Endif
 	_oPrinter:SayAlign(_nLiR,_aCabec[7][3]+3,'Total',_oFont8N,_aCabec[7][2],7,, 0, 0 )
-	_oPrinter:SayAlign(_nLiR,_aCabec[8][3],Alltrim(str(_nPesLiq,,2)),_oFont8N,_aCabec[8][2]-3,7,, 1, 0 )
-	_oPrinter:SayAlign(_nLiR,_aCabec[9][3],Alltrim(str(_nPesBru,,2)),_oFont8N,_aCabec[9][2]-3,7,, 1, 0 )
+	_oPrinter:SayAlign(_nLiR,_aCabec[8][3],Alltrim(str(_nPesLiq,,3)),_oFont8N,_aCabec[8][2]-3,7,, 1, 0 )
+	_oPrinter:SayAlign(_nLiR,_aCabec[9][3],Alltrim(str(_nPesBru,,3)),_oFont8N,_aCabec[9][2]-3,7,, 1, 0 )
 
 	_nLiR += _nTLin+3
 	_oPrinter:Line(_nPosIRod,_aCabec[7][3],_nLiR,_aCabec[7][3])
