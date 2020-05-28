@@ -7,13 +7,13 @@ Autor 		: Fabiano da Silva	-	25/03/20
 Descrição 	: Exportar tabelas SA4
 */
 
-USER FUNCTION RM_SA4(_oProcess,_cTab,_cPasta)
+USER FUNCTION RM_SA4(_oProcess,_cTab,_cPasta,_cBDados)
 
 	If Select("TTRAN") > 0
 		TTRAN->(dbCloseArea())
 	Endif
 
-	_cQry := " SELECT * FROM DADOSRM..TTRA  A " +CRLF
+	_cQry := " SELECT * FROM "+_cBDados+".TTRA  A " +CRLF
 	_cQry += " WHERE RTRIM(CODCOLIGADA) IN  ('0','9','10','11') " +CRLF
 	_cQry += " ORDER BY CODCOLIGADA,CODTRA" +CRLF
 

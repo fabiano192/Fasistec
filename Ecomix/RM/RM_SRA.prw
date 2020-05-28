@@ -7,14 +7,14 @@ Autor 		: Fabiano da Silva	-	25/03/20
 Descrição 	: Exportar tabelas SRA
 */
 
-USER FUNCTION RM_SRA(_oProcess,_cTab,_cPasta)
+USER FUNCTION RM_SRA(_oProcess,_cTab,_cPasta,_cBDados)
 
 	If Select("TFUNC") > 0
 		TFUNC->(dbCloseArea())
 	Endif
 
-	_cQry := " SELECT * FROM DADOSRM..FCONTA A " + CRLF
-	_cQry += " INNER JOIN DADOSRM..GBANCO B ON A.NUMBANCO = B.NUMBANCO " + CRLF
+	_cQry := " SELECT * FROM "+_cBDados+".FCONTA A " + CRLF
+	_cQry += " INNER JOIN "+_cBDados+".GBANCO B ON A.NUMBANCO = B.NUMBANCO " + CRLF
 	_cQry += " WHERE RTRIM(A.CODCOLIGADA) IN  ('0','9','10','11')  " + CRLF
 	_cQry += " ORDER BY A.CODCOLIGADA " + CRLF
 

@@ -7,13 +7,13 @@ Autor 		: Fabiano da Silva	-	25/03/20
 Descrição 	: Exportar tabelas SF2
 */
 
-USER FUNCTION RM_SF2(_oProcess,_cTab,_cPasta)
+USER FUNCTION RM_SF2(_oProcess,_cTab,_cPasta,_cBDados)
 
 	If Select("TNFISCAL") > 0
 		TNFISCAL->(dbCloseArea())
 	Endif
 
-	_cQry := " SELECT * FROM DADOSRM..TMOV A " +CRLF
+	_cQry := " SELECT * FROM "+_cBDados+".TMOV A " +CRLF
 	_cQry += " WHERE RTRIM(A.CODCOLIGADA)+RTRIM(A.CODFILIAL) IN ('91','93','101','103','104','111','113') " +CRLF
 	_cQry += " AND A.TIPO = 'P' " +CRLF
 	_cQry += " ORDER BY A.CODCOLIGADA,A.CODFILIAL " +CRLF
@@ -37,9 +37,8 @@ USER FUNCTION RM_SF2(_oProcess,_cTab,_cPasta)
 
 			If U_RMCriarDTC(_cTab,_cKey1)
 
-				_cArq5	:= "\TAB_RM\"+_cPasta+"\SA1"+_cKey1+".dtc"	//Gera o nome do arquivo
-				_cInd5	:= "\TAB_RM\"+_cPasta+"\SA1"+_cKey1			//Indice do arquivo
-				// _cInd5	:= "\TAB_RM\"+_cPasta+"\SA1"+_cKey1+"A"		//Indice do arquivo
+				_cArq5	:= "\TAB_RM\"+_cPasta+"\SA1"+PadL(_cKey1,2,"0")+"0.dtc"		//Gera o nome do arquivo
+				_cInd5	:= "\TAB_RM\"+_cPasta+"\SA1"+PadL(_cKey1,2,"0")+"0"			//Indice do arquivo
 
 				If SELECT("TRM5") > 0
 					TRM5->(dbCloseArea())
@@ -74,7 +73,7 @@ USER FUNCTION RM_SF2(_oProcess,_cTab,_cPasta)
 
 					TRM->(RecLock("TRM",.T.))
 					TRM->F2_YID     := TNFISCAL->IDMOV
-					TRM->F2_FILIAL  := Alltrim(cValtoChar(TNFISCAL->CODFILIAL))
+					TRM->F2_FILIAL  := PadL(Alltrim(cValtoChar(TNFISCAL->CODFILIAL)),2,"0")
 					TRM->F2_DOC     := Alltrim(TNFISCAL->NUMEROMOV)
 					TRM->F2_SERIE   := Alltrim(TNFISCAL->SERIE)
 					TRM->F2_CLIENTE := _cCodCli

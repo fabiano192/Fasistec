@@ -7,16 +7,16 @@ Autor 		: Fabiano da Silva	-	25/03/20
 Descrição 	: Exportar tabelas SD2
 */
 
-USER FUNCTION RM_SD2(_oProcess,_cTab,_cPasta)
+USER FUNCTION RM_SD2(_oProcess,_cTab,_cPasta,_cBDados)
 
 	If Select("TNFITEM") > 0
 		TNFITEM->(dbCloseArea())
 	Endif
 
-	_cQry := " SELECT B.CODCFO,C.CODIGOPRD,D.CODUNDBASE,B.CODTMV,B.NUMEROMOV,B.SERIE,A.* FROM DADOSRM..TITMMOV A " +CRLF
-	_cQry += " INNER JOIN DADOSRM..TMOV B ON A.CODCOLIGADA = B.CODCOLIGADA AND A.IDMOV = B.IDMOV " +CRLF
-	_cQry += " INNER JOIN DADOSRM..TPRD C ON A.IDPRD = C.IDPRD AND A.CODCOLIGADA = C.CODCOLIGADA " +CRLF
-	_cQry += " INNER JOIN DADOSRM..TUND D ON A.CODUND = D.CODUND " +CRLF
+	_cQry := " SELECT B.CODCFO,C.CODIGOPRD,D.CODUNDBASE,B.CODTMV,B.NUMEROMOV,B.SERIE,A.* FROM "+_cBDados+".TITMMOV A " +CRLF
+	_cQry += " INNER JOIN "+_cBDados+".TMOV B ON A.CODCOLIGADA = B.CODCOLIGADA AND A.IDMOV = B.IDMOV " +CRLF
+	_cQry += " INNER JOIN "+_cBDados+".TPRD C ON A.IDPRD = C.IDPRD AND A.CODCOLIGADA = C.CODCOLIGADA " +CRLF
+	_cQry += " INNER JOIN "+_cBDados+".TUND D ON A.CODUND = D.CODUND " +CRLF
 	_cQry += " WHERE RTRIM(A.CODCOLIGADA)+RTRIM(A.CODFILIAL) IN ('91','93','101','103','104','111','113')" +CRLF
 	_cQry += " AND B.TIPO = 'P' " +CRLF
 	_cQry += " ORDER BY A.CODCOLIGADA,A.CODFILIAL " +CRLF
@@ -40,8 +40,8 @@ USER FUNCTION RM_SD2(_oProcess,_cTab,_cPasta)
 
 			If U_RMCriarDTC(_cTab,_cKey1)
 
-				_cArq5	:= "\TAB_RM\"+_cPasta+"\SA1"+_cKey1+".dtc"	//Gera o nome do arquivo
-				_cInd5	:= "\TAB_RM\"+_cPasta+"\SA1"+_cKey1			//Indice do arquivo
+				_cArq5	:= "\TAB_RM\"+_cPasta+"\SA1"+PadL(_cKey1,2,"0")+"0.dtc"	//Gera o nome do arquivo
+				_cInd5	:= "\TAB_RM\"+_cPasta+"\SA1"+PadL(_cKey1,2,"0")+"0"		//Indice do arquivo
 
 				If SELECT("TRM5") > 0
 					TRM5->(dbCloseArea())
@@ -58,8 +58,8 @@ USER FUNCTION RM_SD2(_oProcess,_cTab,_cPasta)
 
 
 
-				_cArq6	:= "\TAB_RM\"+_cPasta+"\SB1"+_cKey1+".dtc"	//Gera o nome do arquivo
-				_cInd6	:= "\TAB_RM\"+_cPasta+"\SB1"+_cKey1			//Indice do arquivo
+				_cArq6	:= "\TAB_RM\"+_cPasta+"\SB1"+PadL(_cKey1,2,"0")+"0.dtc"		//Gera o nome do arquivo
+				_cInd6	:= "\TAB_RM\"+_cPasta+"\SB1"+PadL(_cKey1,2,"0")+"0"			//Indice do arquivo
 
 				If SELECT("TRM6") > 0
 					TRM6->(dbCloseArea())
@@ -103,7 +103,7 @@ USER FUNCTION RM_SD2(_oProcess,_cTab,_cPasta)
 
 					TRM->(RecLock("TRM",.T.))
 					TRM->D2_YID     := TNFITEM->IDMOV
-					TRM->D2_FILIAL  := Alltrim(cValtoChar(TNFITEM->CODFILIAL))
+					TRM->D2_FILIAL  := PadL(Alltrim(cValtoChar(TNFITEM->CODFILIAL)),2,"0")
 					TRM->D2_DOC     := Alltrim(TNFITEM->NUMEROMOV)
 					TRM->D2_SERIE   := Alltrim(TNFITEM->SERIE)
 					TRM->D2_CLIENTE := _cCodCli

@@ -7,14 +7,14 @@ Autor 		: Fabiano da Silva	-	25/03/20
 Descrição 	: Exportar tabelas SB1
 */
 
-USER FUNCTION RM_SB1(_oProcess,_cTab,_cPasta)
+USER FUNCTION RM_SB1(_oProcess,_cTab,_cPasta,_cBDados)
 
 	If Select("TPROD") > 0
 		TPROD->(dbCloseArea())
 	Endif
 
-	_cQry := " SELECT * FROM DADOSRM..TPRODUTO A " +CRLF
-	_cQry += " INNER JOIN DADOSRM..TPRODUTODEF B ON A.CODCOLPRD = B.CODCOLIGADA  AND A.IDPRD = B.IDPRD " +CRLF
+	_cQry := " SELECT * FROM "+_cBDados+".TPRODUTO A " +CRLF
+	_cQry += " INNER JOIN "+_cBDados+".TPRODUTODEF B ON A.CODCOLPRD = B.CODCOLIGADA  AND A.IDPRD = B.IDPRD " +CRLF
 	_cQry += " WHERE RTRIM(CODCOLPRD) IN  ('0','9','10','11') " +CRLF
 	_cQry += " ORDER BY CODCOLPRD,CODIGOPRD" +CRLF
 

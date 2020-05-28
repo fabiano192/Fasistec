@@ -7,13 +7,13 @@ Autor 		: Fabiano da Silva	-	25/03/20
 Descrição 	: Exportar tabelas SE2
 */
 
-USER FUNCTION RM_SE2(_oProcess,_cTab,_cPasta)
+USER FUNCTION RM_SE2(_oProcess,_cTab,_cPasta,_cBDados)
 
 	If Select("TPAG") > 0
 		TPAG->(dbCloseArea())
 	Endif
 
-	_cQry := " SELECT CODFILIAL AS FILIAL,DATAVENCIMENTO AS DTVENC, * FROM DADOSRM..FLAN " + CRLF
+	_cQry := " SELECT CODFILIAL AS FILIAL,DATAVENCIMENTO AS DTVENC, * FROM "+_cBDados+".FLAN A " + CRLF
 	_cQry += " WHERE RTRIM(A.CODCOLIGADA)+RTRIM(A.CODFILIAL) IN ('91','93','101','103','104','111','113') " + CRLF
 	// _cQry += " WHERE RTRIM(CODCOLIGADA) IN  ('0','9','10','11')  " + CRLF
 	_cQry += " AND PAGREC = '2' " + CRLF
@@ -40,9 +40,9 @@ USER FUNCTION RM_SE2(_oProcess,_cTab,_cPasta)
 
 				// _cArq3	:= "\TAB_RM\20200513_124607\SA2"+_cKey1+".dtc"	//Gera o nome do arquivo
 				// _cInd3	:= "\TAB_RM\20200513_124607\SA2"+_cKey1			//Indice do arquivo
-				_cArq4	:= "\TAB_RM\"+_cPasta+"\SA2"+_cKey1+".dtc"	//Gera o nome do arquivo
-				_cInd4	:= "\TAB_RM\"+_cPasta+"\SA2"+_cKey1			//Indice do arquivo
-				_cInd6	:= "\TAB_RM\"+_cPasta+"\SA2"+_cKey1+"A"		//Indice do arquivo
+				_cArq4	:= "\TAB_RM\"+_cPasta+"\SA2"+PadL(_cKey1,2,"0")+"0.dtc"	//Gera o nome do arquivo
+				_cInd4	:= "\TAB_RM\"+_cPasta+"\SA2"+PadL(_cKey1,2,"0")+"0"		//Indice do arquivo
+				_cInd6	:= "\TAB_RM\"+_cPasta+"\SA2"+PadL(_cKey1,2,"0")+"0A"	//Indice do arquivo
 
 				If SELECT("TRM4") > 0
 					TRM4->(dbCloseArea())
@@ -76,7 +76,7 @@ USER FUNCTION RM_SE2(_oProcess,_cTab,_cPasta)
 							TFOR->(dbCloseArea())
 						Endif
 
-						_cQry := " SELECT CODCOLIGADA AS 'EMP',* FROM DADOSRM..FCFO " + CRLF
+						_cQry := " SELECT CODCOLIGADA AS 'EMP',* FROM "+_cBDados+".FCFO " + CRLF
 						_cQry += " WHERE CODCFO = '"+TPAG->CODCFO+"' " + CRLF
 
 						TcQuery _cQry New Alias "TFOR"

@@ -7,13 +7,13 @@ Autor 		: Fabiano da Silva	-	25/03/20
 Descrição 	: Exportar tabelas DA0
 */
 
-USER FUNCTION RM_DA0(_oProcess,_cTab,_cPasta)
+USER FUNCTION RM_DA0(_oProcess,_cTab,_cPasta,_cBDados)
 
 	If Select("TPRC") > 0
 		TPRC->(dbCloseArea())
 	Endif
 
-	_cQry := " SELECT * FROM DADOSRM..TTABPRECO  A " +CRLF
+	_cQry := " SELECT * FROM "+_cBDados+".TTABPRECO  A " +CRLF
 	_cQry += " WHERE RTRIM(CODCOLIGADA) IN  ('0','9','10','11') " +CRLF
 	_cQry += " ORDER BY CODCOLIGADA" +CRLF
 

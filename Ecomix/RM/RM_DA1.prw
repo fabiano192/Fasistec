@@ -7,14 +7,14 @@ Autor 		: Fabiano da Silva	-	25/03/20
 Descrição 	: Exportar tabelas DA1
 */
 
-USER FUNCTION RM_DA1(_oProcess,_cTab,_cPasta)
+USER FUNCTION RM_DA1(_oProcess,_cTab,_cPasta,_cBDados)
 
 	If Select("TIPRC") > 0
 		TIPRC->(dbCloseArea())
 	Endif
 
-	_cQry := " SELECT B.CODIGOPRD,* FROM DADOSRM..TTABPRECOPRD  A " +CRLF
-	_cQry += " INNER JOIN DADOSRM..TPRODUTO B ON A.IDPRD = B.IDPRD  " +CRLF
+	_cQry := " SELECT B.CODIGOPRD,* FROM "+_cBDados+".TTABPRECOPRD  A " +CRLF
+	_cQry += " INNER JOIN "+_cBDados+".TPRODUTO B ON A.IDPRD = B.IDPRD  " +CRLF
 	_cQry += " WHERE RTRIM(CODCOLIGADA) IN  ('0','9','10','11') " +CRLF
 	_cQry += " ORDER BY A.CODCOLIGADA, A.IDTABPRECO,B.CODIGOPRD" +CRLF
 

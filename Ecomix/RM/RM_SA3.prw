@@ -7,13 +7,13 @@ Autor 		: Fabiano da Silva	-	25/03/20
 Descrição 	: Exportar tabelas SA3
 */
 
-USER FUNCTION RM_SA3(_oProcess,_cTab,_cPasta)
+USER FUNCTION RM_SA3(_oProcess,_cTab,_cPasta,_cBDados)
 
 	If Select("TVEN") > 0
 		TVEN->(dbCloseArea())
 	Endif
 
-	_cQry := " SELECT * FROM DADOSRM..TVEN A " +CRLF
+	_cQry := " SELECT * FROM "+_cBDados+".TVEN A " +CRLF
 	_cQry += " WHERE RTRIM(CODCOLIGADA) IN  ('0','9','10','11') " +CRLF
 	_cQry += " ORDER BY CODCOLIGADA,CODVEN" +CRLF
 

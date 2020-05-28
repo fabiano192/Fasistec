@@ -7,13 +7,14 @@ Autor 		: Fabiano da Silva	-	25/03/20
 Descrição 	: Exportar tabelas CT1
 */
 
-USER FUNCTION RM_CT1(_oProcess,_cTab,_cPasta)
+USER FUNCTION RM_CT1(_oProcess,_cTab,_cPasta,_cBDados)
 
 	If Select("TCONTA") > 0
 		TCONTA->(dbCloseArea())
 	Endif
 
-	_cQry := " SELECT * FROM DADOSRM..CCONTA " +CRLF
+	_cQry := " SELECT * FROM "+_cBDados+".CCONTA " +CRLF
+	// _cQry := " SELECT * FROM DADOSRM..CCONTA " +CRLF
 	_cQry += " WHERE CODCOLIGADA = '0' " +CRLF
 	_cQry += " ORDER BY CODCONTA " +CRLF
 
@@ -39,7 +40,7 @@ USER FUNCTION RM_CT1(_oProcess,_cTab,_cPasta)
 				// _oProcess:IncRegua2("Gerando tabela "+_cTab+" - Registro "+Alltrim(str(_nRegAtu))+" de "+Alltrim(str(_nReg)))
 
 				TRM->(RecLock("TRM",.T.))
-				TRM->CT1_YID   := TCONTA->IDMOV
+				TRM->CT1_YID   := TCONTA->ID
 				// TRM->CT1_FILIAL :=
 				TRM->CT1_CLASSE := If(TCONTA->ANALITICA=0,'1','2')
 				TRM->CT1_CONTA  := Alltrim(StrTran(TCONTA->CODCONTA,".",""))

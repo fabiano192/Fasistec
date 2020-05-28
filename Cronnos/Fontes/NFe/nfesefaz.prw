@@ -7411,7 +7411,9 @@ EndIf
 			Endif
 		Else
 			cString += '<xPed>'+ConvType(aPedCom[01])+'</xPed>'
-			cString += '<nItemPed>'+ConvType(aPedCom[02])+'</nItemPed>'
+			If !Empty(aPedCom[02])
+				cString += '<nItemPed>'+ConvType(aPedCom[02])+'</nItemPed>'
+			Endif
 		Endif
 	ElseIf Len(aPedCom) > 0 .And. !Empty(aPedCom[01]).And. !Empty(aPedCom[02])
 		cString += '<xPed>'+ConvType(aPedCom[01])+'</xPed>'

@@ -7,13 +7,13 @@ Autor 		: Fabiano da Silva	-	25/03/20
 Descrição 	: Exportar tabelas CTT
 */
 
-USER FUNCTION RM_CTT(_oProcess,_cTab,_cPasta)
+USER FUNCTION RM_CTT(_oProcess,_cTab,_cPasta,_cBDados)
 
 	If Select("TCUSTO") > 0
 		TCUSTO->(dbCloseArea())
 	Endif
 
-	_cQry := " SELECT * FROM DADOSRM..GCCUSTO " +CRLF
+	_cQry := " SELECT * FROM "+_cBDados+".GCCUSTO " +CRLF
 	_cQry += " WHERE RTRIM(CODCOLIGADA) IN  ('0','9','10','11') " +CRLF
 	_cQry += " ORDER BY CODCOLIGADA,CODCCUSTO" +CRLF
 
@@ -50,7 +50,9 @@ USER FUNCTION RM_CTT(_oProcess,_cTab,_cPasta)
 					TRM->CTT_DESC01	:= U_RM_NoAcento(UPPER(Alltrim(TCUSTO->NOME)))
 					TRM->CTT_DTEXIS	:= CTOD('25/03/2020')
 					TRM->CTT_BLOQ	:= If(TCUSTO->PERMITELANC='T',"2","1")
-					TRM->CTT_MSBLQL	:= If(TCUSTO->ATIVO='T',"2","1")
+					If CTT->(FieldPos("CTT_MSBLQL")) > 0
+						TRM->CTT_MSBLQL	:= If(TCUSTO->ATIVO='T',"2","1")
+					Endif
 					TRM->(MsUnLock())
 
 					// _oProcess:IncRegua2("Gerando tabela "+_cTab)

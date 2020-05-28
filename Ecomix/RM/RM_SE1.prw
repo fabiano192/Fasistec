@@ -7,13 +7,13 @@ Autor 		: Fabiano da Silva	-	25/03/20
 Descrição 	: Exportar tabelas SE1
 */
 
-USER FUNCTION RM_SE1(_oProcess,_cTab,_cPasta)
+USER FUNCTION RM_SE1(_oProcess,_cTab,_cPasta,_cBDados)
 
 	If Select("TREC") > 0
 		TREC->(dbCloseArea())
 	Endif
 
-	_cQry := " SELECT CODFILIAL AS FILIAL,DATAVENCIMENTO AS DTVENC, * FROM DADOSRM..FLAN " + CRLF
+	_cQry := " SELECT CODFILIAL AS FILIAL,DATAVENCIMENTO AS DTVENC, * FROM "+_cBDados+".FLAN A" + CRLF
 	// _cQry += " WHERE RTRIM(CODCOLIGADA) IN  ('0','9','10','11')  " + CRLF
 	_cQry += " WHERE RTRIM(A.CODCOLIGADA)+RTRIM(A.CODFILIAL) IN ('91','93','101','103','104','111','113') " + CRLF
 	_cQry += " AND PAGREC = '1' " + CRLF
@@ -38,9 +38,9 @@ USER FUNCTION RM_SE1(_oProcess,_cTab,_cPasta)
 
 			If U_RMCriarDTC(_cTab,_cKey1)
 
-				_cArq3	:= "\TAB_RM\"+_cPasta+"\SA1"+_cKey1+".dtc"	//Gera o nome do arquivo
-				_cInd3	:= "\TAB_RM\"+_cPasta+"\SA1"+_cKey1			//Indice do arquivo
-				_cInd5	:= "\TAB_RM\"+_cPasta+"\SA1"+_cKey1+"A"		//Indice do arquivo
+				_cArq3	:= "\TAB_RM\"+_cPasta+"\SA1"+PadL(_cKey1,2,"0")+"0.dtc"		//Gera o nome do arquivo
+				_cInd3	:= "\TAB_RM\"+_cPasta+"\SA1"+PadL(_cKey1,2,"0")+"0"			//Indice do arquivo
+				_cInd5	:= "\TAB_RM\"+_cPasta+"\SA1"+PadL(_cKey1,2,"0")+"0A"		//Indice do arquivo
 
 				If SELECT("TRM3") > 0
 					TRM3->(dbCloseArea())
@@ -74,7 +74,7 @@ USER FUNCTION RM_SE1(_oProcess,_cTab,_cPasta)
 							TCLI->(dbCloseArea())
 						Endif
 
-						_cQry := " SELECT CODCOLIGADA AS 'EMP',* FROM DADOSRM..FCFO " + CRLF
+						_cQry := " SELECT CODCOLIGADA AS 'EMP',* FROM "+_cBDados+".FCFO " + CRLF
 						_cQry += " WHERE CODCFO = '"+TREC->CODCFO+"' " + CRLF
 
 						TcQuery _cQry New Alias "TCLI"
@@ -144,7 +144,7 @@ USER FUNCTION RM_SE1(_oProcess,_cTab,_cPasta)
 					TRM->E1_YCODRM    := TREC->CODCFO
 					TRM->E1_YDOCRM    := TREC->NUMERODOCUMENTO
 
-					TRM->E1_FILIAL    := Alltrim(cValtoChar(TREC->CODFILIAL))
+					TRM->E1_FILIAL    := PadL(Alltrim(cValtoChar(TREC->CODFILIAL)),2,"0")
 					TRM->E1_PREFIXO   := If(Alltrim(TREC->SERIEDOCUMENTO) = '@@@','',Alltrim(TREC->SERIEDOCUMENTO))
 					TRM->E1_NUM       := Alltrim(Left(TREC->NUMERODOCUMENTO,9))
 

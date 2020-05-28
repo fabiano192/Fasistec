@@ -30,8 +30,6 @@ USER FUNCTION IMPRM()
 	@ 010,015 SAY _oTSayA VAR "Esta rotina tem por objetivo exportar as tabelas  "	OF _oGrupo PIXEL Size 150,010 FONT _oFont11N
 	@ 020,015 SAY 'do Banco de Dados "DADOSRM" '		    						OF _oGrupo PIXEL Size 150,010 FONT _oFont11N
 
-	// _oTBut1	:= TButton():New( 60,010, "Parâmetros" ,_oDlg,{||Pergunte("TOPO02")},035,012,,,.F.,.T.,.F.,,.F.,,,.F. )
-
 	TButton():New( 40,068, "OK" ,_oDlg,{||_nOpc := 1,_oDlg:End()},035,012,,,.F.,.T.,.F.,,.F.,,,.F. )
 
 	TButton():New( 40,120, "Sair" ,_oDlg,{||_nOpc := 0,_oDlg:End()},035,012,,,.F.,.T.,.F.,,.F.,,,.F. )
@@ -40,25 +38,85 @@ USER FUNCTION IMPRM()
 	ACTIVATE MSDIALOG _oDlg CENTERED
 
 	If _nOpc = 1
-		// LjMsgRun(_cMsgTit,_cProc,{||EXPDADOS()})
-		_oProcess := MsNewProcess():New( { || EXPDADOS() } , _cMsgTit, _cProc , .F. )
-		_oProcess:Activate()
+		_aRetTab := GetTable()
 
-		MsgInfo("Finalizado o processo de Exportação das tabelas do banco de dados DADOSRM")
+		If !Empty(_aRetTab)
+			_oProcess := MsNewProcess():New( { || EXPDADOS(_aRetTab) } , _cMsgTit, _cProc , .F. )
+			_oProcess:Activate()
+
+			MsgInfo("Finalizado o processo de Exportação das tabelas do banco de dados DADOSRM")
+		Else
+			MsgInfo("Não foi marcado nenhuma tabela para Importação.")
+		Endif
 	Endif
 
 Return(Nil)
 
 
 
+Static Function GetTable()
 
-Static Function EXPDADOS()
+	Local cTitulo 	:='Tabelas'
+	Local a
+	Local b
 
-	Local _aTabelas    := {'SA3'}
+	Local MvParDef 	:= ""
+	Local oWnd
+	Local _aTabelas 	:= {;
+		{'CT1','Plano de Contas'		},;
+		{'CT2','Lançamentos Contábeis'	},;
+		{'SA1','Cliente'				},;
+		{'SA2','Fornecedor'				},;
+		{'SB1','Produto'				},;
+		{'CTT','Centro de Custo'		},;
+		{'SA6','Bancos'					},;
+		{'SE1','Contas a Receber'		},;
+		{'SE2','Contas a Pagar'			},;
+		{'SF2','Cabeçalho NF Saída'		},;
+		{'SD2','Itens NF de Saída'		},;
+		{'SA4','Transportadora'			},;
+		{'DA0','Cabeçalho Tab. Preço'	},;
+		{'DA1','Itens Tab. Preço'		}}//'SE4','SRA,'SF1'
+
+	Local l1Elem		:= .F.
+
+	Local _aRetTb 		:= {}
+
+	Private _aRet		:= {}
+
+	oWnd := GetWndDefault()
+
+	_cRet:= Space(Len(_aTabelas)*3)
+
+	For a := 1 to Len(_aTabelas)
+
+		Aadd(_aRet,_aTabelas[a][2])
+
+		MvParDef += _aTabelas[a][1]
+
+	Next a
+
+	f_Opcoes(@_cRet,cTitulo,_aRet,MvParDef,12,49,l1Elem,3,Len(_aTabelas))  // Chama funcao f_Opcoes
+
+	For b := 1 to Len(_cRet) Step 3
+		If Substr(_cRet,b,1) <> '*'
+			AAdd(_aRetTb,Substr(_cRet,b,3))
+		Endif
+	Next b
+
+Return(_aRetTb)
+
+
+
+Static Function EXPDADOS(_aTabelas)
+
+	// Local _aTabelas    := {'SA3'}
 	// Local _aTabelas := {'CT1','CT2','SA1','SA2','SB1','CTT','SA6','SE1','SE2','SF2','SD2','SA4','DA0','DA1'}//'SE4','SRA,'SF1'
 	Local _nTab        := 0
 	Local _cTab        := ''
-	// Local _aEmp        := GetEmp()
+	Local _cBDados	   := "[10.140.1.5].[CorporeRM].dbo"
+
+	Private  _aEmp     := GetEmp()
 	Private _nCodA1    := 0
 	Private _nCodA10   := 0
 	Private _nCodA19   := 0
@@ -77,49 +135,12 @@ Static Function EXPDADOS()
 
 	For _nTab := 1 to Len(_aTabelas)
 
-		_oProcess:IncRegua1("Tabelas RM") 
+		_oProcess:IncRegua1("Tabelas RM")
 
 		_cTab := _aTabelas[_nTab]
 
-		&("U_RM_"+_cTab+"(_oProcess,_cTab,_cPasta)")
+		&("U_RM_"+_cTab+"(_oProcess,_cTab,_cPasta,_cBDados)")
 
-	/*
-		If _cTab = 'CT1'
-			U_RM_CT1(_oProcess,_cTab,_cPasta)
-		ElseIf _cTab = 'CT2'
-			U_RM_CT2(_oProcess,_cTab,_cPasta)
-		ElseIf _cTab = "SA1"
-			U_RM_SA1(_oProcess,_cTab,_cPasta)
-		ElseIf _cTab = 'SA2'
-			U_RM_SA2(_oProcess,_cTab,_cPasta)
-		ElseIf _cTab = 'SB1'
-			U_RM_SB1(_oProcess,_cTab,_cPasta)
-		ElseIf _cTab = 'SA4'
-			U_RM_SA4(_oProcess,_cTab,_cPasta)
-		ElseIf _cTab = 'CTT'
-			U_RM_CTT(_oProcess,_cTab,_cPasta)
-		ElseIf _cTab = 'SE4'
-			U_RM_SE4(_oProcess,_cTab,_cPasta)
-		ElseIf _cTab = 'SA6'
-			U_RM_SA6(_oProcess,_cTab,_cPasta)
-		ElseIf _cTab = 'SRA'
-			U_RM_SRA(_oProcess,_cTab,_cPasta)
-		ElseIf _cTab = 'SE1'
-			U_RM_SE1(_oProcess,_cTab,_cPasta)
-		ElseIf _cTab = 'SE2'
-			U_RM_SE2(_oProcess,_cTab,_cPasta)
-		ElseIf _cTab = 'SF2'
-			U_RM_SF2(_oProcess,_cTab,_cPasta)
-		ElseIf _cTab = 'SD2'
-			U_RM_SD2(_oProcess,_cTab,_cPasta)
-		ElseIf _cTab = 'SF1'
-			U_RM_SF1(_oProcess,_cTab,_cPasta)
-		ElseIf _cTab = 'DA0'
-			U_RM_DA0(_oProcess,_cTab,_cPasta)
-		ElseIf _cTab = 'DA1'
-			U_RM_DA1(_oProcess,_cTab,_cPasta)
-		Endif
-		*/
 	Next _nTab
 
 Return(Nil)
@@ -136,9 +157,11 @@ User Function RMCriarDTC(_cTabela,_cNome)
 	Local _cNTab	:= ''
 
 	If ValType(_cNome) = "U"
-		_cNTab	:= _cTabela
+		_cNTab	:= _cTabela+"010"
 	Else
-		_cNTab	:= _cTabela+_cNome
+		_cCodEmp := PadL(_cNome,2,"0")
+		_cCodEmp := _aEmp[aScan(_aEmp,{|x| x[1] = _cCodEmp})][2]
+		_cNTab	 := _cTabela+_cCodEmp+"0"
 	Endif
 
 	MakeDir( "\TAB_RM\"+_cPasta )
@@ -227,11 +250,36 @@ Return(_lRet)
 
 Static Function GetEmp()
 
+	Local _aRet	:= {{'09','01'},;
+		{'10','02'},;
+		{'11','03'},;
+		{'00','00'}}
+
+	// Local _aRet	:= {{'0901','0101'},;
+		// 				{'0903','0103'},;
+		// 				{'1001','0201'},;
+		// 				{'1003','0203'},;
+		// 				{'1004','0204'},;
+		// 				{'1101','0301'},;
+		// 				{'1103','0303'}}
+
+/*
+EMP_OLD		FILIAL_OLD		M0_CODIGO	M0_CODFIL
+09			01				01			01
+09			03				01			03
+10			01				02			01
+10			03				02			03
+10			04				02			04
+11			01				03			01
+11			03				03			03
+*/
+
+/*
 	Local _cQryEmp	:= ''
 	Local _cEmp		:= ''
 	Local _cFil		:= ''
 	Local _cCNPJ	:= ''
-	Local _aRet		:= {}
+
 	Local _AreaSM0	:= Nil
 	Local _lOk		:= .F.
 
@@ -277,7 +325,7 @@ Static Function GetEmp()
 	EndDo
 
 	TEMP->(dbCloseArea())
-
+*/
 Return(_aRet)
 
 

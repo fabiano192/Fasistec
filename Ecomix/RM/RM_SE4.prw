@@ -7,14 +7,14 @@ Autor 		: Fabiano da Silva	-	25/03/20
 Descrição 	: Exportar tabelas SE4
 */
 
-USER FUNCTION RM_SE4(_oProcess,_cTab,_cPasta)
+USER FUNCTION RM_SE4(_oProcess,_cTab,_cPasta,_cBDados)
 
 /*
 			If Select("TCONPAG") > 0
 				TCONPAG->(dbCloseArea())
 			Endif
 
-			_cQry := " SELECT TOP 5 * FROM DADOSRM..TCPG " +CRLF
+			_cQry := " SELECT TOP 5 * FROM "+_cBDados+".TCPG " +CRLF
 			_cQry += " WHERE RTRIM(CODCOLIGADA) IN  ('0','9','10','11') " +CRLF
 			_cQry += " ORDER BY CODCOLIGADA,CODCPG " +CRLF
 

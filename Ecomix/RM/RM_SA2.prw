@@ -7,7 +7,7 @@ Autor 		: Fabiano da Silva	-	25/03/20
 Descrição 	: Exportar tabelas SA2
 */
 
-USER FUNCTION RM_SA2(_oProcess,_cTab,_cPasta)
+USER FUNCTION RM_SA2(_oProcess,_cTab,_cPasta,_cBDados)
 
 	Local _nTRM := 0
 	
@@ -15,7 +15,7 @@ USER FUNCTION RM_SA2(_oProcess,_cTab,_cPasta)
 		TFOR->(dbCloseArea())
 	Endif
 
-	_cQry := " SELECT CODCOLIGADA AS 'EMP',* FROM DADOSRM..FCFO " + CRLF
+	_cQry := " SELECT CODCOLIGADA AS 'EMP',* FROM "+_cBDados+".FCFO " + CRLF
 	// _cQry += " WHERE PAGREC = 3 " + CRLF
 	_cQry += " WHERE PAGREC <> 1 " + CRLF
 	_cQry += " AND RTRIM(CODCOLIGADA) IN  ('0','9','10','11') " + CRLF
@@ -111,8 +111,8 @@ USER FUNCTION RM_SA2(_oProcess,_cTab,_cPasta)
 				EndDo
 
 				If _cKey1 <> '0'
-					_cArq1	:= "\TAB_RM\"+_cPasta+"\SA20.dtc"	//Gera o nome do arquivo
-					_cInd1	:= "\TAB_RM\"+_cPasta+"\SA20"		//Indice do arquivo
+					_cArq1	:= "\TAB_RM\"+_cPasta+"\SA2000.dtc"	//Gera o nome do arquivo
+					_cInd1	:= "\TAB_RM\"+_cPasta+"\SA2000"		//Indice do arquivo
 
 					If SELECT("TRM2") > 0
 						TRM2->(dbCloseArea())
