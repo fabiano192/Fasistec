@@ -85,6 +85,7 @@ Return
 
 Static Function GetFile()
 
+local nX
 	_aCSV := Directory(cDir+'*.csv')
 
 	For nX:=1 To Len(_aCSV)
@@ -118,7 +119,7 @@ Static Function A010UpFile() //Processa arquivos selecionados para importacao
 	Local nI         := 0
 //	Local aLogErro   := {}
 
-	//³ Loop para contar quantos arquivos serao processados ³
+	//í Loop para contar quantos arquivos serao processados í
 	For nI:=1 To Len(aListFile)
 
 		If aListFile[nI][1]
@@ -131,7 +132,7 @@ Static Function A010UpFile() //Processa arquivos selecionados para importacao
 
 		ProcRegua(Len( aListFile )+ 1 )
 
-		//³ Loop para contar processar os arquivos selecionados ³
+		//í Loop para contar processar os arquivos selecionados í
 		IncProc()
 
 		For nI:=1 To Len( aListFile )
@@ -154,7 +155,7 @@ Static Function A010UpFile() //Processa arquivos selecionados para importacao
 					__CopyFile( cDir +AllTrim(aListFile[nI][2]), cDir+"BKP\"+_cData+_cHora+"_"+AllTrim(aListFile[nI][2]) )
 					FErase(cDir +AllTrim(aListFile[nI][2]))
 
-					LjMsgRun("Gerando e-mail das inconsistências...","Programação CNH",{||CR095C()})
+					LjMsgRun("Gerando e-mail das inconsistíncias...","Programação CNH",{||CR095C()})
 
 				EndIf
 
@@ -171,14 +172,15 @@ Static Function A010UpFile() //Processa arquivos selecionados para importacao
 Return
 
 /*
-Desc.     	³Processa arquivos selecionados para importacao
-Parametros	³ cDir   	 - Diretorio em que os arquivos sao gravados.
-³ cFile     - Nome do arquivo.
-³ lIns      - Insere .T., Altera .F.
+Desc.     	íProcessa arquivos selecionados para importacao
+Parametros	í cDir   	 - Diretorio em que os arquivos sao gravados.
+í cFile     - Nome do arquivo.
+í lIns      - Insere .T., Altera .F.
 */
 
 Static Function UploadFile(	cDir, cFile, lIns)
 
+	local A
 	Local cBuffer    := ""
 	Local aLin       := {}
 	Local aPeso      := {}
@@ -367,6 +369,18 @@ Static Function UploadFile(	cDir, cFile, lIns)
 						_cCliente := "000021"
 						_cLoja := "01"
 						_cTes  := "511"
+					ElseIf	Alltrim(aLin[12]) = "ND"
+						_cCliente := "000025"
+						_cLoja := "08"
+						_cTes  := "511"
+					ElseIf	Alltrim(aLin[12]) = "CB"
+						_cCliente := "000025"
+						_cLoja := "06"
+						_cTes  := "511"
+					ElseIf	Alltrim(aLin[12]) = "LE"
+						_cCliente := "000025"
+						_cLoja := "09"
+						_cTes  := "511"
 					Endif
 
 					If Empty(_cloja)
@@ -435,8 +449,9 @@ Static Function UploadFile(	cDir, cFile, lIns)
 						_dDtEnt   := Ctod(Subst(aLin[7],7,2)+"/"+Subst(aLin[7],5,2)+"/20"+Subst(aLin[7],3,2))
 						SZ4->Z4_DTENT   := _dDtEnt
 
-						_nPos1   := AT(".",aLin[8])
-						_nQuant := Val(Substr(aLin[8],1,_nPos1)+","+Substr(aLin[8],_nPos1+1,3))
+						_nQuant := Val(STRTRAN(aLin[8],'.',','))
+						// _nPos1   := AT(".",aLin[8])
+						// _nQuant := Val(Substr(aLin[8],1,_nPos1)+","+Substr(aLin[8],_nPos1+1,3))
 
 						SZ4->Z4_QTENT   := _nQuant
 						SZ4->Z4_PEDIDO  := _cPedCli
@@ -505,6 +520,7 @@ Return lRet
 
 Static Function CR095B(cLoja,_cCliente)
 
+local i
 	Private _nPula,_lPrim,_cItem,_cItemExp,_lAchou,_nPrcVen,_cNum,_lVerFat, _lIncSC6, _cPedido
 	Private _lIncSC6 := .F.
 
@@ -649,15 +665,15 @@ Static Function IntSC6C()
 
 	While SD2->(!Eof()) .And. _cChav == SD2->D2_CLIENTE + SD2->D2_LOJA + SD2->D2_COD
 
-		If SD2->D2_DOC <= _cNF .And. SD2->D2_EMISSAO <= ZZ4->Z4_DTULTNF
+		If SD2->D2_DOC <= _cNF //.And. SD2->D2_EMISSAO <= ZZ4->Z4_DTULTNF
 			SD2->(dbSkip())
 			Loop
 		Endif
 
-		If SD2->D2_EMISSAO < ZZ4->Z4_DTULTNF
-			SD2->(dbSkip())
-			Loop
-		Endif
+		//If SD2->D2_EMISSAO < ZZ4->Z4_DTULTNF
+		//	SD2->(dbSkip())
+		//	Loop
+		//Endif
 
 		If SD2->D2_PROCLI <> ZZ4->Z4_PRODCLI
 			SD2->(dbSkip())
