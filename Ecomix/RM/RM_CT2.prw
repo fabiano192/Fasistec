@@ -7,7 +7,7 @@ Autor 		: Fabiano da Silva	-	25/03/20
 Descrição 	: Exportar tabelas CT2
 */
 
-USER FUNCTION RM_CT2(_oProcess,_cTab,_cPasta,_cBDados)
+USER FUNCTION RM_CT2E(_oProcess,_cTab,_cPasta,_cBDados)
 
 	Local _nH := 0
 
@@ -136,5 +136,97 @@ USER FUNCTION RM_CT2(_oProcess,_cTab,_cPasta,_cBDados)
 	Endif
 
 	TCONTA->(dbCloseArea())
+
+	TRM->(dbCloseArea())
+
+Return(Nil)
+
+
+
+
+USER FUNCTION RM_CT2I(_oProcess,_cTab,_cPasta)
+
+	Local _cAlias   := ''
+	Local _lTabLoc  := .T.
+	Local _cModo
+	Local _nCT2
+	Local _aArea     := GetArea()
+	Local _aAreaCT2  := CT2->( GetArea() )
+	Local _cSvFilAnt := cFilAnt //Salva a Filial Anterior
+	Local _cSvEmpAnt := cEmpAnt //Salva a Empresa Anterior
+	Local _cSvArqTab := cArqTab //Salva os arquivos de
+
+	If Alltrim(cEmpAnt) = Substr(_cTab,4,2)
+		_cAlias := "CT2"
+	Else
+
+		If EmpOpenFile("CT2A","CT2",1,.T., Substr(_cTab,4,2),@_cModo)
+			_cAlias := "CT2A"
+			_lTabLoc := .F.
+		Endif
+	Endif
+
+	If !Empty(_cAlias)
+
+		_cUpd := " DELETE "+_cTab
+
+		TCSQLEXEC(_cUpd )
+
+		_cArq	:= "\TAB_RM\"+_cPasta+"\"+_cTab+".dtc"		//Gera o nome do arquivo
+		_cInd	:= "\TAB_RM\"+_cPasta+"\"+_cTab+"0"			//Indice do arquivo
+
+		If SELECT("TCT2") > 0
+			TCT2->(dbCloseArea())
+		Endif
+
+		dbUseArea( .T.,"CTREECDX", _cArq,"TCT2", .T., .F. )
+
+		If Select("TCT2") = 0
+			MsgInfo( 'Erro Abrir tabela Temporária TCT2', 'RM_CT2' )
+			Return(Nil)
+		Endif
+
+		dbSelectArea("TCT2")
+
+		IndRegua( "TCT2", _cInd, CT2->( IndexKey( 1 ) ))
+
+		dbClearIndex()
+		dbSetIndex(_cInd + OrdBagExt() )
+
+		_nReg := Contar("TCT2","!EOF()")
+
+		_oProcess:SetRegua2( _nReg ) //Alimenta a segunda barra de progresso
+		_oProcess:IncRegua2("Importando a tabela "+Left(_cTab,3)+" na Empresa "+Substr(_cTab,4,2) )
+
+		TCT2->(dbGoTop())
+
+		While TCT2->(!EOF())
+
+			(_cAlias)->(RecLock(_cAlias,.T.))
+			For _nCT2 := 1 to (_cAlias)->(FCOUNT())
+				&("(_cAlias)->"+((_cAlias)->(FIELD(_nCT2)))) := &("TCT2->"+((_cAlias)->(FIELD(_nCT2))))
+			Next _nCT2
+			(_cAlias)->(MsUnLock())
+
+			TCT2->(dbSkip())
+		EndDo
+
+		TCT2->(dbCloseArea())
+
+		If !_lTabLoc
+			(_cAlias)->(dbCloseArea())
+		Endif
+
+	Endif
+
+	//Restaura os Dados de Entrada ( Ambiente )
+	cFilAnt := _cSvFilAnt
+	cEmpAnt := _cSvEmpAnt
+	cArqTab := _cSvArqTab
+
+	//Restaura os ponteiros das Tabelas
+
+	RestArea( _aAreaCT2 )
+	RestArea( _aArea )
 
 Return(Nil)

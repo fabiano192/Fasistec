@@ -7,7 +7,7 @@ Autor 		: Fabiano da Silva	-	25/03/20
 Descrição 	: Exportar tabelas SA3
 */
 
-USER FUNCTION RM_SA3(_oProcess,_cTab,_cPasta,_cBDados)
+USER FUNCTION RM_SA3E(_oProcess,_cTab,_cPasta,_cBDados)
 
 	If Select("TVEN") > 0
 		TVEN->(dbCloseArea())
@@ -118,5 +118,99 @@ USER FUNCTION RM_SA3(_oProcess,_cTab,_cPasta,_cBDados)
 	Endif
 
 	TVEN->(dbCloseArea())
+
+	TRM->(dbCloseArea())
+
+Return(Nil)
+
+
+
+
+USER FUNCTION RM_SA3I(_oProcess,_cTab,_cPasta)
+
+	Local _cAlias   := ''
+	Local _lTabLoc  := .T.
+	Local _cModo
+	Local _nSA3
+	Local _aArea     := GetArea()
+	Local _aAreaSA3  := SA3->( GetArea() )
+	Local _cSvFilAnt := cFilAnt //Salva a Filial Anterior
+	Local _cSvEmpAnt := cEmpAnt //Salva a Empresa Anterior
+	Local _cSvArqTab := cArqTab //Salva os arquivos de
+
+	If Alltrim(cEmpAnt) = Substr(_cTab,4,2)
+		_cAlias := "SA3"
+	Else
+
+		If EmpOpenFile("SA3A","SA3",1,.T., Substr(_cTab,4,2),@_cModo)
+			_cAlias := "SA3A"
+			_lTabLoc := .F.
+		Endif
+	Endif
+
+	If !Empty(_cAlias)
+
+		_cUpd := " DELETE "+_cTab
+
+		TCSQLEXEC(_cUpd )
+
+		_cArq	:= "\TAB_RM\"+_cPasta+"\"+_cTab+".dtc"		//Gera o nome do arquivo
+		_cInd	:= "\TAB_RM\"+_cPasta+"\"+_cTab+"0"			//Indice do arquivo
+
+		If SELECT("TSA3") > 0
+			TSA3->(dbCloseArea())
+		Endif
+
+		dbUseArea( .T.,"CTREECDX", _cArq,"TSA3", .T., .F. )
+
+		If Select("TSA3") = 0
+			MsgInfo( 'Erro Abrir tabela Temporária TSA3', 'RM_SA3' )
+			Return(Nil)
+		Endif
+
+		dbSelectArea("TSA3")
+
+		IndRegua( "TSA3", _cInd, SA3->( IndexKey( 1 ) ))
+
+		dbClearIndex()
+		dbSetIndex(_cInd + OrdBagExt() )
+
+		_nReg := Contar("TSA3","!EOF()")
+
+		_oProcess:SetRegua2( _nReg ) //Alimenta a segunda barra de progresso
+		_oProcess:IncRegua2("Importando a tabela "+Left(_cTab,3)+" na Empresa "+Substr(_cTab,4,2) )
+
+
+
+		TSA3->(dbGoTop())
+
+		While TSA3->(!EOF())
+
+			(_cAlias)->(RecLock(_cAlias,.T.))
+			For _nSA3 := 1 to (_cAlias)->(FCOUNT())
+				&("(_cAlias)->"+((_cAlias)->(FIELD(_nSA3)))) := &("TSA3->"+((_cAlias)->(FIELD(_nSA3))))
+			Next _nSA3
+			(_cAlias)->(MsUnLock())
+
+			TSA3->(dbSkip())
+		EndDo
+
+		TSA3->(dbCloseArea())
+
+		If !_lTabLoc
+			(_cAlias)->(dbCloseArea())
+		Endif
+
+	Endif
+
+	//Restaura os Dados de Entrada ( Ambiente )
+	cFilAnt := _cSvFilAnt
+	cEmpAnt := _cSvEmpAnt
+	cArqTab := _cSvArqTab
+
+	//Restaura os ponteiros das Tabelas
+
+	RestArea( _aAreaSA3 )
+	RestArea( _aArea )
 
 Return(Nil)

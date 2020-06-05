@@ -7,7 +7,7 @@ Autor 		: Fabiano da Silva	-	25/03/20
 Descrição 	: Exportar tabelas SE4
 */
 
-USER FUNCTION RM_SE4(_oProcess,_cTab,_cPasta,_cBDados)
+USER FUNCTION RM_SE4E(_oProcess,_cTab,_cPasta,_cBDados)
 
 /*
 			If Select("TCONPAG") > 0
@@ -62,7 +62,102 @@ USER FUNCTION RM_SE4(_oProcess,_cTab,_cPasta,_cBDados)
 			Endif
 
 			TCONPAG->(dbCloseArea())
+
+			
+			TRM->(dbCloseArea())
 			*/
 
+
+Return(Nil)
+
+
+
+
+USER FUNCTION RM_SE4I(_oProcess,_cTab,_cPasta)
+
+	Local _cAlias   := ''
+	Local _lTabLoc  := .T.
+	Local _cModo
+	Local _nSE4
+	Local _aArea     := GetArea()
+	Local _aAreaSE4  := SE4->( GetArea() )
+	Local _cSvFilAnt := cFilAnt //Salva a Filial Anterior
+	Local _cSvEmpAnt := cEmpAnt //Salva a Empresa Anterior
+	Local _cSvArqTab := cArqTab //Salva os arquivos de
+
+	If Alltrim(cEmpAnt) = Substr(_cTab,4,2)
+		_cAlias := "SE4"
+	Else
+
+		If EmpOpenFile("SE4A","SE4",1,.T., Substr(_cTab,4,2),@_cModo)
+			_cAlias := "SE4A"
+			_lTabLoc := .F.
+		Endif
+	Endif
+
+	If !Empty(_cAlias)
+
+		_cUpd := " DELETE "+_cTab
+
+		TCSQLEXEC(_cUpd )
+
+		_cArq	:= "\TAB_RM\"+_cPasta+"\"+_cTab+".dtc"		//Gera o nome do arquivo
+		_cInd	:= "\TAB_RM\"+_cPasta+"\"+_cTab+"0"			//Indice do arquivo
+
+		If SELECT("TSE4") > 0
+			TSE4->(dbCloseArea())
+		Endif
+
+		dbUseArea( .T.,"CTREECDX", _cArq,"TSE4", .T., .F. )
+
+		If Select("TSE4") = 0
+			MsgInfo( 'Erro Abrir tabela Temporária TSE4', 'RM_SE4' )
+			Return(Nil)
+		Endif
+
+		dbSelectArea("TSE4")
+
+		IndRegua( "TSE4", _cInd, SE4->( IndexKey( 1 ) ))
+
+		dbClearIndex()
+		dbSetIndex(_cInd + OrdBagExt() )
+
+		_nReg := Contar("TSE4","!EOF()")
+
+		_oProcess:SetRegua2( _nReg ) //Alimenta a segunda barra de progresso
+		_oProcess:IncRegua2("Importando a tabela "+Left(_cTab,3)+" na Empresa "+Substr(_cTab,4,2) )
+
+
+
+		TSE4->(dbGoTop())
+
+		While TSE4->(!EOF())
+
+			(_cAlias)->(RecLock(_cAlias,.T.))
+			For _nSE4 := 1 to (_cAlias)->(FCOUNT())
+				&("(_cAlias)->"+((_cAlias)->(FIELD(_nSE4)))) := &("TSE4->"+((_cAlias)->(FIELD(_nSE4))))
+			Next _nSE4
+			(_cAlias)->(MsUnLock())
+
+			TSE4->(dbSkip())
+		EndDo
+
+		TSE4->(dbCloseArea())
+
+		If !_lTabLoc
+			(_cAlias)->(dbCloseArea())
+		Endif
+
+	Endif
+
+	//Restaura os Dados de Entrada ( Ambiente )
+	cFilAnt := _cSvFilAnt
+	cEmpAnt := _cSvEmpAnt
+	cArqTab := _cSvArqTab
+
+	//Restaura os ponteiros das Tabelas
+
+	RestArea( _aAreaSE4 )
+	RestArea( _aArea )
 
 Return(Nil)

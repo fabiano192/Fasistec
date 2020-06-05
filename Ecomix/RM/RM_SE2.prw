@@ -7,7 +7,7 @@ Autor 		: Fabiano da Silva	-	25/03/20
 Descrição 	: Exportar tabelas SE2
 */
 
-USER FUNCTION RM_SE2(_oProcess,_cTab,_cPasta,_cBDados)
+USER FUNCTION RM_SE2E(_oProcess,_cTab,_cPasta,_cBDados)
 
 	If Select("TPAG") > 0
 		TPAG->(dbCloseArea())
@@ -38,11 +38,14 @@ USER FUNCTION RM_SE2(_oProcess,_cTab,_cPasta,_cBDados)
 
 			If U_RMCriarDTC(_cTab,_cKey1)
 
-				// _cArq3	:= "\TAB_RM\20200513_124607\SA2"+_cKey1+".dtc"	//Gera o nome do arquivo
-				// _cInd3	:= "\TAB_RM\20200513_124607\SA2"+_cKey1			//Indice do arquivo
-				_cArq4	:= "\TAB_RM\"+_cPasta+"\SA2"+PadL(_cKey1,2,"0")+"0.dtc"	//Gera o nome do arquivo
-				_cInd4	:= "\TAB_RM\"+_cPasta+"\SA2"+PadL(_cKey1,2,"0")+"0"		//Indice do arquivo
-				_cInd6	:= "\TAB_RM\"+_cPasta+"\SA2"+PadL(_cKey1,2,"0")+"0A"	//Indice do arquivo
+				// _cCodEmp := _aEmp[aScan(_aEmp,{|x| x[1] = PadL(_cKey1,2,"0")})][2]
+
+				_cArq4	:= "\TAB_RM\"+_cPasta+"\SA2010.dtc"	//Gera o nome do arquivo
+				_cInd4	:= "\TAB_RM\"+_cPasta+"\SA2010"		//Indice do arquivo
+				_cInd6	:= "\TAB_RM\"+_cPasta+"\SA2010A"	//Indice do arquivo
+				// _cArq4	:= "\TAB_RM\"+_cPasta+"\SA2"+PadL(_cKey1,2,"0")+"0.dtc"	//Gera o nome do arquivo
+				// _cInd4	:= "\TAB_RM\"+_cPasta+"\SA2"+PadL(_cKey1,2,"0")+"0"		//Indice do arquivo
+				// _cInd6	:= "\TAB_RM\"+_cPasta+"\SA2"+PadL(_cKey1,2,"0")+"0A"	//Indice do arquivo
 
 				If SELECT("TRM4") > 0
 					TRM4->(dbCloseArea())
@@ -210,5 +213,99 @@ USER FUNCTION RM_SE2(_oProcess,_cTab,_cPasta,_cBDados)
 	Endif
 
 	TPAG->(dbCloseArea())
+
+	TRM->(dbCloseArea())
+
+Return(Nil)
+
+
+
+
+USER FUNCTION RM_SE2I(_oProcess,_cTab,_cPasta)
+
+	Local _cAlias   := ''
+	Local _lTabLoc  := .T.
+	Local _cModo
+	Local _nSE2
+	Local _aArea     := GetArea()
+	Local _aAreaSE2  := SE2->( GetArea() )
+	Local _cSvFilAnt := cFilAnt //Salva a Filial Anterior
+	Local _cSvEmpAnt := cEmpAnt //Salva a Empresa Anterior
+	Local _cSvArqTab := cArqTab //Salva os arquivos de
+
+	If Alltrim(cEmpAnt) = Substr(_cTab,4,2)
+		_cAlias := "SE2"
+	Else
+
+		If EmpOpenFile("SE2A","SE2",1,.T., Substr(_cTab,4,2),@_cModo)
+			_cAlias := "SE2A"
+			_lTabLoc := .F.
+		Endif
+	Endif
+
+	If !Empty(_cAlias)
+
+		_cUpd := " DELETE "+_cTab
+
+		TCSQLEXEC(_cUpd )
+
+		_cArq	:= "\TAB_RM\"+_cPasta+"\"+_cTab+".dtc"		//Gera o nome do arquivo
+		_cInd	:= "\TAB_RM\"+_cPasta+"\"+_cTab+"0"			//Indice do arquivo
+
+		If SELECT("TSE2") > 0
+			TSE2->(dbCloseArea())
+		Endif
+
+		dbUseArea( .T.,"CTREECDX", _cArq,"TSE2", .T., .F. )
+
+		If Select("TSE2") = 0
+			MsgInfo( 'Erro Abrir tabela Temporária TSE2', 'RM_SE2' )
+			Return(Nil)
+		Endif
+
+		dbSelectArea("TSE2")
+
+		IndRegua( "TSE2", _cInd, SE2->( IndexKey( 1 ) ))
+
+		dbClearIndex()
+		dbSetIndex(_cInd + OrdBagExt() )
+
+		_nReg := Contar("TSE2","!EOF()")
+
+		_oProcess:SetRegua2( _nReg ) //Alimenta a segunda barra de progresso
+		_oProcess:IncRegua2("Importando a tabela "+Left(_cTab,3)+" na Empresa "+Substr(_cTab,4,2) )
+
+
+
+		TSE2->(dbGoTop())
+
+		While TSE2->(!EOF())
+
+			(_cAlias)->(RecLock(_cAlias,.T.))
+			For _nSE2 := 1 to (_cAlias)->(FCOUNT())
+				&("(_cAlias)->"+((_cAlias)->(FIELD(_nSE2)))) := &("TSE2->"+((_cAlias)->(FIELD(_nSE2))))
+			Next _nSE2
+			(_cAlias)->(MsUnLock())
+
+			TSE2->(dbSkip())
+		EndDo
+
+		TSE2->(dbCloseArea())
+
+		If !_lTabLoc
+			(_cAlias)->(dbCloseArea())
+		Endif
+
+	Endif
+
+	//Restaura os Dados de Entrada ( Ambiente )
+	cFilAnt := _cSvFilAnt
+	cEmpAnt := _cSvEmpAnt
+	cArqTab := _cSvArqTab
+
+	//Restaura os ponteiros das Tabelas
+
+	RestArea( _aAreaSE2 )
+	RestArea( _aArea )
 
 Return(Nil)

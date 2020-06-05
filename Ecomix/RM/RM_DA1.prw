@@ -7,7 +7,7 @@ Autor 		: Fabiano da Silva	-	25/03/20
 Descrição 	: Exportar tabelas DA1
 */
 
-USER FUNCTION RM_DA1(_oProcess,_cTab,_cPasta,_cBDados)
+USER FUNCTION RM_DA1E(_oProcess,_cTab,_cPasta,_cBDados)
 
 	If Select("TIPRC") > 0
 		TIPRC->(dbCloseArea())
@@ -88,5 +88,99 @@ USER FUNCTION RM_DA1(_oProcess,_cTab,_cPasta,_cBDados)
 	Endif
 
 	TIPRC->(dbCloseArea())
+
+	TRM->(dbCloseArea())
+
+Return(Nil)
+
+
+
+
+USER FUNCTION RM_DA1I(_oProcess,_cTab,_cPasta)
+
+	Local _cAlias   := ''
+	Local _lTabLoc  := .T.
+	Local _cModo
+	Local _nDA1
+	Local _aArea     := GetArea()
+	Local _aAreaDA1  := DA1->( GetArea() )
+	Local _cSvFilAnt := cFilAnt //Salva a Filial Anterior
+	Local _cSvEmpAnt := cEmpAnt //Salva a Empresa Anterior
+	Local _cSvArqTab := cArqTab //Salva os arquivos de
+
+	If Alltrim(cEmpAnt) = Substr(_cTab,4,2)
+		_cAlias := "DA1"
+	Else
+
+		If EmpOpenFile("DA1A","DA1",1,.T., Substr(_cTab,4,2),@_cModo)
+			_cAlias := "DA1A"
+			_lTabLoc := .F.
+		Endif
+	Endif
+
+	If !Empty(_cAlias)
+
+		_cUpd := " DELETE "+_cTab
+
+		TCSQLEXEC(_cUpd )
+
+		_cArq	:= "\TAB_RM\"+_cPasta+"\"+_cTab+".dtc"		//Gera o nome do arquivo
+		_cInd	:= "\TAB_RM\"+_cPasta+"\"+_cTab+"0"			//Indice do arquivo
+
+		If SELECT("TDA1") > 0
+			TDA1->(dbCloseArea())
+		Endif
+
+		dbUseArea( .T.,"CTREECDX", _cArq,"TDA1", .T., .F. )
+
+		If Select("TDA1") = 0
+			MsgInfo( 'Erro Abrir tabela Temporária TDA1', 'RM_DA1' )
+			Return(Nil)
+		Endif
+
+		dbSelectArea("TDA1")
+
+		IndRegua( "TDA1", _cInd, DA1->( IndexKey( 1 ) ))
+
+		dbClearIndex()
+		dbSetIndex(_cInd + OrdBagExt() )
+
+		_nReg := Contar("TDA1","!EOF()")
+
+		_oProcess:SetRegua2( _nReg ) //Alimenta a segunda barra de progresso
+		_oProcess:IncRegua2("Importando a tabela "+Left(_cTab,3)+" na Empresa "+Substr(_cTab,4,2) )
+
+
+
+		TDA1->(dbGoTop())
+
+		While TDA1->(!EOF())
+
+			(_cAlias)->(RecLock(_cAlias,.T.))
+			For _nDA1 := 1 to (_cAlias)->(FCOUNT())
+				&("(_cAlias)->"+((_cAlias)->(FIELD(_nDA1)))) := &("TDA1->"+((_cAlias)->(FIELD(_nDA1))))
+			Next _nDA1
+			(_cAlias)->(MsUnLock())
+
+			TDA1->(dbSkip())
+		EndDo
+
+		TDA1->(dbCloseArea())
+
+		If !_lTabLoc
+			(_cAlias)->(dbCloseArea())
+		Endif
+
+	Endif
+
+	//Restaura os Dados de Entrada ( Ambiente )
+	cFilAnt := _cSvFilAnt
+	cEmpAnt := _cSvEmpAnt
+	cArqTab := _cSvArqTab
+
+	//Restaura os ponteiros das Tabelas
+
+	RestArea( _aAreaDA1 )
+	RestArea( _aArea )
 
 Return(Nil)

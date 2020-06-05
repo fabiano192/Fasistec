@@ -7,7 +7,7 @@ Autor 		: Fabiano da Silva	-	25/03/20
 Descrição 	: Exportar tabelas CT1
 */
 
-USER FUNCTION RM_CT1(_oProcess,_cTab,_cPasta,_cBDados)
+USER FUNCTION RM_CT1E(_oProcess,_cTab,_cPasta,_cBDados)
 
 	If Select("TCONTA") > 0
 		TCONTA->(dbCloseArea())
@@ -77,6 +77,22 @@ USER FUNCTION RM_CT1(_oProcess,_cTab,_cPasta,_cBDados)
 				TRM->CT1_ACCLVL := "1"
 				TRM->(MsUnLock())
 
+				
+				_cKey1 := Alltrim(cValToChar(TCONTA->CODCOLIGADA))
+				// _cCodEmp := "01"
+				_cCodEmp := _aEmp[aScan(_aEmp,{|x| x[1] = PadL(_cKey1,2,"0")})][2]
+
+				_cAliZF6 := 'ZF6'+_cCodEmp
+
+				(_cAliZF6)->(RecLock(_cAliZF6,.T.))
+				// (_cAliZF6)->ZF6_FILIAL := 
+				(_cAliZF6)->ZF6_TABELA := "CT1"
+				(_cAliZF6)->ZF6_CAMPO  := "CT1_CONTA"
+				(_cAliZF6)->ZF6_CODRM  := TCONTA->CODCONTA
+				(_cAliZF6)->ZF6_IDRM   := TCONTA->ID
+				(_cAliZF6)->ZF6_TOTVS  := Alltrim(StrTran(TCONTA->CODCONTA,".",""))
+				(_cAliZF6)->(MsUnLock())
+
 				TCONTA->(dbSkip())
 			EndDo
 
@@ -85,4 +101,98 @@ USER FUNCTION RM_CT1(_oProcess,_cTab,_cPasta,_cBDados)
 
 	TCONTA->(dbCloseArea())
 
+	TRM->(dbCloseArea())
+
 Return(Nil)
+
+
+
+USER FUNCTION RM_CT1I(_oProcess,_cTab,_cPasta)
+
+	Local _cAlias   := ''
+	Local _lTabLoc  := .T.
+	Local _cModo
+	Local _nCT1
+	Local _aArea     := GetArea()
+	Local _aAreaCT1  := CT1->( GetArea() )
+	Local _cSvFilAnt := cFilAnt //Salva a Filial Anterior
+	Local _cSvEmpAnt := cEmpAnt //Salva a Empresa Anterior
+	Local _cSvArqTab := cArqTab //Salva os arquivos de
+
+	If Alltrim(cEmpAnt) = Substr(_cTab,4,2)
+		_cAlias := "CT1"
+	Else
+
+		If EmpOpenFile("CT1A","CT1",1,.T., Substr(_cTab,4,2),@_cModo)
+			_cAlias := "CT1A"
+			_lTabLoc := .F.
+		Endif
+	Endif
+
+	If !Empty(_cAlias)
+
+		_cUpd := " DELETE "+_cTab
+
+		TCSQLEXEC(_cUpd )
+
+		_cArq	:= "\TAB_RM\"+_cPasta+"\"+_cTab+".dtc"		//Gera o nome do arquivo
+		_cInd	:= "\TAB_RM\"+_cPasta+"\"+_cTab+"0"			//Indice do arquivo
+
+		If SELECT("TCT1") > 0
+			TCT1->(dbCloseArea())
+		Endif
+
+		dbUseArea( .T.,"CTREECDX", _cArq,"TCT1", .T., .F. )
+
+		If Select("TCT1") = 0
+			MsgInfo( 'Erro Abrir tabela Temporária TCT1', 'RM_CT1' )
+			Return(Nil)
+		Endif
+
+		dbSelectArea("TCT1")
+
+		IndRegua( "TCT1", _cInd, CT1->( IndexKey( 1 ) ))
+
+		dbClearIndex()
+		dbSetIndex(_cInd + OrdBagExt() )
+
+		_nReg := Contar("TCT1","!EOF()")
+
+		_oProcess:SetRegua2( _nReg ) //Alimenta a segunda barra de progresso
+		_oProcess:IncRegua2("Importando a tabela "+Left(_cTab,3)+" na Empresa "+Substr(_cTab,4,2) )
+
+
+
+		TCT1->(dbGoTop())
+
+		While TCT1->(!EOF())
+
+			(_cAlias)->(RecLock(_cAlias,.T.))
+			For _nCT1 := 1 to (_cAlias)->(FCOUNT())
+				&("(_cAlias)->"+((_cAlias)->(FIELD(_nCT1)))) := &("TCT1->"+((_cAlias)->(FIELD(_nCT1))))
+			Next _nCT1
+			(_cAlias)->(MsUnLock())
+
+			TCT1->(dbSkip())
+		EndDo
+
+		TCT1->(dbCloseArea())
+
+		If !_lTabLoc
+			(_cAlias)->(dbCloseArea())
+		Endif
+
+	Endif
+
+	//Restaura os Dados de Entrada ( Ambiente )
+	cFilAnt := _cSvFilAnt
+	cEmpAnt := _cSvEmpAnt
+	cArqTab := _cSvArqTab
+
+	//Restaura os ponteiros das Tabelas
+
+	RestArea( _aAreaCT1 )
+	RestArea( _aArea )
+
+Return(Nil)
+

@@ -7,7 +7,7 @@ Autor 		: Fabiano da Silva	-	25/03/20
 Descrição 	: Exportar tabelas SF2
 */
 
-USER FUNCTION RM_SF2(_oProcess,_cTab,_cPasta,_cBDados)
+USER FUNCTION RM_SF2E(_oProcess,_cTab,_cPasta,_cBDados)
 
 	If Select("TNFISCAL") > 0
 		TNFISCAL->(dbCloseArea())
@@ -37,23 +37,30 @@ USER FUNCTION RM_SF2(_oProcess,_cTab,_cPasta,_cBDados)
 
 			If U_RMCriarDTC(_cTab,_cKey1)
 
-				_cArq5	:= "\TAB_RM\"+_cPasta+"\SA1"+PadL(_cKey1,2,"0")+"0.dtc"		//Gera o nome do arquivo
-				_cInd5	:= "\TAB_RM\"+_cPasta+"\SA1"+PadL(_cKey1,2,"0")+"0"			//Indice do arquivo
+				_cCodEmp := _aEmp[aScan(_aEmp,{|x| x[1] = PadL(_cKey1,2,"0")})][2]
 
-				If SELECT("TRM5") > 0
-					TRM5->(dbCloseArea())
-				Endif
+				_cAliZF6 := 'ZF6'+_cCodEmp
 
-				dbUseArea( .T.,"CTREECDX", _cArq5,"TRM5", .T., .F. )
-				dbSelectArea("TRM5")
+				// _cArq5	:= "\TAB_RM\"+_cPasta+"\SA1010.dtc"		//Gera o nome do arquivo
+				// _cInd5	:= "\TAB_RM\"+_cPasta+"\SA1010"			//Indice do arquivo
+				// _cArq5	:= "\TAB_RM\"+_cPasta+"\ZF6"+_cCodEmp+"0.dtc"		//Gera o nome do arquivo
+				// _cInd5	:= "\TAB_RM\"+_cPasta+"\ZF6"+_cCodEmp+"0"			//Indice do arquivo
+				// _cArq5	:= "\TAB_RM\"+_cPasta+"\ZF6"+PadL(_cKey1,2,"0")+"0.dtc"		//Gera o nome do arquivo
+				// _cInd5	:= "\TAB_RM\"+_cPasta+"\ZF6"+PadL(_cKey1,2,"0")+"0"			//Indice do arquivo
 
-				IndRegua( "TRM5", _cInd5, "A1_YCODRM")
-				// IndRegua( "TRM3", _cInd5, "A1_CGC")
+				// If SELECT("TRM5") > 0
+				// 	TRM5->(dbCloseArea())
+				// Endif
 
-				dbClearIndex()
-				dbSetIndex(_cInd5 + OrdBagExt() )
+				// dbUseArea( .T.,"CTREECDX", _cArq5,"TRM5", .T., .F. )
+				// dbSelectArea("TRM5")
 
+				// IndRegua( "TRM5", _cInd5, "ZF6_CODRM")
+				// // IndRegua( "TRM3", _cInd5, "A1_CGC")
 
+				// dbClearIndex()
+				// dbSetIndex(_cInd5 + OrdBagExt() )
+				
 				While TNFISCAL->(!EOF()) .And. _cKey1 == Alltrim(cValToChar(TNFISCAL->CODCOLIGADA))
 
 					_nRegAtu ++
@@ -64,12 +71,19 @@ USER FUNCTION RM_SF2(_oProcess,_cTab,_cPasta,_cBDados)
 					_cLojCli := ''
 					_cNomCli := ''
 					_cUF	 := ''
-					If TRM5->(MsSeek(TNFISCAL->CODCFO))
-						_cCodCli := TRM5->A1_COD
-						_cLojCli := TRM5->A1_LOJA
-						_cNomCli := TRM5->A1_NREDUZ
-						_cUF	 := TRM5->A1_EST
+
+					// If TRM5->(MsSeek(TNFISCAL->CODCFO))
+					If (_cAliZF6)->(MsSeek(Space(2)+"SA1"+"A1_COD"+TNFISCAL->CODCFO))
+						_cCodCli := Left((_cAliZF6)->ZF6_TOTVS,6)
+						_cLojCli := Substr((_cAliZF6)->ZF6_TOTVA,7,2)
 					ENDIF
+
+					SA1->(dbSetOrder(1))
+					If SA1->(MsSeek(xFilial("SA1")+_cCodCli+_cLojCli))
+						_cNomCli := SA1->A1_NREDUZ
+						_cUF	 := SA1->A1_EST
+					Endif
+
 
 					TRM->(RecLock("TRM",.T.))
 					TRM->F2_YID     := TNFISCAL->IDMOV
@@ -119,5 +133,98 @@ USER FUNCTION RM_SF2(_oProcess,_cTab,_cPasta,_cBDados)
 	Endif
 
 	TNFISCAL->(dbCloseArea())
+
+	TRM->(dbCloseArea())
+
+Return(Nil)
+
+
+
+USER FUNCTION RM_SF2I(_oProcess,_cTab,_cPasta)
+
+	Local _cAlias   := ''
+	Local _lTabLoc  := .T.
+	Local _cModo
+	Local _nSF2
+	Local _aArea     := GetArea()
+	Local _aAreaSF2  := SF2->( GetArea() )
+	Local _cSvFilAnt := cFilAnt //Salva a Filial Anterior
+	Local _cSvEmpAnt := cEmpAnt //Salva a Empresa Anterior
+	Local _cSvArqTab := cArqTab //Salva os arquivos de
+
+	If Alltrim(cEmpAnt) = Substr(_cTab,4,2)
+		_cAlias := "SF2"
+	Else
+
+		If EmpOpenFile("SF2A","SF2",1,.T., Substr(_cTab,4,2),@_cModo)
+			_cAlias := "SF2A"
+			_lTabLoc := .F.
+		Endif
+	Endif
+
+	If !Empty(_cAlias)
+
+		_cUpd := " DELETE "+_cTab
+
+		TCSQLEXEC(_cUpd )
+
+		_cArq	:= "\TAB_RM\"+_cPasta+"\"+_cTab+".dtc"		//Gera o nome do arquivo
+		_cInd	:= "\TAB_RM\"+_cPasta+"\"+_cTab+"0"			//Indice do arquivo
+
+		If SELECT("TSF2") > 0
+			TSF2->(dbCloseArea())
+		Endif
+
+		dbUseArea( .T.,"CTREECDX", _cArq,"TSF2", .T., .F. )
+
+		If Select("TSF2") = 0
+			MsgInfo( 'Erro Abrir tabela Temporária TSF2', 'RM_SF2' )
+			Return(Nil)
+		Endif
+
+		dbSelectArea("TSF2")
+
+		IndRegua( "TSF2", _cInd, SF2->( IndexKey( 1 ) ))
+
+		dbClearIndex()
+		dbSetIndex(_cInd + OrdBagExt() )
+
+		_nReg := Contar("TSF2","!EOF()")
+
+		_oProcess:SetRegua2( _nReg ) //Alimenta a segunda barra de progresso
+		_oProcess:IncRegua2("Importando a tabela "+Left(_cTab,3)+" na Empresa "+Substr(_cTab,4,2) )
+
+
+
+		TSF2->(dbGoTop())
+
+		While TSF2->(!EOF())
+
+			(_cAlias)->(RecLock(_cAlias,.T.))
+			For _nSF2 := 1 to (_cAlias)->(FCOUNT())
+				&("(_cAlias)->"+((_cAlias)->(FIELD(_nSF2)))) := &("TSF2->"+((_cAlias)->(FIELD(_nSF2))))
+			Next _nSF2
+			(_cAlias)->(MsUnLock())
+
+			TSF2->(dbSkip())
+		EndDo
+
+		TSF2->(dbCloseArea())
+
+		If !_lTabLoc
+			(_cAlias)->(dbCloseArea())
+		Endif
+
+	Endif
+
+	//Restaura os Dados de Entrada ( Ambiente )
+	cFilAnt := _cSvFilAnt
+	cEmpAnt := _cSvEmpAnt
+	cArqTab := _cSvArqTab
+
+	//Restaura os ponteiros das Tabelas
+
+	RestArea( _aAreaSF2 )
+	RestArea( _aArea )
 
 Return(Nil)

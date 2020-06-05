@@ -7,7 +7,7 @@ Autor 		: Fabiano da Silva	-	25/03/20
 Descrição 	: Exportar tabelas SF1
 */
 
-USER FUNCTION RM_SF1(_oProcess,_cTab,_cPasta,_cBDados)
+USER FUNCTION RM_SF1E(_oProcess,_cTab,_cPasta,_cBDados)
 
 	If Select("TNFISCAL") > 0
 		TNFISCAL->(dbCloseArea())
@@ -37,8 +37,12 @@ USER FUNCTION RM_SF1(_oProcess,_cTab,_cPasta,_cBDados)
 
 			If U_RMCriarDTC(_cTab,_cKey1)
 
-				_cArq5	:= "\TAB_RM\"+_cPasta+"\SA1"+PadL(_cKey1,2,"0")+"0.dtc"		//Gera o nome do arquivo
-				_cInd5	:= "\TAB_RM\"+_cPasta+"\SA1"+PadL(_cKey1,2,"0")+"0"			//Indice do arquivo
+				// _cCodEmp := _aEmp[aScan(_aEmp,{|x| x[1] = PadL(_cKey1,2,"0")})][2]
+
+				_cArq5	:= "\TAB_RM\"+_cPasta+"\SA1010.dtc"		//Gera o nome do arquivo
+				_cInd5	:= "\TAB_RM\"+_cPasta+"\SA1010"			//Indice do arquivo
+				// _cArq5	:= "\TAB_RM\"+_cPasta+"\SA1"+PadL(_cKey1,2,"0")+"0.dtc"		//Gera o nome do arquivo
+				// _cInd5	:= "\TAB_RM\"+_cPasta+"\SA1"+PadL(_cKey1,2,"0")+"0"			//Indice do arquivo
 
 				If SELECT("TRM5") > 0
 					TRM5->(dbCloseArea())
@@ -119,5 +123,98 @@ USER FUNCTION RM_SF1(_oProcess,_cTab,_cPasta,_cBDados)
 	Endif
 
 	TNFISCAL->(dbCloseArea())
+
+	TRM->(dbCloseArea())
+
+Return(Nil)
+
+
+
+USER FUNCTION RM_SF1I(_oProcess,_cTab,_cPasta)
+
+	Local _cAlias   := ''
+	Local _lTabLoc  := .T.
+	Local _cModo
+	Local _nSF1
+	Local _aArea     := GetArea()
+	Local _aAreaSF1  := SF1->( GetArea() )
+	Local _cSvFilAnt := cFilAnt //Salva a Filial Anterior
+	Local _cSvEmpAnt := cEmpAnt //Salva a Empresa Anterior
+	Local _cSvArqTab := cArqTab //Salva os arquivos de
+
+	If Alltrim(cEmpAnt) = Substr(_cTab,4,2)
+		_cAlias := "SF1"
+	Else
+
+		If EmpOpenFile("SF1A","SF1",1,.T., Substr(_cTab,4,2),@_cModo)
+			_cAlias := "SF1A"
+			_lTabLoc := .F.
+		Endif
+	Endif
+
+	If !Empty(_cAlias)
+
+		_cUpd := " DELETE "+_cTab
+
+		TCSQLEXEC(_cUpd )
+
+		_cArq	:= "\TAB_RM\"+_cPasta+"\"+_cTab+".dtc"		//Gera o nome do arquivo
+		_cInd	:= "\TAB_RM\"+_cPasta+"\"+_cTab+"0"			//Indice do arquivo
+
+		If SELECT("TSF1") > 0
+			TSF1->(dbCloseArea())
+		Endif
+
+		dbUseArea( .T.,"CTREECDX", _cArq,"TSF1", .T., .F. )
+
+		If Select("TSF1") = 0
+			MsgInfo( 'Erro Abrir tabela Temporária TSF1', 'RM_SF1' )
+			Return(Nil)
+		Endif
+
+		dbSelectArea("TSF1")
+
+		IndRegua( "TSF1", _cInd, SF1->( IndexKey( 1 ) ))
+
+		dbClearIndex()
+		dbSetIndex(_cInd + OrdBagExt() )
+
+		_nReg := Contar("TSF1","!EOF()")
+
+		_oProcess:SetRegua2( _nReg ) //Alimenta a segunda barra de progresso
+		_oProcess:IncRegua2("Importando a tabela "+Left(_cTab,3)+" na Empresa "+Substr(_cTab,4,2) )
+
+
+
+		TSF1->(dbGoTop())
+
+		While TSF1->(!EOF())
+
+			(_cAlias)->(RecLock(_cAlias,.T.))
+			For _nSF1 := 1 to (_cAlias)->(FCOUNT())
+				&("(_cAlias)->"+((_cAlias)->(FIELD(_nSF1)))) := &("TSF1->"+((_cAlias)->(FIELD(_nSF1))))
+			Next _nSF1
+			(_cAlias)->(MsUnLock())
+
+			TSF1->(dbSkip())
+		EndDo
+
+		TSF1->(dbCloseArea())
+
+		If !_lTabLoc
+			(_cAlias)->(dbCloseArea())
+		Endif
+
+	Endif
+
+	//Restaura os Dados de Entrada ( Ambiente )
+	cFilAnt := _cSvFilAnt
+	cEmpAnt := _cSvEmpAnt
+	cArqTab := _cSvArqTab
+
+	//Restaura os ponteiros das Tabelas
+
+	RestArea( _aAreaSF1 )
+	RestArea( _aArea )
 
 Return(Nil)
