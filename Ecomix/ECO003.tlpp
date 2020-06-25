@@ -1,0 +1,323 @@
+#INCLUDE "TOTVS.CH"
+#INCLUDE "TOPCONN.CH"
+
+/*
+Programa ECO003
+Autor 		: Fabiano da Silva	-	24/06/20
+Descrição 	: Prposta Comercial
+*/
+
+#Define Verde "#9AFF9A"
+#Define Amarelo "#FFFF00"
+#Define Branco "#FFFAFA"
+#Define Preto "#000000"
+#Define Cinza "#696969"
+#Define Mizu "#E8782F"
+#Define POSDES 5
+#Define POSTOT 9
+
+#Define CLR_BRUSH	RGB(204,204,204) //Cinza
+
+USER FUNCTION ECO003(_lProtheus)
+
+	Local _oDlg			:= NIL
+	Local _nOpc			:= 0
+
+	Default _lProtheus := .T.
+
+	Private _cTitulo    := "Proposta Comercial - ECO003"
+
+	Private _oPrinter	:= NIL
+	Private _nTmPag 	:= 0
+	Private _nLin		:= 0
+	Private _nTamRod	:= 0
+	private _nLinTot	:= 0
+	Private _nCol		:= 0
+	Private _nColTot	:= 0
+	Private _nPosIRod	:= 0
+	Private _aMargRel	:= {10,15,10,20}
+
+	Private _oBrush	:= TBrush():New( ,  CLR_BRUSH  )
+
+	Private _cProc		:= 'Processando'
+	Private _cMsgTit	:= 'Aguarde, gerando dados...'
+
+	Private _oFont7N	:= TFont():New('Courier New'	,,-07,,.T.,,,,,.F.,.F.)
+	Private _oFont11	:= TFont():New('Times New Roman',,-11,,.F.,,,,,.F.,.F.)
+	Private _oFont8N	:= TFont():New('Courier New'	,,-08,,.T.,,,,,.F.,.F.)
+	Private _oFont10	:= TFont():New('Courier New'	,,-10,,.F.,,,,,.F.,.F.)
+	Private _oFont12	:= TFont():New('Times New Roman',,-12,,.F.,,,,,.F.,.F.)
+	Private _oFont16	:= TFont():New('Times New Roman',,-16,,.F.,,,,,.F.,.F.)
+	Private _oFont16N	:= TFont():New('Times New Roman',,-16,,.T.,,,,,.F.,.F.)
+	Private _oFont12N	:= TFont():New('Times New Roman',,-12,,.T.,,,,,.F.,.F.)
+	Private _oFont11N	:= TFont():New('Courier New'	,,-11,,.T.,,,,,.F.,.F.)
+	Private _oFont20N	:= TFont():New('Times New Roman',,-20,,.T.,,,,,.F.,.F.)
+
+	Private _nTLin		:= 10
+	Private _aCabec		:= {}
+
+	// AtuSX1()
+
+	DEFINE MSDIALOG _oDlg FROM 0,0 TO 171,318 TITLE _cTitulo OF _oDlg PIXEL
+
+	_oGrupo	:= TGroup():New(005,005,045,155,"",_oDlg,CLR_HRED,CLR_WHITE,.T.,.F. )
+
+	@ 010,015 SAY _oTSayA VAR "Esta rotina tem por objetivo gerar a "	OF _oGrupo PIXEL Size 150,010 FONT _oFont11N
+	@ 020,015 SAY "Proposta Comercial "				OF _oGrupo PIXEL Size 150,010 FONT _oFont11N
+	// @ 030,015 SAY "parâmetros informados pelo usuário." 				OF _oGrupo PIXEL Size 150,010 FONT _oFont11N
+
+	// _oTBut1	:= TButton():New( 60,010, "Parâmetros" ,_oDlg,{||Pergunte("ECO003")},035,012,,,.F.,.T.,.F.,,.F.,,,.F. )
+	// _cStyle := GetStyle(Amarelo,Branco,Cinza,Preto,1)
+	// _oTBut1:SetCss(_cStyle)
+
+	_oTBut2	:= TButton():New( 60,068, "OK" ,_oDlg,{||_nOpc := 1,_oDlg:End()},035,012,,,.F.,.T.,.F.,,.F.,,,.F. )
+	_cStyle := GetStyle(Verde,Branco,Cinza,Preto,1)
+	_oTBut2:SetCss(_cStyle)
+
+	_oTBut3	:= TButton():New( 60,120, "Sair" ,_oDlg,{||_nOpc := 0,_oDlg:End()},035,012,,,.F.,.T.,.F.,,.F.,,,.F. )
+	_cStyle := GetStyle(Branco,Mizu,Cinza,Preto,1)
+	_oTBut3:SetCss(_cStyle)
+
+	ACTIVATE MSDIALOG _oDlg CENTERED
+
+	If _nOpc = 1
+
+		// Pergunte("ECO003",.f.)
+
+		LjMsgRun(_cMsgTit,_cProc,{||ECO03A()})
+	Endif
+
+Return(Nil)
+
+
+
+Static Function GetStyle(_cCor1,_cCor2,_cCor3,_cCor4,_nTip)
+
+	Local _cMod := ''
+	Default _nTip := 1
+
+	_cMod := "QPushButton { background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 "+_cCor1+", stop: 1 "+_cCor2+");"
+	_cMod += "border-style: outset;border-width: 2px;
+		_cMod += "border-radius: 10px;border-color: "+_cCor3+";"
+	_cMod += "color: "+_cCor4+"};"
+	_cMod += "QPushButton:pressed { background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 "+_cCor2+", stop: 1 "+_cCor1+");"
+	_cMod += "border-style: outset;border-width: 2px;"
+	_cMod += "border-radius: 10px;"
+	_cMod += "border-color: "+_cCor3+" }"
+
+Return(_cMod)
+
+
+
+Static Function ECO03A()
+
+	Local _lAdjustToLegacy	:= .F.
+	Local _lDisableSetup	:= .T.
+	Local _cTitPDF			:= ''
+	Local _cDir				:= GetTempPath()
+	Local _a				:= 0
+	Local _n				:= 0
+
+		/*
+	1 - Percentual do campo conforme tamanho total
+	2 - Tamanho da coluna (calculado)
+	3 - Posição Inicial da coluna (calculado)
+	4 - Nome
+	5 - Alinhamento Horizontal (0=Esquerda, 1=Direita, 2 = Centralizado)
+	6 - Qtde a somar na posição inicial
+	7 - Qtde a diminuir no tamanho da coluna
+	8 - Campo que será impresso na coluna
+	9 - Picture do campo
+	10- Campo SubTotal
+	11- Campo Total Geral
+	*/
+	_aCabec		:= {;
+		{10,0,0,'ITEM'		,0,3,0,'ITEM'		,'@!'				,''		,''	},;
+		{60,0,0,'PRODUTO'	,0,3,0,'PRODUTO'	,'@!'				,''		,''	},;
+		{15,0,0,'PREÇO'		,1,0,3,'PRECO'		,'@e 9,999,999.99'	,''		,''	},;
+		{15,0,0,'PREÇO KG'	,1,0,3,'PRECOKG'	,'@e 9,999,999.99'	,''		,''	}}
+
+	_cTitPDF  := 'Proposta_Comercial_'+GravaData(dDataBase,.f.,8)+'_'+StrTran(Time(),':','')
+	_oPrinter := FWMSPrinter():New(UPPER(_cTitPDF), 6, _lAdjustToLegacy,_cDir, _lDisableSetup, , , ,    , , .F., )
+	_oPrinter:SetPortrait()
+	_oPrinter:SetPaperSize(9)
+	_nLin	:= 3000
+
+	CheckLine()
+
+	For n := 1 to 10
+
+		_nLin += 17
+		_nPs := _nCol+30
+		_nLiBk := _nLin
+		_nLinICab := _nLin+5
+		_nLinFCab := _nLinICab + 15
+
+		For _a := 1 to Len(_aCabec)
+			_oPrinter:Box(_nLinICab,_aCabec[_a][3],_nLinFCab,_aCabec[_a][3]+_aCabec[_a][2]-2)
+			_oPrinter:SayAlign(_nLinICab,_aCabec[_a][3]+_aCabec[_a][6],"teste",_oFont12,_aCabec[_a][2] -_aCabec[_a][7]-3,7,CLR_BLACK, _aCabec[_a][5] , 0 )
+		Next _a
+	Next n
+
+	_nLin += 25
+
+	_oPrinter:SayAlign(_nLin,_nCol,"> Material colocado na obra: Barra da Tijuca",_oFont12,_nColTot,10,CLR_BLACK, 0 , 0 )
+
+	_nLin += 17
+
+	_nLin += 17
+
+	_oPrinter:Box(_nLin,_nCol, _nLin + 13,_nColTot)
+
+	_oPrinter:FillRect( {_nLin+1, _nCol+1, _nLin + 12, _nColTot-1}, _oBrush)
+
+	_oPrinter:SayAlign(_nLin,_nCol+2,"CONDIÇÕES GERAIS",_oFont12N,_nColTot-2,10,, 2, 0 )
+
+	_nLin += 15
+
+	_oPrinter:SayAlign(_nLin,_nCol,"> Prazo de pagamento 28 dias da data",_oFont12,_nColTot,10,CLR_BLACK, 0 , 0 )
+
+	_nLin += 13
+
+	_oPrinter:SayAlign(_nLin,_nCol,"> Pedido minimo 14.000 Kg",_oFont12,_nColTot,10,CLR_BLACK, 0 , 0 )
+
+	_nLin += 13
+
+	_oPrinter:SayAlign(_nLin,_nCol,"> PROSPECCAO",_oFont12,_nColTot,10,CLR_BLACK, 0 , 0 )
+
+	_nLin += 13
+
+	_oPrinter:SayAlign(_nLin,_nCol,"> Válidade da Proposta: Dias.",_oFont12,_nColTot,10,CLR_BLACK, 0 , 0 )
+
+	_nLin += 13
+
+	_oPrinter:SayAlign(_nLin,_nCol,"> Preço com impostos",_oFont12,_nColTot,10,CLR_BLACK, 0 , 0 )
+
+	_nLin += 13
+	_nLin += 13
+
+	_oPrinter:Box(_nLin,_nCol, _nLin + 13,_nColTot)
+
+	_oPrinter:FillRect( {_nLin+1, _nCol+1, _nLin + 12, _nColTot-1}, _oBrush)
+
+	_oPrinter:SayAlign(_nLin,_nCol+2,"OBSERVAÇÕES",_oFont12N,_nColTot-2,10,, 2, 0 )
+
+	_nLin += 15
+
+	_oPrinter:SayAlign(_nLin,_nCol,"> Alíquota de IPI aplicada igual a zero, conf. Dec. 7879 de 2012.",_oFont12,_nColTot,10,CLR_BLACK, 0 , 0 )
+
+	_nLin += 13
+	_nLin += 13
+
+	_oPrinter:Box(_nLin,_nCol, _nLin + 13,_nColTot)
+
+	_oPrinter:FillRect( {_nLin+1, _nCol+1, _nLin + 12, _nColTot-1}, _oBrush)
+
+	_oPrinter:SayAlign(_nLin,_nCol+2,"CONTATOS",_oFont12N,_nColTot-2,10,, 2, 0 )
+
+	_nLin += 15
+
+	_oPrinter:SayAlign(_nLin,_nCol,"Comercial - Simões - comercial@construcola.com.br - (21) 2445-0062",_oFont12,_nColTot,10,CLR_BLACK, 0 , 0 )
+
+	_nLin += 13
+	_nLin += 13
+	_nLin += 13
+
+	_oPrinter:Line(_nLin,_nCol,_nLin,_nColTot)
+
+	_nLin += 13
+
+	_oPrinter:SayAlign(_nLin,_nCol,Alltrim(SM0->M0_NOMECOM),_oFont11,_nColTot,10,CLR_BLACK, 0 , 0 )
+	// _oPrinter:SayAlign(_nLin,_nCol,"Construcola.",_oFont11,_nColTot,10,CLR_BLACK, 0 , 0 )
+	_nLin += 11
+	_oPrinter:SayAlign(_nLin,_nCol,Alltrim(SM0->M0_ENDCOB)+" - "+Alltrim(SM0->M0_BAIRCOB)+" - "+Alltrim(SM0->M0_CIDCOB)+"/"+Alltrim(SM0->M0_ESTCOB),_oFont11,_nColTot,10,CLR_BLACK, 0 , 0 )
+	// _oPrinter:SayAlign(_nLin,_nCol,"Estrada do Bandeirantes 583 - Piranema - Seropedica/RJ",_oFont11,_nColTot,10,CLR_BLACK, 0 , 0 )
+	_nLin += 11
+	_oPrinter:SayAlign(_nLin,_nCol,"CEP: "+Transform(SM0->M0_CEPCOB,"@R 99.999-999"),_oFont11,_nColTot,10,CLR_BLACK, 0 , 0 )
+	// _oPrinter:SayAlign(_nLin,_nCol,"Cep. 23898-893",_oFont11,_nColTot,10,CLR_BLACK, 0 , 0 )
+
+	Ms_Flush()
+	_oPrinter:EndPage()
+	_oPrinter:Preview()
+
+Return(nil)
+
+
+
+Static Function CheckLine()
+
+	If _nLin > _nPosIRod-10
+		Cabec()
+	Endif
+
+Return()
+
+
+
+Static Function Cabec() //Cabeçalho
+
+	Local _a	:= 0
+
+	_oPrinter:StartPage()
+
+	_nSizePage	:= _oPrinter:nPageWidth / _oPrinter:nFactorHor
+	_nColTot	:= _nSizePage-(_aMargRel[1]+_aMargRel[3])
+	_nLinTot	:= ((_oPrinter:nPageHeight / _oPrinter:nFactorVert) - (_aMargRel[2]+_aMargRel[4])) - 50
+	_nCol		:= _aMargRel[1] + 15
+	_nLin		:= _aMargRel[2] + 10
+	_nMaxLin	:= _nLinTot
+	_nTmPag		:= _nColTot - _nCol
+	_nLinIni	:= _nLin
+
+	_nLin += 6
+
+	_oPrinter:SayBitmap(_nLin,_nCol,"Ecomix.png",095,040)
+
+	_nLin += 45
+
+	_oPrinter:SayAlign(_nLin,_nCol,"GEOLOGUS ENGENHARIA LTDA",_oFont20N,_nTmPag,10,, 0, 0 )
+	_oPrinter:SayAlign(_nLin,_nCol,"Proposta: 022337 - Rev.0",_oFont16,_nTmPag,10,, 1, 0 )
+
+	_nLin += 20
+
+	_oPrinter:SayAlign(_nLin,_nCol,"A/C: SR. SERGIO",_oFont16,_nTmPag,10,, 0, 0 )
+	_oPrinter:SayAlign(_nLin,_nCol,"09/10/2018",_oFont16,_nTmPag,10,, 1, 0 )
+
+	_nLin += 15
+
+	_oPrinter:SayAlign(_nLin,_nCol,"Tel.:",_oFont16,_nTmPag,10,, 0, 0 )
+
+	_nLin += 15
+
+	_oPrinter:SayAlign(_nLin,_nCol,"Email: compras@geologus.com.br",_oFont16,_nTmPag,10,, 0, 0 )
+
+	_nLin += 30
+
+	_oPrinter:SayAlign(_nLin,_nCol,"PROPOSTA COMERCIAL",_oFont16N,_nTmPag,10,, 2, 0 )
+
+	_nLin += 15
+
+	_oPrinter:Line(_nLin,_nCol,_nLin,_nColTot)
+
+	_nLin += 15
+
+	_nPs := _nCol+30
+	_nLiBk := _nLin
+	_nLinICab := _nLin+5
+	_nLinFCab := _nLinICab + 15
+
+	For _a := 1 to Len(_aCabec)
+		_nTm := (_aCabec[_a][1] / 100) * (_nTmPag - 60)
+		_nColICab := _nPs
+		_nColFCab := _nColICab+_nTm
+		_oPrinter:Box(_nLinICab,_nColICab,_nLinFCab,_nColFCab-2)
+		_oPrinter:FillRect( {_nLinICab+1, _nColICab+1, _nLinFCab-1, _nColFCab-3}, _oBrush)
+		_aCabec[_a][2] := _nTm
+		_aCabec[_a][3] := _nPs
+
+		_oPrinter:SayAlign(_nLinICab, _nColICab+_aCabec[_a][6],_aCabec[_a][4],_oFont12N,_nTm-_aCabec[_a][7]-3,7,, _aCabec[_a][5] , 0 )
+
+		_nPs += _nTm
+	Next _a
+
+Return(Nil)

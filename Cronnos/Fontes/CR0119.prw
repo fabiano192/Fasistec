@@ -318,7 +318,7 @@ Static Function CR119IN()
 		Next _a
 
 		_nSubTot += TEXP->SUBTOTAL
-		_nTotMea += TEXP->MEASUR
+		_nTotMea := TEXP->MEASUR
 		_nLin 	+= _nTLin
 		If aScan(_aNF,Alltrim(TEXP->NF)) = 0
 			AAdd(_aNF,Alltrim(TEXP->NF))

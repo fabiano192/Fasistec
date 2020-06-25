@@ -63,6 +63,8 @@ User Function ECO002()
 	Private _nPos2		:= 0
 	Private _nPos3		:= 0
 	Private _nPos4		:= 0
+	Private _nPos5		:= 0
+	Private _nPos6		:= 0
 
 	Private _oFont12	:= TFont():New('Arial',,-12,.F.)
 	Private _cCNPJ      := Space(TamSx3("A1_CGC")[1])
@@ -87,10 +89,12 @@ User Function ECO002()
 	Private _cCond		:= Space(TamSx3("E4_COND")[1])
 	Private _cDCond		:= Space(TamSx3("E4_DESCRI")[1])
 
-	SetPrvt("_oGetF1A,_oGetF1B,_oGetF1C,_oGetF1D,_oGetF1E,_oGetF1F,_oGetF1G,_oGetF1H,_oGetF1I")
-	SetPrvt("_oGetF2A,_oGetF2B,_oGetF2C,_oGetF2D,_oGetF2E,_oGetF2F,_oGetF2G,_oGetF2H,_oGetF2I,_oGetF2J,_oGetF2K")
-	SetPrvt("_oGetF2A,_oGetF2B,_oGetF2C,_oGetF2D,_oGetF2E,_oGetF2F,_oGetF2G,_oGetF2H,_oGetF2I")
-	SetPrvt("_oComb2A,_oComb2B,_oComb2C,_oComb2D,_oComb2E")
+	SetPrvt("_oGetF1A,_oGetF1B,_oGetF1C,_oGetF1D,_oGetF1E,_oGetF1F,_oGetF1G,_oGetF1H,_oGetF1I,_oListbox")
+	SetPrvt("_oGetF2A,_oGetF2B,_oGetF2C,_oGetF2D,_oGetF2E,_oGetF2F,_oGetF2G,_oGetF2H,_oGetF2I,_oGetF2J,_oGetF2K,_oGetF2L")
+	SetPrvt("_oGetF3A,_oGetF3B,_oGetF3C,_oGetF3D,_oGetF3E,_oGetF3F,_oGetF3G,_oGetF3H,_oGetF3I,_oGetF3J,_oGetF3K,_oGetF3L")
+	SetPrvt("_oGetF4A,_oGetF4B,_oGetF4C,_oGetF4D,_oGetF4E,_oGetF4F,_oGetF4G,_oGetF4H,_oGetF4I,_oGetF4J,_oGetF4K,_oGetF4L")
+	SetPrvt("_oGetF5A,_oGetF5B,_oGetF5C,_oGetF5D,_oGetF5E,_oGetF5F,_oGetF5G,_oGetF5H,_oGetF5I,_oGetF5J,_oGetF5K,_oGetF5L")
+	SetPrvt("_oComb2A,_oComb2B,_oComb2C,_oComb2D,_oComb2E,_oComb2F,_oComb2G,_oComb2H,_oComb2I,_oComb2J,_oComb2K,_oComb2L,_oComb2M,_oComb2N")
 	SetPrvt("_oGetF3A,_oGetF3B,_oGetF3C,_oGetF3D,_oGetF3E,_oGetF3F,_oGetF3G,_oGetF3H,_oGetF3I")
 
 	Private _aComb2A := {'Prospecção','Orçamento','Fechada','Negociando','Concluída','Perdida'}
@@ -108,6 +112,33 @@ User Function ECO002()
 	Private _aComb2E := {'SE','SA','ES','CP','EX'}
 	Private _cComb2E := _aComb2E[1]
 
+	Private _aComb2F := {'Sim','Não'}
+	Private _cComb2F := _aComb2F[1]
+
+	Private _aComb2G := {'Sim','Não'}
+	Private _cComb2G := _aComb2G[1]
+
+	Private _aComb2H := {'Sim','Não'}
+	Private _cComb2H := _aComb2H[1]
+
+	Private _aComb2I := {'Sim','Não'}
+	Private _cComb2I := _aComb2I[1]
+
+	Private _aComb2J := {'Sim','Não'}
+	Private _cComb2J := _aComb2J[1]
+
+	Private _aComb2K := {'COSTA VERDE','DOS LAGOS','FORA DO ESTADO','GRANDE VITÓRIA','NOROESTE FLUMINENSE','NORTE ESPIRITO SANTO','NORTE FLUMINENSE','Rio - BARRA / JPA / RECREIO','Rio - CENTRO','Rio - GRANDE TIJUCA','Rio - SUBURBANA','Rio - ZONA NORTE','Rio - ZONA OESTE','Rio - ZONA SUL','Rio M - GRANDE RIO','Rio M - METROPOLITANA CENTRAL','Rio M - METROPOLITANA SUL','Rio M - NITEROI / RIO BONITO','SERRANA ALTA','SERRANA BAIXA','SUL ESPIRITO SANTO - BR262','SUL ESPIRITO SANTO - BR101','SUL FLUMINENSE'}
+	Private _cComb2K := _aComb2K[1]
+
+	Private _aComb2L := {''}
+	Private _cComb2L := _aComb2L[1]
+
+	Private _aComb2M := {'Mensal','Quinzenal','Semanal','45 Dias'}
+	Private _cComb2M := _aComb2M[1]
+
+	Private _aComb2N := {'Não se Aplica','Distribuidor','Linha Cinxza','Linha Branca'}
+	Private _cComb2N := _aComb2N[1]
+
 	Private _cRev      := Space(10)
 	Private _cNomIn    := Space(TamSx3("A1_NOME")[1])
 
@@ -116,13 +147,49 @@ User Function ECO002()
 	Private _cNomPro   := Space(TamSx3("A1_NOME")[1])
 	Private _cContato  := Space(TamSx3("A1_CONTATO")[1])
 	Private _cFone     := Space(TamSx3("A1_TEL")[1])
-	Private _cContato  := Space(TamSx3("A1_CONTATO")[1])
+	// Private _cContato  := Space(TamSx3("A1_CONTATO")[1])
 	Private _cCelular  := Space(TamSx3("A1_TELC")[1])
 	Private _cMailXML  := Space(100)
 	Private _cMailSec  := Space(100)
 	Private _cRMObra   := Space(100)
 
+	Private _cCont1    := Space(100)
+	Private _cCont2    := Space(100)
+	Private _cValida   := Space(100)
+	Private _cFoneCo   := Space(100)
+	Private _cMailCo   := Space(100)
+	Private _cLetrei   := Space(100)
+	Private _cExpRej   := Space(100)
+	Private _nLimCaF   := 0
+	Private _nQtAjud   := 0
+	Private _nMargem   := 0
+	Private _nComiss   := 0
+	Private _nPrecoN   := 0
 
+	Private _cObs1     := "Pedido minimo 14.000 Kg"
+	Private _cObs2     := "Prazo de entrega 48hs - Carga Paletizada, obrigatoria devolucao paletes no ato entrega. - Descarga realizada em ate 20 metros de distancia horizontal. - Programacao via e-mail vendas@ecomixargamassa.com.br."
+	Private _cObs3     := ""
+	Private _cObs4     := ""
+
+	Private _c4Rua      := Space(100)
+	Private _c4Lat      := Space(100)
+	Private _c4Lon      := Space(100)
+	Private _c4Com      := Space(100)
+	Private _c4CEP      := Space(10)
+	Private _c4Num      := Space(10)
+	Private _c4Bai      := Space(100)
+	Private _c4Des      := 0
+	Private _c4Dsc      := 0
+	Private _c4Cid      := Space(100)
+
+	Private _c5Lin      := Space(100)
+	Private _c5Pro      := Space(20)
+	Private _c5DPr      := ''
+	Private _n5PrS      := 0
+	Private _n5PrV      := 0
+	Private _n5PrN      := 0
+
+	Private _aListFile  := {{'','','',0,0,0}}
 
 	_oSize := FwDefSize():New( .F. )
 	_oSize:AddObject( "P1", 100, _nPerc1, .T., .T. )
@@ -211,90 +278,91 @@ Static Function Painel1(_oPanel)
 	_nPos2 := _nPos1 + 80
 	_nPos3 := 250
 	_nPos4 := _nPos3 + 80
+	_nPos5 := 500
+	_nPos6 := _nPos5 + 80
 
 	_nLin2 := _nLin1
 
 	TSay():New(_nLin1,_nPos1,{||'CNPJ/CPF:'},_oTFolder:aDialogs[1],,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF1A	:= TGet():New(_nLin1, _nPos2,{|u| If(PCount()>0,_cCNPJ:=u,_cCNPJ)},_oTFolder:aDialogs[1]   ,80,012,'@R 99.999.999/9999-99',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cCNPJ",,)
+	_oGetF1A	:= TGet():New(_nLin1, _nPos2,{|u| If(PCount()>0,_cCNPJ:=u,_cCNPJ)},_oTFolder:aDialogs[1]   ,100,12,'@R 99.999.999/9999-99',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cCNPJ",,)
 	_oGetF1A:Disable()
 	TSay():New(_nLin1,_nPos3,{||'Código Cliente:'},_oTFolder:aDialogs[1],,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF1B	:= TGet():New(_nLin1, _nPos4,{|u| If(PCount()>0,_cCodCl:=u,_cCodCl)},_oTFolder:aDialogs[1]   ,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cCodCl",,)
+	_oGetF1B	:= TGet():New(_nLin1, _nPos4,{|u| If(PCount()>0,_cCodCl:=u,_cCodCl)},_oTFolder:aDialogs[1]   ,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cCodCl",,)
 	_oGetF1B:Disable()
 
 	_nLin1 += 15
 	TSay():New(_nLin1,_nPos1,{||'Limite de Crédito:'},_oTFolder:aDialogs[1],,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF1C	:= TGet():New(_nLin1, _nPos2,{|u| If(PCount()>0,_nLimCr:=u,_nLimCr)},_oTFolder:aDialogs[1]   ,80,012,'@e 999,999,999.99',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_nLimCr",,)
+	_oGetF1C	:= TGet():New(_nLin1, _nPos2,{|u| If(PCount()>0,_nLimCr:=u,_nLimCr)},_oTFolder:aDialogs[1]   ,100,12,'@e 999,999,999.99',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_nLimCr",,)
 	_oGetF1C:Disable()
 	TSay():New(_nLin1,_nPos3,{||'Inscrição Estadual:'},_oTFolder:aDialogs[1],,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF1D	:= TGet():New(_nLin1, _nPos4,{|u| If(PCount()>0,_cInscE:=u,_cInscE)},_oTFolder:aDialogs[1]   ,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cInscE",,)
+	_oGetF1D	:= TGet():New(_nLin1, _nPos4,{|u| If(PCount()>0,_cInscE:=u,_cInscE)},_oTFolder:aDialogs[1]   ,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cInscE",,)
 	_oGetF1D:Disable()
 
 	_nLin1 += 15
 	TSay():New(_nLin1,_nPos1,{||'Capital Social:'},_oTFolder:aDialogs[1],,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF1E	:= TGet():New(_nLin1, _nPos2,{|u| If(PCount()>0,_nCapit:=u,_nCapit)},_oTFolder:aDialogs[1]   ,80,012,'@e 999,999,999.99',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_nCapit",,)
+	_oGetF1E	:= TGet():New(_nLin1, _nPos2,{|u| If(PCount()>0,_nCapit:=u,_nCapit)},_oTFolder:aDialogs[1]   ,100,12,'@e 999,999,999.99',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_nCapit",,)
 	_oGetF1E:Disable()
 	TSay():New(_nLin1,_nPos3,{||'Inscrição Municipal:'},_oTFolder:aDialogs[1],,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF1F	:= TGet():New(_nLin1, _nPos4,{|u| If(PCount()>0,_cInscM:=u,_cInscM)},_oTFolder:aDialogs[1]   ,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cInscM",,)
+	_oGetF1F	:= TGet():New(_nLin1, _nPos4,{|u| If(PCount()>0,_cInscM:=u,_cInscM)},_oTFolder:aDialogs[1]   ,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cInscM",,)
 	_oGetF1F:Disable()
 
 	_nLin1 += 15
 
 	TSay():New(_nLin1,_nPos1,{||'Razão Social:'},_oTFolder:aDialogs[1],,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF1G	:= TGet():New(_nLin1, _nPos2,{|u| If(PCount()>0,_cRazao:=u,_cRazao)},_oTFolder:aDialogs[1]   ,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cRazao",,)
+	_oGetF1G	:= TGet():New(_nLin1, _nPos2,{|u| If(PCount()>0,_cRazao:=u,_cRazao)},_oTFolder:aDialogs[1]   ,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cRazao",,)
 	_oGetF1G:Disable()
 	TSay():New(_nLin1,_nPos3,{||'Início das Atividades:'},_oTFolder:aDialogs[1],,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF1H	:= TGet():New(_nLin1, _nPos4,{|u| If(PCount()>0,_dInici:=u,_dInici)},_oTFolder:aDialogs[1]   ,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_dInici",,)
+	_oGetF1H	:= TGet():New(_nLin1, _nPos4,{|u| If(PCount()>0,_dInici:=u,_dInici)},_oTFolder:aDialogs[1]   ,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_dInici",,)
 	_oGetF1H:Disable()
 
 	_nLin1 += 15
 
 	TSay():New(_nLin1,_nPos1,{||'Nome Fantasia:'},_oTFolder:aDialogs[1],,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF1I	:= TGet():New(_nLin1, _nPos2,{|u| If(PCount()>0,_cFanta:=u,_cFanta)},_oTFolder:aDialogs[1]   ,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cFanta",,)
+	_oGetF1I	:= TGet():New(_nLin1, _nPos2,{|u| If(PCount()>0,_cFanta:=u,_cFanta)},_oTFolder:aDialogs[1]   ,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cFanta",,)
 	_oGetF1I:Disable()
 
 
 	//FOLDER 2
 
 	TSay():New(_nLin2,_nPos1,{||'CEP:'},_oTFolder:aDialogs[2],,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF2A	:= TGet():New(_nLin2, _nPos2,{|u| If(PCount()>0,_cCEP:=u,_cCEP)},_oTFolder:aDialogs[2]   ,80,012,'@R 99999-999',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cCEP",,)
+	_oGetF2A	:= TGet():New(_nLin2, _nPos2,{|u| If(PCount()>0,_cCEP:=u,_cCEP)},_oTFolder:aDialogs[2]   ,100,12,'@R 99999-999',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cCEP",,)
 	_oGetF2A:Disable()
 	TSay():New(_nLin2,_nPos3,{||'Tipo Bairro:'},_oTFolder:aDialogs[2],,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF2B	:= TGet():New(_nLin2, _nPos4,{|u| If(PCount()>0,_cTpBai:=u,_cTpBai)},_oTFolder:aDialogs[2]   ,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cTpBai",,)
+	_oGetF2B	:= TGet():New(_nLin2, _nPos4,{|u| If(PCount()>0,_cTpBai:=u,_cTpBai)},_oTFolder:aDialogs[2]   ,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cTpBai",,)
 	_oGetF2B:Disable()
 
 	_nLin2 += 15
 
 	TSay():New(_nLin2,_nPos1,{||'Tipo:'},_oTFolder:aDialogs[2],,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF2C	:= TGet():New(_nLin2, _nPos2,{|u| If(PCount()>0,_cTipo:=u,_cTipo)},_oTFolder:aDialogs[2]   ,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cTipo",,)
+	_oGetF2C	:= TGet():New(_nLin2, _nPos2,{|u| If(PCount()>0,_cTipo:=u,_cTipo)},_oTFolder:aDialogs[2]   ,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cTipo",,)
 	_oGetF2C:Disable()
 	TSay():New(_nLin2,_nPos3,{||'Bairro:'},_oTFolder:aDialogs[2],,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF2D	:= TGet():New(_nLin2, _nPos4,{|u| If(PCount()>0,_cBairr:=u,_cBairr)},_oTFolder:aDialogs[2]   ,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cBairr",,)
+	_oGetF2D	:= TGet():New(_nLin2, _nPos4,{|u| If(PCount()>0,_cBairr:=u,_cBairr)},_oTFolder:aDialogs[2]   ,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cBairr",,)
 	_oGetF2D:Disable()
 
 	_nLin2 += 15
 
 	TSay():New(_nLin2,_nPos1,{||'Rua:'},_oTFolder:aDialogs[2],,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF2E	:= TGet():New(_nLin2, _nPos2,{|u| If(PCount()>0,_cRua:=u,_cRua)},_oTFolder:aDialogs[2]   ,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cRua",,)
+	_oGetF2E	:= TGet():New(_nLin2, _nPos2,{|u| If(PCount()>0,_cRua:=u,_cRua)},_oTFolder:aDialogs[2]   ,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cRua",,)
 	_oGetF2E:Disable()
 	TSay():New(_nLin2,_nPos3,{||'UF:'},_oTFolder:aDialogs[2],,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF2F	:= TGet():New(_nLin2, _nPos4,{|u| If(PCount()>0,_cUF:=u,_cUF)},_oTFolder:aDialogs[2]   ,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cUF",,)
+	_oGetF2F	:= TGet():New(_nLin2, _nPos4,{|u| If(PCount()>0,_cUF:=u,_cUF)},_oTFolder:aDialogs[2]   ,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cUF",,)
 	_oGetF2F:Disable()
 
 	_nLin2 += 15
 
 	TSay():New(_nLin2,_nPos1,{||'Número:'},_oTFolder:aDialogs[2],,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF2G	:= TGet():New(_nLin2, _nPos2,{|u| If(PCount()>0,_cNume:=u,_cNume)},_oTFolder:aDialogs[2]   ,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cNume",,)
+	_oGetF2G	:= TGet():New(_nLin2, _nPos2,{|u| If(PCount()>0,_cNume:=u,_cNume)},_oTFolder:aDialogs[2]   ,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cNume",,)
 	_oGetF2G:Disable()
 	TSay():New(_nLin2,_nPos3,{||'Município:'},_oTFolder:aDialogs[2],,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF2H	:= TGet():New(_nLin2, _nPos4,{|u| If(PCount()>0,_cMuni:=u,_cMuni)},_oTFolder:aDialogs[2]   ,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cMuni",,)
+	_oGetF2H	:= TGet():New(_nLin2, _nPos4,{|u| If(PCount()>0,_cMuni:=u,_cMuni)},_oTFolder:aDialogs[2]   ,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cMuni",,)
 	_oGetF2H:Disable()
 	_nLin2 += 15
 	TSay():New(_nLin2,_nPos1,{||'Complemento:'},_oTFolder:aDialogs[2],,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF2I	:= TGet():New(_nLin2, _nPos2,{|u| If(PCount()>0,_cComp:=u,_cComp)},_oTFolder:aDialogs[2]   ,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cComp",,)
+	_oGetF2I	:= TGet():New(_nLin2, _nPos2,{|u| If(PCount()>0,_cComp:=u,_cComp)},_oTFolder:aDialogs[2]   ,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cComp",,)
 	_oGetF2I:Disable()
 
 	// _oSay1:SetCss( _cStyle )
-
 
 	_nLin2 := _nLin1
 
@@ -331,66 +399,66 @@ Static function Painel2(_oPanel)
 	_nLiI2 := 0
 
 	TSay():New(_nLiI2,_nPos1,{||'Status:'},_oPanel2A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oComb2A	:= TComboBox():New(_nLiI2,_nPos2,{|u|if(PCount()>0,_cComb2A:=u,_cComb2A)},_aComb2A,80,12,_oPanel2A,,{||},,,,.T.,,,,,,,,,'_cComb2A')
+	_oComb2A	:= TComboBox():New(_nLiI2,_nPos2,{|u|if(PCount()>0,_cComb2A:=u,_cComb2A)},_aComb2A,100,12,_oPanel2A,,{||},,,,.T.,,,,,,,,,'_cComb2A')
 
 	TSay():New(_nLiI2,_nPos3,{||'Revisão:'},_oPanel2A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF2B	:= TGet():New(_nLiI2, _nPos4,{|u| If(PCount()>0,_cRev:=u,_cRev)},_oPanel2A,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cRev",,)
+	_oGetF2B	:= TGet():New(_nLiI2, _nPos4,{|u| If(PCount()>0,_cRev:=u,_cRev)},_oPanel2A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cRev",,)
 
 	_nLiI2 += 15
 
 	TSay():New(_nLiI2,_nPos1,{||'Nome Cliente Interno:'},_oPanel2A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF2C	:= TGet():New(_nLiI2, _nPos2,{|u| If(PCount()>0,_cNomIn:=u,_cNomIn)},_oPanel2A,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cNomIn",,)
+	_oGetF2C	:= TGet():New(_nLiI2, _nPos2,{|u| If(PCount()>0,_cNomIn:=u,_cNomIn)},_oPanel2A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cNomIn",,)
 
 	TSay():New(_nLiI2,_nPos3,{||'Data:'},_oPanel2A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF2D	:= TGet():New(_nLiI2, _nPos4,{|u| If(PCount()>0,_dData:=u,_dData)},_oPanel2A,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_dData",,)
+	_oGetF2D	:= TGet():New(_nLiI2, _nPos4,{|u| If(PCount()>0,_dData:=u,_dData)},_oPanel2A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_dData",,)
 
 	_nLiI2 += 15
 
 	TSay():New(_nLiI2,_nPos1,{||'Nome Cliente Proposta:'},_oPanel2A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF2E	:= TGet():New(_nLiI2, _nPos2,{|u| If(PCount()>0,_cNomPro:=u,_cNomPro)},_oPanel2A,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cNomPro",,)
+	_oGetF2E	:= TGet():New(_nLiI2, _nPos2,{|u| If(PCount()>0,_cNomPro:=u,_cNomPro)},_oPanel2A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cNomPro",,)
 
 	TSay():New(_nLiI2,_nPos3,{||'Contato:'},_oPanel2A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF2F	:= TGet():New(_nLiI2, _nPos4,{|u| If(PCount()>0,_cContato:=u,_cContato)},_oPanel2A,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cContato",,)
+	_oGetF2F	:= TGet():New(_nLiI2, _nPos4,{|u| If(PCount()>0,_cContato:=u,_cContato)},_oPanel2A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cContato",,)
 
 	_nLiI2 += 15
 
 	TSay():New(_nLiI2,_nPos1,{||'Categoria:'},_oPanel2A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oComb2B	:= TComboBox():New(_nLiI2,_nPos2,{|u|if(PCount()>0,_cComb2B:=u,_cComb2B)},_aComb2B,80,12,_oPanel2A,,{||},,,,.T.,,,,,,,,,'_cComb2B')
+	_oComb2B	:= TComboBox():New(_nLiI2,_nPos2,{|u|if(PCount()>0,_cComb2B:=u,_cComb2B)},_aComb2B,100,12,_oPanel2A,,{||},,,,.T.,,,,,,,,,'_cComb2B')
 
 	TSay():New(_nLiI2,_nPos3,{||'Contato:'},_oPanel2A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF2G	:= TGet():New(_nLiI2, _nPos4,{|u| If(PCount()>0,_cContato:=u,_cContato)},_oPanel2A,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cContato",,)
+	_oGetF2G	:= TGet():New(_nLiI2, _nPos4,{|u| If(PCount()>0,_cContato:=u,_cContato)},_oPanel2A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cContato",,)
 
 	_nLiI2 += 15
 
 	TSay():New(_nLiI2,_nPos1,{||'Tipo Cliente:'},_oPanel2A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oComb2C	:= TComboBox():New(_nLiI2,_nPos2,{|u|if(PCount()>0,_cComb2C:=u,_cComb2C)},_aComb2C,80,12,_oPanel2A,,{||},,,,.T.,,,,,,,,,'_cComb2C')
+	_oComb2C	:= TComboBox():New(_nLiI2,_nPos2,{|u|if(PCount()>0,_cComb2C:=u,_cComb2C)},_aComb2C,100,12,_oPanel2A,,{||},,,,.T.,,,,,,,,,'_cComb2C')
 
 	TSay():New(_nLiI2,_nPos3,{||'Telefone:'},_oPanel2A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF2G	:= TGet():New(_nLiI2, _nPos4,{|u| If(PCount()>0,_cFone:=u,_cFone)},_oPanel2A,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cFone",,)
+	_oGetF2G	:= TGet():New(_nLiI2, _nPos4,{|u| If(PCount()>0,_cFone:=u,_cFone)},_oPanel2A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cFone",,)
 
 	_nLiI2 += 15
 
 	TSay():New(_nLiI2,_nPos1,{||'É Obra:'},_oPanel2A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oComb2D	:= TComboBox():New(_nLiI2,_nPos2,{|u|if(PCount()>0,_cComb2D:=u,_cComb2D)},_aComb2D,80,12,_oPanel2A,,{||},,,,.T.,,,,,,,,,'_cComb2D')
+	_oComb2D	:= TComboBox():New(_nLiI2,_nPos2,{|u|if(PCount()>0,_cComb2D:=u,_cComb2D)},_aComb2D,100,12,_oPanel2A,,{||},,,,.T.,,,,,,,,,'_cComb2D')
 
 	TSay():New(_nLiI2,_nPos3,{||'Celular:'},_oPanel2A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF2H	:= TGet():New(_nLiI2, _nPos4,{|u| If(PCount()>0,_cCelular:=u,_cCelular)},_oPanel2A,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cCelular",,)
+	_oGetF2H	:= TGet():New(_nLiI2, _nPos4,{|u| If(PCount()>0,_cCelular:=u,_cCelular)},_oPanel2A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cCelular",,)
 
 	_nLiI2 += 15
 
 	TSay():New(_nLiI2,_nPos1,{||'Origem:'},_oPanel2A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oComb2E	:= TComboBox():New(_nLiI2,_nPos2,{|u|if(PCount()>0,_cComb2E:=u,_cComb2E)},_aComb2E,80,12,_oPanel2A,,{||},,,,.T.,,,,,,,,,'_cComb2E')
+	_oComb2E	:= TComboBox():New(_nLiI2,_nPos2,{|u|if(PCount()>0,_cComb2E:=u,_cComb2E)},_aComb2E,100,12,_oPanel2A,,{||},,,,.T.,,,,,,,,,'_cComb2E')
 
 	TSay():New(_nLiI2,_nPos3,{||'Email (Envio XML):'},_oPanel2A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF2I	:= TGet():New(_nLiI2, _nPos4,{|u| If(PCount()>0,_cMailXML:=u,_cMailXML)},_oPanel2A,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cMailXML",,)
+	_oGetF2I	:= TGet():New(_nLiI2, _nPos4,{|u| If(PCount()>0,_cMailXML:=u,_cMailXML)},_oPanel2A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cMailXML",,)
 
 	_nLiI2 += 15
 
 	TSay():New(_nLiI2,_nPos1,{||'RM CODOBRA:'},_oPanel2A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF2J	:= TGet():New(_nLiI2, _nPos2,{|u| If(PCount()>0,_cRMObra:=u,_cRMObra)},_oPanel2A,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cRMObra",,)
+	_oGetF2J	:= TGet():New(_nLiI2, _nPos2,{|u| If(PCount()>0,_cRMObra:=u,_cRMObra)},_oPanel2A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cRMObra",,)
 
 	TSay():New(_nLiI2,_nPos3,{||'Email Secundário:'},_oPanel2A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF2K	:= TGet():New(_nLiI2, _nPos4,{|u| If(PCount()>0,_cMailSec:=u,_cMailSec)},_oPanel2A,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cMailSec",,)
+	_oGetF2K	:= TGet():New(_nLiI2, _nPos4,{|u| If(PCount()>0,_cMailSec:=u,_cMailSec)},_oPanel2A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cMailSec",,)
 
 
 Return(Nil)
@@ -418,63 +486,106 @@ Static function Painel3(_oPanel)
 
 	// _oPanel3:Align := CONTROL_ALIGN_TOP
 
-	@ 000,000 MSPANEL _oPanel3A OF _oPanel2 SIZE _nCoF3-10,120// 143,247
+	@ 000,000 MSPANEL _oPanel3A OF _oPanel2 SIZE _nCoF3-10,240// 143,247
 
 	_oPanel3:SetFrame( _oPanel3A )
 
 	_nLiI3 := 0
 
-	TSay():New(_nLiI3,_nPos1,{||'Status:'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF3A := TGet():New(_nLiI3, _nPos2,{|u| If(PCount()>0,_cCond:=u,_cCond)},_oPanel3A,20,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cCond",,)
+	TSay():New(_nLiI3,_nPos1,{||'Prazo:'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oGetF3A := TGet():New(_nLiI3, _nPos2,{|u| If(PCount()>0,_cCond:=u,_cCond)},_oPanel3A,20,012,'@!',{||ExistCPO( "SE4", _cCond ,1)},CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cCond",,)
+	_oGetF3A:cF3 := "SE4"
 	_oGetF3B := TGet():New(_nLiI3, _nPos2+21,{|u| If(PCount()>0,_cDCond:=u,_cDCond)},_oPanel3A,59,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cDCond",,)
 	_oGetF3B:Disable()
 
 	TSay():New(_nLiI3,_nPos3,{||'Contatos:'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	_oGetF3C	:= TGet():New(_nLiI3, _nPos4,{|u| If(PCount()>0,_cRev:=u,_cRev)},_oPanel3A,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cRev",,)
+	_oGetF3C	:= TGet():New(_nLiI3, _nPos4,{|u| If(PCount()>0,_cCont1:=u,_cCont1)},_oPanel3A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cCont1",,)
 
 	_nLiI3 += 15
 
 	TSay():New(_nLiI3,_nPos1,{||'Validade (Dias):'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	// _oGetF3A := TGet():New(_nLiI3, _nPos2,{|u| If(PCount()>0,_cCond:=u,_cCond)},_oPanel3A,80,012,'@!',"SE4",CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cCond",,)
+	_oGetF3D := TGet():New(_nLiI3, _nPos2,{|u| If(PCount()>0,_cValida:=u,_cValida)},_oPanel3A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cValida",,)
 
 	TSay():New(_nLiI3,_nPos3,{||'Contato (cobrança)'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	// _oGetF3C	:= TGet():New(_nLiI3, _nPos4,{|u| If(PCount()>0,_cRev:=u,_cRev)},_oPanel3A,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cRev",,)
+	_oGetF3E	:= TGet():New(_nLiI3, _nPos4,{|u| If(PCount()>0,_cCont2:=u,_cCont2)},_oPanel3A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cCont2",,)
 
 	_nLiI3 += 15
 
 	TSay():New(_nLiI3,_nPos1,{||'Obs1:'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	// _oGetF3A := TGet():New(_nLiI3, _nPos2,{|u| If(PCount()>0,_cCond:=u,_cCond)},_oPanel3A,80,012,'@!',"SE4",CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cCond",,)
+	_oGetF3F := TMultiget():new( _nLiI3, _nPos2, {| u | if( pCount() > 0, _cObs1 := u, _cObs1 )}, _oPanel3A, 100, 045, ,.T., , , , .T., , , /*[ bWhen]*/ , , , /*[ lReadOnly]*/ , {|| }, /*[ uParam20]*/, /*[ uParam21]*/, /*[ lNoBorder]*/, /*[ lVScroll]*/, /*[cLabelText]*/ ,/*[nLabelPos]*/, /*[oLabelFont]*/, /*[nLabelColor]*/  )  
 
 	TSay():New(_nLiI3,_nPos3,{||'Tel (cobrança)'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	// _oGetF3C	:= TGet():New(_nLiI3, _nPos4,{|u| If(PCount()>0,_cRev:=u,_cRev)},_oPanel3A,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cRev",,)
+	_oGetF3G	:= TGet():New(_nLiI3, _nPos4,{|u| If(PCount()>0,_cFoneCo:=u,_cFoneCo)},_oPanel3A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cFoneCo",,)
 
 	_nLiI3 += 15
-
-	// TSay():New(_nLiI3,_nPos1,{||'Validade (Dias):'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	// _oGetF3A := TGet():New(_nLiI3, _nPos2,{|u| If(PCount()>0,_cCond:=u,_cCond)},_oPanel3A,80,012,'@!',"SE4",CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cCond",,)
 
 	TSay():New(_nLiI3,_nPos3,{||'Email (cobrança):'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	// _oGetF3C	:= TGet():New(_nLiI3, _nPos4,{|u| If(PCount()>0,_cRev:=u,_cRev)},_oPanel3A,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cRev",,)
+	_oGetF3H	:= TGet():New(_nLiI3, _nPos4,{|u| If(PCount()>0,_cMailCo:=u,_cMailCo)},_oPanel3A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cMailCo",,)
 
 	_nLiI3 += 15
 
-	// TSay():New(_nLiI3,_nPos1,{||'Validade (Dias):'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	// _oGetF3A := TGet():New(_nLiI3, _nPos2,{|u| If(PCount()>0,_cCond:=u,_cCond)},_oPanel3A,80,012,'@!',"SE4",CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cCond",,)
-
 	TSay():New(_nLiI3,_nPos3,{||'Letreiro (data):'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	// _oGetF3C	:= TGet():New(_nLiI3, _nPos4,{|u| If(PCount()>0,_cRev:=u,_cRev)},_oPanel3A,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cRev",,)
-
+	_oGetF3I	:= TGet():New(_nLiI3, _nPos4,{|u| If(PCount()>0,_cLetrei:=u,_cLetrei)},_oPanel3A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cLetrei",,)
 
 	_nLiI3 += 15
 
 	TSay():New(_nLiI3,_nPos1,{||'Obs2:'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	// _oGetF3A := TGet():New(_nLiI3, _nPos2,{|u| If(PCount()>0,_cCond:=u,_cCond)},_oPanel3A,80,012,'@!',"SE4",CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cCond",,)
+	_oGetF3J := TMultiget():new( _nLiI3, _nPos2, {| u | if( pCount() > 0, _cObs2 := u, _cObs2 )}, _oPanel3A, 100, 045, ,.T., , , , .T., , , /*[ bWhen]*/ , , , /*[ lReadOnly]*/ , {|| }, /*[ uParam20]*/, /*[ uParam21]*/, /*[ lNoBorder]*/, /*[ lVScroll]*/, /*[cLabelText]*/ ,/*[nLabelPos]*/, /*[oLabelFont]*/, /*[nLabelColor]*/  )  
+
 
 	TSay():New(_nLiI3,_nPos3,{||'Expositor Rejunte (data)'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
-	// _oGetF3C	:= TGet():New(_nLiI3, _nPos4,{|u| If(PCount()>0,_cRev:=u,_cRev)},_oPanel3A,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cRev",,)
+	_oGetF3K	:= TGet():New(_nLiI3, _nPos4,{|u| If(PCount()>0,_cExpRej:=u,_cExpRej)},_oPanel3A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_cExpRej",,)
 
 	_nLiI3 += 15
 
+	TSay():New(_nLiI3,_nPos3,{||'Limite Carga Fechada (Kg):'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oGetF3L	:= TGet():New(_nLiI3, _nPos4,{|u| If(PCount()>0,_nLimCaF:=u,_nLimCaF)},_oPanel3A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_nLimCaF",,)
+
+	_nLiI3 += 15
+
+	TSay():New(_nLiI3,_nPos3,{||'Libera Agendamento:'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oComb2F	:= TComboBox():New(_nLiI3,_nPos4,{|u|if(PCount()>0,_cComb2F:=u,_cComb2F)},_aComb2F,100,12,_oPanel3A,,{||},,,,.T.,,,,,,,,,'_cComb2F')
+
+	_nLiI3 += 15
+
+	TSay():New(_nLiI3,_nPos1,{||'Obs Padrão da Nota Fiscal:'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oGetF3M := TMultiget():new( _nLiI3, _nPos2, {| u | if( pCount() > 0, _cObs3 := u, _cObs3 )}, _oPanel3A, 100, 045, ,.T., , , , .T., , , /*[ bWhen]*/ , , , /*[ lReadOnly]*/ , {|| }, /*[ uParam20]*/, /*[ uParam21]*/, /*[ lNoBorder]*/, /*[ lVScroll]*/, /*[cLabelText]*/ ,/*[nLabelPos]*/, /*[oLabelFont]*/, /*[nLabelColor]*/  )  
+
+	TSay():New(_nLiI3,_nPos3,{||'Libera OBS NF:'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oComb2G	:= TComboBox():New(_nLiI3,_nPos4,{|u|if(PCount()>0,_cComb2G:=u,_cComb2G)},_aComb2G,100,12,_oPanel3A,,{||},,,,.T.,,,,,,,,,'_cComb2G')
+
+	_nLiI3 += 15
+
+	TSay():New(_nLiI3,_nPos3,{||'Quantidade de Ajudante:'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oGetF3N	:= TGet():New(_nLiI3, _nPos4,{|u| If(PCount()>0,_nQtAjud:=u,_nQtAjud)},_oPanel3A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_nQtAjud",,)
+
+	_nLiI3 += 15
+
+	TSay():New(_nLiI3,_nPos3,{||'% Margem Venda:'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oGetF3O	:= TGet():New(_nLiI3, _nPos4,{|u| If(PCount()>0,_nMargem:=u,_nMargem)},_oPanel3A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_nMargem",,)
+
+	_nLiI3 += 15
+
+	TSay():New(_nLiI3,_nPos1,{||'Obs Padrão da Carga:'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oGetF3C := TMultiget():new( _nLiI3, _nPos2, {| u | if( pCount() > 0, _cObs4 := u, _cObs4 )}, _oPanel3A, 100, 045, ,.T., , , , .T., , , /*[ bWhen]*/ , , , /*[ lReadOnly]*/ , {|| }, /*[ uParam20]*/, /*[ uParam21]*/, /*[ lNoBorder]*/, /*[ lVScroll]*/, /*[cLabelText]*/ ,/*[nLabelPos]*/, /*[oLabelFont]*/, /*[nLabelColor]*/  )  
+
+	TSay():New(_nLiI3,_nPos3,{||'% Comissão:'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oGetF3O	:= TGet():New(_nLiI3, _nPos4,{|u| If(PCount()>0,_nComiss:=u,_nComiss)},_oPanel3A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_nComiss",,)
+
+	_nLiI3 += 15
+
+	TSay():New(_nLiI3,_nPos3,{||'Preço Negociado:'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oComb2H	:= TComboBox():New(_nLiI3,_nPos4,{|u|if(PCount()>0,_cComb2H:=u,_cComb2H)},_aComb2H,100,12,_oPanel3A,,{||},,,,.T.,,,,,,,,,'_cComb2H')
+
+	_nLiI3 += 15
+
+	TSay():New(_nLiI3,_nPos3,{||'Cpg Fixa:'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oComb2I	:= TComboBox():New(_nLiI3,_nPos4,{|u|if(PCount()>0,_cComb2I:=u,_cComb2I)},_aComb2I,100,12,_oPanel3A,,{||},,,,.T.,,,,,,,,,'_cComb2I')
+
+	_nLiI3 += 15
+
+	TSay():New(_nLiI3,_nPos3,{||'CPG exceção:'},_oPanel3A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oComb2J	:= TComboBox():New(_nLiI3,_nPos4,{|u|if(PCount()>0,_cComb2J:=u,_cComb2J)},_aComb2J,100,12,_oPanel3A,,{||},,,,.T.,,,,,,,,,'_cComb2J')
 
 Return(Nil)
 
@@ -502,9 +613,76 @@ Static function Painel4(_oPanel)
 
 	// _oPanel4:Align := CONTROL_ALIGN_TOP
 
-	@ 000,000 MSPANEL _oPanel4A OF _oPanel4 SIZE _nCoF4-10,120// 143,247
+	@ 000,000 MSPANEL _oPanel4A OF _oPanel4 SIZE _nCoF4-10,220// 143,247
 
 	_oPanel4:SetFrame( _oPanel4A )
+
+	_nLiI4 := 0
+
+	TSay():New(_nLiI4,_nPos1,{||'Região de Frete*:'},_oPanel4A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oComb2K	:= TComboBox():New(_nLiI4,_nPos2,{|u|if(PCount()>0,_cComb2K:=u,_cComb2K)},_aComb2K,100,12,_oPanel4A,,{||},,,,.T.,,,,,,,,,'_cComb2K')
+
+	TSay():New(_nLiI4,_nPos3,{||'Rua:'},_oPanel4A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oGetF4A	:= TGet():New(_nLiI4, _nPos4,{|u| If(PCount()>0,_c4Rua:=u,_c4Rua)},_oPanel4A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_c4Rua",,)
+
+	TSay():New(_nLiI4,_nPos5,{||'Latitude:'},_oPanel4A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oGetF4B	:= TGet():New(_nLiI4, _nPos6,{|u| If(PCount()>0,_c4Lat:=u,_c4Lat)},_oPanel4A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_c4Lat",,)
+
+	_nLiI4 += 15
+
+	TSay():New(_nLiI4,_nPos1,{||'Área/Bairro*:'},_oPanel4A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oComb2L	:= TComboBox():New(_nLiI4,_nPos2,{|u|if(PCount()>0,_cComb2L:=u,_cComb2L)},_aComb2L,100,12,_oPanel4A,,{||},,,,.T.,,,,,,,,,'_cComb2L')
+	
+	TSay():New(_nLiI4,_nPos3,{||'Complemento/Referência:'},_oPanel4A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oGetF4C	:= TGet():New(_nLiI4, _nPos4,{|u| If(PCount()>0,_c4Com:=u,_c4Com)},_oPanel4A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_c4Com",,)
+	
+	TSay():New(_nLiI4,_nPos5,{||'Longitude:'},_oPanel4A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oGetF4D	:= TGet():New(_nLiI4, _nPos6,{|u| If(PCount()>0,_c4Lon:=u,_c4Lon)},_oPanel4A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_c4Lon",,)
+
+	_nLiI4 += 15
+
+	TSay():New(_nLiI4,_nPos1,{||'Representante*:'},_oPanel4A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	// _oGetF4E	:= TGet():New(_nLiI4, _nPos6,{|u| If(PCount()>0,_c4Lon:=u,_c4Lon)},_oPanel4A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_c4Lon",,)
+	// _oGetF4F	:= TGet():New(_nLiI4, _nPos6,{|u| If(PCount()>0,_c4Lon:=u,_c4Lon)},_oPanel4A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_c4Lon",,)
+	
+	TSay():New(_nLiI4,_nPos3,{||'CEP:'},_oPanel4A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oGetF4G	:= TGet():New(_nLiI4, _nPos4,{|u| If(PCount()>0,_c4CEP:=u,_c4CEP)},_oPanel4A,100,12,'@R 99.999-999',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_c4CEP",,)
+	
+	_nLiI4 += 15
+
+	TGroup():New(_nLiI4,_nPos1,_nLiI4+43,_nPos2+120,"Adicionais",_oPanel4A,CLR_BLUE,,.T.)
+
+	TSay():New(_nLiI4,_nPos3,{||'Número:'},_oPanel4A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oGetF4H	:= TGet():New(_nLiI4, _nPos4,{|u| If(PCount()>0,_c4Num:=u,_c4Num)},_oPanel4A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_c4Num",,)
+
+	_nLiI4 += 15
+
+	TSay():New(_nLiI4-4,_nPos1+10,{||'R$ Desconto FOB (Sc 20Kg):'},_oPanel4A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,10,,,,,.T.)
+	_oGetF4I	:= TGet():New(_nLiI4-3, _nPos2+10,{|u| If(PCount()>0,_c4Des:=u,_c4Des)},_oPanel4A,100,12,'@E 999,999.99',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_c4Des",,)
+
+	TSay():New(_nLiI4,_nPos3,{||'Bairro:'},_oPanel4A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oGetF4J	:= TGet():New(_nLiI4, _nPos4,{|u| If(PCount()>0,_c4Bai:=u,_c4Bai)},_oPanel4A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_c4Bai",,)
+
+	_nLiI4 += 15
+
+	TSay():New(_nLiI4-4,_nPos1+10,{||'R$ Descarga (Sc 20Kg):'},_oPanel4A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,10,,,,,.T.)
+	_oGetF4K	:= TGet():New(_nLiI4-3, _nPos2+10,{|u| If(PCount()>0,_c4Dsc:=u,_c4Dsc)},_oPanel4A,100,12,'@E 999,999.99',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_c4Dsc",,)
+
+	TSay():New(_nLiI4,_nPos3,{||'Cidade:'},_oPanel4A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oGetF4L	:= TGet():New(_nLiI4, _nPos4,{|u| If(PCount()>0,_c4Cid:=u,_c4Cid)},_oPanel4A,100,12,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_c4Cid",,)
+
+
+	_nLiI4 += 15
+
+	TSay():New(_nLiI4,_nPos1,{||'Frequencia Visitas:'},_oPanel4A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oComb2M	:= TComboBox():New(_nLiI4,_nPos2,{|u|if(PCount()>0,_cComb2M:=u,_cComb2M)},_aComb2M,100,12,_oPanel4A,,{||},,,,.T.,,,,,,,,,'_cComb2M')
+
+	_nLiI4 += 15
+
+	TSay():New(_nLiI4,_nPos1,{||'Tipo de Loja:'},_oPanel4A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+	_oComb2N	:= TComboBox():New(_nLiI4,_nPos2,{|u|if(PCount()>0,_cComb2N:=u,_cComb2N)},_aComb2N,100,12,_oPanel4A,,{||},,,,.T.,,,,,,,,,'_cComb2N')
+
+	_nLiI4 += 15
 
 Return(Nil)
 
@@ -535,6 +713,57 @@ Static function Painel5(_oPanel)
 
 	_oPanel5:SetFrame( _oPanel5A )
 
+	_nLiI5 := 0
+	_nCol5 := 0
+
+	TSay():New(_nLiI5,_nPos1,{||'Linha:'},_oPanel5A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,100,12,,,,,.T.)
+
+	_oGetF5A := TGet():New(_nLiI5+8, _nCol5,{|u| If(PCount()>0,_c5Lin:=u,_c5Lin)},_oPanel5A,80,012,'@!',{||},CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_c5Lin",,)
+
+	_nCol5 += 100
+
+	TSay():New(_nLiI5,_nCol5,{||'Produto:'},_oPanel5A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,80,12,,,,,.T.)
+	_oGetF5B := TGet():New(_nLiI5+8, _nCol5,{|u| If(PCount()>0,_c5Pro:=u,_c5Pro)},_oPanel5A,80,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_c5Pro",,)
+
+	_nCol5 += 100
+
+	TSay():New(_nLiI5,_nCol5,{||'Descrição Produto:'},_oPanel5A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,150,12,,,,,.T.)
+	_oGetF5C := TGet():New(_nLiI5+8, _nCol5,{|u| If(PCount()>0,_c5DPr:=u,_c5DPr)},_oPanel5A,150,012,'@!',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_c5DPr",,)
+	_oGetF5C:Disable()
+
+	_nCol5 += 170
+
+	TSay():New(_nLiI5,_nCol5,{||'R$ Sugerido:'},_oPanel5A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,080,12,,,,,.T.)
+	_oGetF5D := TGet():New(_nLiI5+8, _nCol5,{|u| If(PCount()>0,_n5PrS:=u,_n5PrS)},_oPanel5A,80,012,'@E 999,999.99',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_n5PrS",,)
+	_oGetF5D:Disable()
+
+	_nCol5 += 100
+
+	TSay():New(_nLiI5,_nCol5,{||'R$ Venda:'},_oPanel5A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,080,12,,,,,.T.)
+	_oGetF5E := TGet():New(_nLiI5+8, _nCol5,{|u| If(PCount()>0,_n5PrV:=u,_n5PrV)},_oPanel5A,080,012,'@E 999,999.99',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_n5PrV",,)
+	// _oGetF5E:Disable()
+
+	_nCol5 += 100
+
+	TSay():New(_nLiI5,_nCol5,{||'R$ Negociação:'},_oPanel5A,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,080,12,,,,,.T.)
+	_oGetF5F := TGet():New(_nLiI5+8, _nCol5,{|u| If(PCount()>0,_n5PrN:=u,_n5PrN)},_oPanel5A,080,012,'@E 999,999.99',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","_n5PrN",,)
+
+	_nLiI5 += 42
+
+	_oTsay5a := TSay():New(_nLiI5,_nCoI5,{||''},_oPanel,,_oFont12,,,,.T.,CLR_BLACK,CLR_WHITE,_nCoF5,2,,,,,.T.)
+
+	_cStyle := GetStyle(1,{Preto,Azul_Claro,Azul_Escuro,Preto})
+
+	// _nLiI5 += 2
+
+	_oListbox := TWBrowse():New(_nLiI5, 5,_nCoF5-10,_nLiF5-_nLiI5-5,,{'Item','Linha','Produto','Preço Sugerido','Preço de Venda','Preço de Negociação'},,_oPanel5A,,,,,{||},,,,,,,.F.,,.T.,,.F.,,, )
+
+	_oListbox:SetArray(_aListFile)
+	_oListbox:bLine := {|| aEval( _aListFile[_oListbox:nAt],{|z,w| _aListFile[_oListbox:nAt,w]})}
+
+	_oTsay5a:SetCss(_cStyle)
+	_oTsay5a:SetTextAlign( 0, 2 )
+	_oTsay5a:Refresh()
 
 Return(Nil)
 
