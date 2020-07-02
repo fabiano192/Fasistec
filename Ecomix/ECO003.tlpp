@@ -18,12 +18,12 @@ Descrição 	: Prposta Comercial
 
 #Define CLR_BRUSH	RGB(204,204,204) //Cinza
 
-USER FUNCTION ECO003(_lProtheus)
+USER FUNCTION ECO003(_cProposta)
 
 	Local _oDlg			:= NIL
 	Local _nOpc			:= 0
 
-	Default _lProtheus := .T.
+	Default _cProposta := ''
 
 	Private _cTitulo    := "Proposta Comercial - ECO003"
 
@@ -56,35 +56,39 @@ USER FUNCTION ECO003(_lProtheus)
 	Private _nTLin		:= 10
 	Private _aCabec		:= {}
 
-	// AtuSX1()
+	If Empty(_cProposta)
 
-	DEFINE MSDIALOG _oDlg FROM 0,0 TO 171,318 TITLE _cTitulo OF _oDlg PIXEL
+		DEFINE MSDIALOG _oDlg FROM 0,0 TO 171,318 TITLE _cTitulo OF _oDlg PIXEL
 
-	_oGrupo	:= TGroup():New(005,005,045,155,"",_oDlg,CLR_HRED,CLR_WHITE,.T.,.F. )
+		_oGrupo	:= TGroup():New(005,005,045,155,"",_oDlg,CLR_HRED,CLR_WHITE,.T.,.F. )
 
-	@ 010,015 SAY _oTSayA VAR "Esta rotina tem por objetivo gerar a "	OF _oGrupo PIXEL Size 150,010 FONT _oFont11N
-	@ 020,015 SAY "Proposta Comercial "				OF _oGrupo PIXEL Size 150,010 FONT _oFont11N
-	// @ 030,015 SAY "parâmetros informados pelo usuário." 				OF _oGrupo PIXEL Size 150,010 FONT _oFont11N
+		@ 010,015 SAY _oTSayA VAR "Esta rotina tem por objetivo gerar a "	OF _oGrupo PIXEL Size 150,010 //FONT _oFont11N
+		@ 020,015 SAY "Proposta Comercial "									OF _oGrupo PIXEL Size 150,010 //FONT _oFont11N
 
-	// _oTBut1	:= TButton():New( 60,010, "Parâmetros" ,_oDlg,{||Pergunte("ECO003")},035,012,,,.F.,.T.,.F.,,.F.,,,.F. )
-	// _cStyle := GetStyle(Amarelo,Branco,Cinza,Preto,1)
-	// _oTBut1:SetCss(_cStyle)
+		@ 035,015 SAY "Proposta: "											OF _oGrupo PIXEL Size 40,010 //FONT _oFont11N
+		@ 035,060 MsGet _cProposta		Valid ExistCpo("ZE0",_cProposta)	OF _oGrupo PIXEL Size 40,010 //FONT _oFont11N
 
-	_oTBut2	:= TButton():New( 60,068, "OK" ,_oDlg,{||_nOpc := 1,_oDlg:End()},035,012,,,.F.,.T.,.F.,,.F.,,,.F. )
-	_cStyle := GetStyle(Verde,Branco,Cinza,Preto,1)
-	_oTBut2:SetCss(_cStyle)
+		_oTBut2	:= TButton():New( 60,068, "OK" ,_oDlg,{||_nOpc := 1,_oDlg:End()},035,012,,,.F.,.T.,.F.,,.F.,,,.F. )
+		_cStyle := GetStyle(Verde,Branco,Cinza,Preto,1)
+		_oTBut2:SetCss(_cStyle)
 
-	_oTBut3	:= TButton():New( 60,120, "Sair" ,_oDlg,{||_nOpc := 0,_oDlg:End()},035,012,,,.F.,.T.,.F.,,.F.,,,.F. )
-	_cStyle := GetStyle(Branco,Mizu,Cinza,Preto,1)
-	_oTBut3:SetCss(_cStyle)
+		_oTBut3	:= TButton():New( 60,120, "Sair" ,_oDlg,{||_nOpc := 0,_oDlg:End()},035,012,,,.F.,.T.,.F.,,.F.,,,.F. )
+		_cStyle := GetStyle(Branco,Mizu,Cinza,Preto,1)
+		_oTBut3:SetCss(_cStyle)
 
-	ACTIVATE MSDIALOG _oDlg CENTERED
+		ACTIVATE MSDIALOG _oDlg CENTERED
+	Else
+		_nOpc := 1
+	Endif
 
 	If _nOpc = 1
 
-		// Pergunte("ECO003",.f.)
-
-		LjMsgRun(_cMsgTit,_cProc,{||ECO03A()})
+		ZE0->(dbSetOrder(1))
+		If ZE0->(MsSeek(xFilail("ZE0")+_cProposta))
+			LjMsgRun(_cMsgTit,_cProc,{||ECO03A()})
+		Else
+			MsgAlert("Proposta não encontrada!")
+		Endif
 	Endif
 
 Return(Nil)
@@ -116,7 +120,7 @@ Static Function ECO03A()
 	Local _cTitPDF			:= ''
 	Local _cDir				:= GetTempPath()
 	Local _a				:= 0
-	Local _n				:= 0
+	Local n					:= 0
 
 		/*
 	1 - Percentual do campo conforme tamanho total
@@ -132,10 +136,10 @@ Static Function ECO03A()
 	11- Campo Total Geral
 	*/
 	_aCabec		:= {;
-		{10,0,0,'ITEM'		,0,3,0,'ITEM'		,'@!'				,''		,''	},;
-		{60,0,0,'PRODUTO'	,0,3,0,'PRODUTO'	,'@!'				,''		,''	},;
-		{15,0,0,'PREÇO'		,1,0,3,'PRECO'		,'@e 9,999,999.99'	,''		,''	},;
-		{15,0,0,'PREÇO KG'	,1,0,3,'PRECOKG'	,'@e 9,999,999.99'	,''		,''	}}
+		{10,0,0,'ITEM'		,0,3,0,'ITEM'	,'@!'				,''		,''	},;
+		{60,0,0,'PRODUTO'	,0,3,0,'PRODUT'	,'@!'				,''		,''	},;
+		{15,0,0,'PREÇO'		,1,0,3,'PRECO'	,'@e 9,999,999.99'	,''		,''	},;
+		{15,0,0,'PREÇO KG'	,1,0,3,'PRECO2'	,'@e 9,999,999.99'	,''		,''	}}
 
 	_cTitPDF  := 'Proposta_Comercial_'+GravaData(dDataBase,.f.,8)+'_'+StrTran(Time(),':','')
 	_oPrinter := FWMSPrinter():New(UPPER(_cTitPDF), 6, _lAdjustToLegacy,_cDir, _lDisableSetup, , , ,    , , .F., )
@@ -145,23 +149,40 @@ Static Function ECO03A()
 
 	CheckLine()
 
-	For n := 1 to 10
 
-		_nLin += 17
-		_nPs := _nCol+30
-		_nLiBk := _nLin
-		_nLinICab := _nLin+5
-		_nLinFCab := _nLinICab + 15
+	ZE1->(dbSetOrder(1))
+	If ZE1->(MsSeek(xFilial("ZE1")+ZE0->ZE0_PROPOS))
 
-		For _a := 1 to Len(_aCabec)
-			_oPrinter:Box(_nLinICab,_aCabec[_a][3],_nLinFCab,_aCabec[_a][3]+_aCabec[_a][2]-2)
-			_oPrinter:SayAlign(_nLinICab,_aCabec[_a][3]+_aCabec[_a][6],"teste",_oFont12,_aCabec[_a][2] -_aCabec[_a][7]-3,7,CLR_BLACK, _aCabec[_a][5] , 0 )
-		Next _a
-	Next n
+		While ZE1->(!EOF()) .And. ZE1->ZE1_PROPOS = ZE0->ZE0_PROPOS
+
+			_nLin += 17
+			_nPs := _nCol+30
+			_nLiBk := _nLin
+			_nLinICab := _nLin+5
+			_nLinFCab := _nLinICab + 15
+
+			For _a := 1 to Len(_aCabec)
+				_oPrinter:Box(_nLinICab,_aCabec[_a][3],_nLinFCab,_aCabec[_a][3]+_aCabec[_a][2]-2)
+
+				_xCampo := &("ZE1->ZE1_"+Alltrim(_aCabec[_a][8]))
+
+				If ValType(_xCampo) = "N"
+					_xCampo := Transform(_xCampo,_aCabec[_a][9])
+				Else
+					_xCampo := Alltrim((_xCampo)
+				Endif
+
+				_oPrinter:SayAlign(_nLinICab,_aCabec[_a][3]+_aCabec[_a][6],_xCampo,_oFont12,_aCabec[_a][2] -_aCabec[_a][7]-3,7,CLR_BLACK, _aCabec[_a][5] , 0 )
+			Next _a
+
+			ZE1->(dbSkip())
+		EndDo
+	Endif
 
 	_nLin += 25
 
-	_oPrinter:SayAlign(_nLin,_nCol,"> Material colocado na obra: Barra da Tijuca",_oFont12,_nColTot,10,CLR_BLACK, 0 , 0 )
+	_oPrinter:SayAlign(_nLin,_nCol,"> Material colocado na obra: "+"???",_oFont12,_nColTot,10,CLR_BLACK, 0 , 0 )
+	// _oPrinter:SayAlign(_nLin,_nCol,"> Material colocado na obra: Barra da Tijuca",_oFont12,_nColTot,10,CLR_BLACK, 0 , 0 )
 
 	_nLin += 17
 
@@ -175,19 +196,21 @@ Static Function ECO03A()
 
 	_nLin += 15
 
-	_oPrinter:SayAlign(_nLin,_nCol,"> Prazo de pagamento 28 dias da data",_oFont12,_nColTot,10,CLR_BLACK, 0 , 0 )
+	_oPrinter:SayAlign(_nLin,_nCol,"> Prazo de pagamento "+"n"+" dias da data",_oFont12,_nColTot,10,CLR_BLACK, 0 , 0 )
 
 	_nLin += 13
 
-	_oPrinter:SayAlign(_nLin,_nCol,"> Pedido minimo 14.000 Kg",_oFont12,_nColTot,10,CLR_BLACK, 0 , 0 )
+	// _oPrinter:SayAlign(_nLin,_nCol,"> Pedido minimo 14.000 Kg",_oFont12,_nColTot,10,CLR_BLACK, 0 , 0 )
+	_oPrinter:SayAlign(_nLin,_nCol,"> "+Alltrim(ZE0->ZE0_OBS1),_oFont12,_nColTot,10,CLR_BLACK, 0 , 0 )
 
 	_nLin += 13
 
-	_oPrinter:SayAlign(_nLin,_nCol,"> PROSPECCAO",_oFont12,_nColTot,10,CLR_BLACK, 0 , 0 )
+	// _oPrinter:SayAlign(_nLin,_nCol,"> PROSPECCAO",_oFont12,_nColTot,10,CLR_BLACK, 0 , 0 )
+	_oPrinter:SayAlign(_nLin,_nCol,"> "+Alltrim(ZE0->ZE0_OBS2),_oFont12,_nColTot,10,CLR_BLACK, 0 , 0 )
 
 	_nLin += 13
 
-	_oPrinter:SayAlign(_nLin,_nCol,"> Válidade da Proposta: Dias.",_oFont12,_nColTot,10,CLR_BLACK, 0 , 0 )
+	_oPrinter:SayAlign(_nLin,_nCol,"> Válidade da Proposta: "+"n"+" Dias.",_oFont12,_nColTot,10,CLR_BLACK, 0 , 0 )
 
 	_nLin += 13
 
@@ -275,21 +298,27 @@ Static Function Cabec() //Cabeçalho
 
 	_nLin += 45
 
-	_oPrinter:SayAlign(_nLin,_nCol,"GEOLOGUS ENGENHARIA LTDA",_oFont20N,_nTmPag,10,, 0, 0 )
-	_oPrinter:SayAlign(_nLin,_nCol,"Proposta: 022337 - Rev.0",_oFont16,_nTmPag,10,, 1, 0 )
+	_oPrinter:SayAlign(_nLin,_nCol,Alltrim(ZE0->ZE0_NCLIEN),_oFont20N,_nTmPag,10,, 0, 0 )
+	// _oPrinter:SayAlign(_nLin,_nCol,"GEOLOGUS ENGENHARIA LTDA",_oFont20N,_nTmPag,10,, 0, 0 )
+	_oPrinter:SayAlign(_nLin,_nCol,"Proposta: "Alltrim(ZE0->ZE0_PROPOS)+" - Rev."+Alltrim(STR(ZE0->ZE0_REVISA),_oFont16,_nTmPag,10,, 1, 0 )
+	// _oPrinter:SayAlign(_nLin,_nCol,"Proposta: 022337 - Rev.0",_oFont16,_nTmPag,10,, 1, 0 )
 
 	_nLin += 20
 
-	_oPrinter:SayAlign(_nLin,_nCol,"A/C: SR. SERGIO",_oFont16,_nTmPag,10,, 0, 0 )
-	_oPrinter:SayAlign(_nLin,_nCol,"09/10/2018",_oFont16,_nTmPag,10,, 1, 0 )
+	_oPrinter:SayAlign(_nLin,_nCol,"A/C: "+Alltrim(ZE0->ZE0_CONTAT),_oFont16,_nTmPag,10,, 0, 0 )
+	// _oPrinter:SayAlign(_nLin,_nCol,"A/C: SR. SERGIO",_oFont16,_nTmPag,10,, 0, 0 )
+	_oPrinter:SayAlign(_nLin,_nCol,DTOC(ZE0->ZE0_DATA),_oFont16,_nTmPag,10,, 1, 0 )
+	// _oPrinter:SayAlign(_nLin,_nCol,"09/10/2018",_oFont16,_nTmPag,10,, 1, 0 )
 
 	_nLin += 15
 
-	_oPrinter:SayAlign(_nLin,_nCol,"Tel.:",_oFont16,_nTmPag,10,, 0, 0 )
+	_oPrinter:SayAlign(_nLin,_nCol,"Tel.: "+ZE0->ZE0_FONE,_oFont16,_nTmPag,10,, 0, 0 )
+	// _oPrinter:SayAlign(_nLin,_nCol,"Tel.:",_oFont16,_nTmPag,10,, 0, 0 )
 
 	_nLin += 15
 
-	_oPrinter:SayAlign(_nLin,_nCol,"Email: compras@geologus.com.br",_oFont16,_nTmPag,10,, 0, 0 )
+	_oPrinter:SayAlign(_nLin,_nCol,"Email: "+Alltrim(ZE0->ZE0_EMAIL),_oFont16,_nTmPag,10,, 0, 0 )
+	// _oPrinter:SayAlign(_nLin,_nCol,"Email: compras@geologus.com.br",_oFont16,_nTmPag,10,, 0, 0 )
 
 	_nLin += 30
 
