@@ -20,7 +20,7 @@ User Function PXH096()
 	Private _lEnt
 	Private _cDir 		:= "C:\TOTVS\"
 	Private _lExcel		:= .F.
-	Private _nRadio		:= 1
+	Private _nRadio		:= 2
 
 	If !ExistDir( _cDir )
 		If MakeDir( _cDir ) <> 0
@@ -173,8 +173,10 @@ Static Function PXH96A()
 			_oPrinter:AddTable( _cWkSheet, _cTable )
 
 			_oPrinter:AddColumn( _cWkSheet, _cTable , "Item BNDES"					, 1,1,.F.)
-			_oPrinter:AddColumn( _cWkSheet, _cTable , "CC Lajari"					, 1,1,.F.)
+			//_oPrinter:AddColumn( _cWkSheet, _cTable , "CC Lajari"					, 1,1,.F.)
 			_oPrinter:AddColumn( _cWkSheet, _cTable , "Descrição Sucinta"			, 1,1,.F.)
+			_oPrinter:AddColumn( _cWkSheet, _cTable , "CC Lajari"					, 1,1,.F.)
+			_oPrinter:AddColumn( _cWkSheet, _cTable , "Descrição CCusto"			, 1,1,.F.)
 			_oPrinter:AddColumn( _cWkSheet, _cTable , "Nome do Fornecedor"			, 1,1,.F.)
 			_oPrinter:AddColumn( _cWkSheet, _cTable , "CNPJ/CPF"					, 1,1,.F.)
 			_oPrinter:AddColumn( _cWkSheet, _cTable , "Data"						, 1,1,.F.)
@@ -241,7 +243,7 @@ Static Function PXH96A()
 						_oPrinter:Say(_nLin,0520, TRANS(_nTotal, "@E 999,999,999.99")	,_oFont3,,,,1)
 						_nLin += 10
 					Else
-						_oPrinter:AddRow( _cWkSheet, _cTable,{"SubTotal - "+_cDescIt,,,,,,,,_nTotal,_nTNF})
+						_oPrinter:AddRow( _cWkSheet, _cTable,{"SubTotal - "+_cDescIt,,,,,,,,,_nTotal,_nTNF})
 					Endif
 
 					TSB->(RecLock("TSB",.T.))
@@ -321,8 +323,9 @@ Static Function PXH96A()
 			Else
 				_oPrinter:AddRow( _cWkSheet, _cTable,{;
 				TRB->ITEM		,;
-				TRB->CC			,;
 				TRB->DEITEM		,;
+				TRB->CC			,;
+				TRB->DESCUS		,;
 				TRB->FORNECE	,;
 				_cCnpj			,;
 				TRB->DTDISPO	,;
@@ -376,7 +379,7 @@ Static Function PXH96A()
 			_oPrinter:Say(_nLin,0015, "SubTotal - "+_cDescIt		,_oFont3)
 			_oPrinter:Say(_nLin,0520, TRANS(_nTotal, "@E 999,999,999.99")	,_oFont3,,,,1)
 		Else
-			_oPrinter:AddRow( _cWkSheet, _cTable,{"SubTotal - "+_cDescIt,,,,,,,,_nTotal,_nTNF})
+			_oPrinter:AddRow( _cWkSheet, _cTable,{"SubTotal - "+_cDescIt,,,,,,,,,_nTotal,_nTNF})
 		Endif
 
 		TSB->(RecLock("TSB",.T.))
@@ -437,7 +440,7 @@ Static Function PXH96A()
 
 		Else
 
-			_oPrinter:AddRow( _cWkSheet, _cTable,{"TOTAL GERAL",,,,,,,,_nTGeral,_nTGNF})
+			_oPrinter:AddRow( _cWkSheet, _cTable,{"TOTAL GERAL",,,,,,,,,_nTGeral,_nTGNF})
 
 			LoadSynthetic(_lExcel)
 
@@ -472,8 +475,10 @@ Static Function GeraTRB(_cOpt)
 	aCampos := {}
 
 	AADD(aCampos,{"ITEM"		,TamSx3("ZJ_CODIGO")[3]		,TamSx3("ZJ_CODIGO")[1]		,TamSx3("ZJ_CODIGO")[2]})
-	AADD(aCampos,{"CC"			,TamSx3("CTT_CUSTO")[3]		,TamSx3("CTT_CUSTO")[1]		,TamSx3("CTT_CUSTO")[2]})
+	///AADD(aCampos,{"CC"			,TamSx3("CTT_CUSTO")[3]		,TamSx3("CTT_CUSTO")[1]		,TamSx3("CTT_CUSTO")[2]})
 	AADD(aCampos,{"DEITEM"		,TamSx3("ZJ_DESCRIC")[3]	,TamSx3("ZJ_DESCRIC")[1]	,TamSx3("ZJ_DESCRIC")[2]})
+	AADD(aCampos,{"CC"			,TamSx3("CTT_CUSTO")[3]		,TamSx3("CTT_CUSTO")[1]		,TamSx3("CTT_CUSTO")[2]})
+	AADD(aCampos,{"DESCUS"		,TamSx3("CTT_DESC01")[3]	,TamSx3("CTT_DESC01")[1]	,TamSx3("CTT_DESC01")[2]})
 	AADD(aCampos,{"FORNECE"		,TamSx3("A2_NOME")[3]		,TamSx3("A2_NOME")[1]		,TamSx3("A2_NOME")[2]	})
 	AADD(aCampos,{"CNPJ"		,TamSx3("A2_CGC")[3]		,TamSx3("A2_CGC")[1]		,TamSx3("A2_CGC")[2]})
 	AADD(aCampos,{"DTDISPO"		,TamSx3("E5_DTDISPO")[3]	,TamSx3("E5_DTDISPO")[1]	,TamSx3("E5_DTDISPO")[2]})
@@ -546,6 +551,7 @@ Static Function LoadTRB()
 					If CTT->CTT_YRELBN = 'S'
 						_cItem   := ""
 						_cDescIt := ""
+						_cDescCc := Alltrim(Left(CTT->CTT_DESC01,35))
 						SZJ->(dbSetOrder(1))
 						If SZJ->(msSeek(xFilial("SZJ")+CTT->CTT_YBNDS))
 							_cItem   := Alltrim(SZJ->ZJ_CODIGO)
@@ -554,8 +560,9 @@ Static Function LoadTRB()
 
 						TRB->(RecLock("TRB",.T.))
 						TRB->ITEM		:= _cItem
-						TRB->CC			:= SEV->EV_NATUREZ
 						TRB->DEITEM		:= _cDescIt
+						TRB->CC			:= SEV->EV_NATUREZ
+						TRB->DESCUS		:= _cDescCc
 						TRB->FORNECE	:= TSE5->NOME
 						TRB->CNPJ		:= TSE5->CNPJ
 						TRB->DTDISPO	:= TSE5->DTDISPO
@@ -590,6 +597,7 @@ Static Function LoadTRB()
 				If CTT->CTT_YRELBN = 'S'
 					_cItem   := ""
 					_cDescIt := ""
+					_cDescCc := Alltrim(Left(CTT->CTT_DESC01,35))
 					SZJ->(dbSetOrder(1))
 					If SZJ->(msSeek(xFilial("SZJ")+CTT->CTT_YBNDS))
 						_cItem   := Alltrim(SZJ->ZJ_CODIGO)
@@ -603,8 +611,10 @@ Static Function LoadTRB()
 
 					TRB->(RecLock("TRB",.T.))
 					TRB->ITEM		:= _cItem
-					TRB->CC			:= TSE5->CUSTO
+					//TRB->CC			:= TSE5->CUSTO
 					TRB->DEITEM		:= _cDescIt
+					TRB->CC			:= TSE5->CUSTO
+					TRB->DESCUS		:= _cDescCc
 					TRB->FORNECE	:= TSE5->NOME
 					TRB->CNPJ		:= TSE5->CNPJ
 					TRB->DTDISPO	:= TSE5->DTDISPO

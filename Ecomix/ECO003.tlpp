@@ -23,7 +23,7 @@ USER FUNCTION ECO003(_cProposta)
 	Local _oDlg			:= NIL
 	Local _nOpc			:= 0
 
-	Default _cProposta := ''
+	Default _cProposta := Space(TamSX3("ZE0_PROPOS")[1])
 
 	Private _cTitulo    := "Proposta Comercial - ECO003"
 
@@ -84,7 +84,7 @@ USER FUNCTION ECO003(_cProposta)
 	If _nOpc = 1
 
 		ZE0->(dbSetOrder(1))
-		If ZE0->(MsSeek(xFilail("ZE0")+_cProposta))
+		If ZE0->(MsSeek(xFilial("ZE0")+_cProposta))
 			LjMsgRun(_cMsgTit,_cProc,{||ECO03A()})
 		Else
 			MsgAlert("Proposta não encontrada!")
@@ -169,7 +169,7 @@ Static Function ECO03A()
 				If ValType(_xCampo) = "N"
 					_xCampo := Transform(_xCampo,_aCabec[_a][9])
 				Else
-					_xCampo := Alltrim((_xCampo)
+					_xCampo := Alltrim(_xCampo)
 				Endif
 
 				_oPrinter:SayAlign(_nLinICab,_aCabec[_a][3]+_aCabec[_a][6],_xCampo,_oFont12,_aCabec[_a][2] -_aCabec[_a][7]-3,7,CLR_BLACK, _aCabec[_a][5] , 0 )
@@ -300,7 +300,7 @@ Static Function Cabec() //Cabeçalho
 
 	_oPrinter:SayAlign(_nLin,_nCol,Alltrim(ZE0->ZE0_NCLIEN),_oFont20N,_nTmPag,10,, 0, 0 )
 	// _oPrinter:SayAlign(_nLin,_nCol,"GEOLOGUS ENGENHARIA LTDA",_oFont20N,_nTmPag,10,, 0, 0 )
-	_oPrinter:SayAlign(_nLin,_nCol,"Proposta: "Alltrim(ZE0->ZE0_PROPOS)+" - Rev."+Alltrim(STR(ZE0->ZE0_REVISA),_oFont16,_nTmPag,10,, 1, 0 )
+	_oPrinter:SayAlign(_nLin,_nCol,"Proposta: "+Alltrim(ZE0->ZE0_PROPOS)+" - Rev."+Alltrim(STR(ZE0->ZE0_REVISA)),_oFont16,_nTmPag,10,, 1, 0 )
 	// _oPrinter:SayAlign(_nLin,_nCol,"Proposta: 022337 - Rev.0",_oFont16,_nTmPag,10,, 1, 0 )
 
 	_nLin += 20

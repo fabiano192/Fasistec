@@ -1,5 +1,4 @@
 #INCLUDE 'TOTVS.CH'
-#INCLUDE 'TOPCONN.CH'
 #INCLUDE 'FWMVCDEF.CH'
 
 /*/{Protheus.doc} ECO004
@@ -13,8 +12,6 @@
 User Function ECO004()
 
 	Private _oBrowse 	:= FwMBrowse():New()
-
-    MenuDef()
 
 	//Alias do Browse
 	_oBrowse:SetAlias('ZE0')
@@ -37,11 +34,12 @@ Static Function MenuDef()
 
 	Local _aMenu :=	{}
 
-	ADD OPTION _aMenu TITLE 'Pesquisar'  ACTION 'PesqBrw'       	OPERATION 1 ACCESS 0
-	ADD OPTION _aMenu TITLE 'Visualizar' ACTION 'VIEWDEF.ECO004'	OPERATION 2 ACCESS 0
-	ADD OPTION _aMenu TITLE 'Incluir'    ACTION 'VIEWDEF.ECO004'	OPERATION 3 ACCESS 0
-	ADD OPTION _aMenu TITLE 'Alterar'    ACTION 'VIEWDEF.ECO004'	OPERATION 4 ACCESS 0
-	ADD OPTION _aMenu TITLE 'Excluir'    ACTION 'VIEWDEF.ECO004'	OPERATION 5 ACCESS 0
+	ADD OPTION _aMenu TITLE 'Pesquisar'  ACTION 'PesqBrw'       			OPERATION 1 ACCESS 0
+	ADD OPTION _aMenu TITLE 'Visualizar' ACTION 'VIEWDEF.ECO004'			OPERATION 2 ACCESS 0
+	ADD OPTION _aMenu TITLE 'Incluir'    ACTION 'VIEWDEF.ECO004'			OPERATION 3 ACCESS 0
+	ADD OPTION _aMenu TITLE 'Alterar'    ACTION 'VIEWDEF.ECO004'			OPERATION 4 ACCESS 0
+	ADD OPTION _aMenu TITLE 'Excluir'    ACTION 'VIEWDEF.ECO004'			OPERATION 5 ACCESS 0
+	ADD OPTION _aMenu TITLE 'Imprimir'   ACTION 'U_ECO003(ZE0->ZE0_PROPOS)'	OPERATION 2 ACCESS 0
 
 Return(_aMenu)
 
@@ -117,6 +115,8 @@ Static Function ViewDef()
 
 	_oView:EnableTitleView( 'VIEW_ZE0' )
 	_oView:EnableTitleView( 'VIEW_ZE1', "Itens Proposta Comercial" )
+
+	_oStruZE1:RemoveField( 'ZE1_PROPOS' )
 
 	_oModel:Activate()
 
