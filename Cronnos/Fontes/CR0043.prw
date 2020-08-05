@@ -467,6 +467,8 @@ Static Function CR043B()
 Return
 
 
+
+
 Static Function CR043C(_lFim)
 
 	Private _nPula,_lPrim,_cItem,_cItemExp,_lAchou,_nPrcVen,_cNum,_lVerFat, _lIncSC6, _cPedido
@@ -827,7 +829,7 @@ Static Function IntSC6C()
 				SC5->C5_COMIS1  := SA1->A1_COMIS
 				SC5->C5_EMISSAO := dDataBase
 				SC5->C5_PESOL   := 1
-				SC5->C5_MOEDA   := 1
+				SC5->C5_MOEDA   := 2
 				SC5->C5_TXMOEDA := 1
 				SC5->C5_TPCARGA := "2"
 				SC5->C5_PEDEXP  := _cNum
