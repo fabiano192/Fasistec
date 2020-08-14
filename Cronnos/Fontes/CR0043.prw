@@ -43,22 +43,24 @@ User Function CR0043()
 
 	If _nOpc = 1
 	*/
-	Private cArq
-	Private _cAnexo
+		Private cArq
+		Private _cAnexo
 
-	U_CR0041() 	//Aloca os arquivos nas pastas corretas.
-	CR043A() 	//Processa os arquivos
-	CR043C() 	//Integra os Pedidos
-	CR043D() 	//Gera arquivo excel
+		U_CR0041() 	//Aloca os arquivos nas pastas corretas.
+		CR043A() 	//Processa os arquivos
+		CR043C() 	//Integra os Pedidos
+		CR043D() 	//Gera arquivo excel
 
-	Conout('Fim Programação Cat. Exportação - CR0043')
-	//Endif
+		Conout('Fim Programação Cat. Exportação - CR0043')
+		//Endif
 
-Return(Nil)
+		Return(Nil)
 
 
 
 Static Function CR043A(_lFim)
+
+	Local B, F, nI
 
 	Private _cPedido,_cRelease,_cProdCli2,_cControl,_cPOLine
 	Private	_cCliente,_cLoja,_cDtCode,_cProdCli,_cRevisao
@@ -342,6 +344,7 @@ Return
 
 Static Function CR043B()
 
+	Local B
 	//	_cq2  := " UPDATE "+RetSqlName("EE8")+" SET EE8_SLDATU = 0 "
 	//	_cQ2  += " FROM "+RetSqlName("EE8")+" EE8 "
 	//	_cQ2  += " INNER JOIN "+RetSqlName("SC6")+" C6 ON LEFT(EE8_PEDIDO,6) +EE8_FATIT = C6_NUM+C6_ITEM "
@@ -399,6 +402,10 @@ Static Function CR043B()
 
 	Else
 
+		SZ2->(RecLock("SZ2",.F.))
+		SZ2->Z2_POLINE := _cPOLine
+		SZ2->(MsUnLock())
+
 		If Alltrim(SZ2->Z2_REVISAO) == Alltrim(_cRevisao)
 
 			_cProdPasy := SZ2->Z2_PRODUTO
@@ -411,7 +418,6 @@ Static Function CR043B()
 
 			If &(_cCond)
 				Begin Transaction
-
 					SZ2->(RecLock("SZ2",.F.))
 					SZ2->Z2_RELEASE  := _cRelease
 					SZ2->Z2_PCCODE   := _cProdCli2
@@ -470,6 +476,8 @@ Return
 
 
 Static Function CR043C(_lFim)
+
+	Local i
 
 	Private _nPula,_lPrim,_cItem,_cItemExp,_lAchou,_nPrcVen,_cNum,_lVerFat, _lIncSC6, _cPedido
 	Private _lIncSC6  := .F.
@@ -577,12 +585,12 @@ Static Function CR043C(_lFim)
 					SZ4->(dbSetOrder(1))
 					If SZ4->(dbSeek(xFilial("SZ4")+TSZ4->Z4_CONTROL+TSZ4->Z4_CODCLI+TSZ4->Z4_LOJA+TSZ4->Z4_PRODCLI+Dtos(TSZ4->Z4_DTENT)+TSZ4->Z4_PEDIDO+'N'))
 
-					Begin Transaction
+						Begin Transaction
 
 					SZ4->(RecLock("SZ4",.F.))
 					SZ4->Z4_INTEGR := "Y"
 					SZ4->(MsUnlock())
-					End Transaction
+						End Transaction
 
 					Endif
 
@@ -706,6 +714,8 @@ Return
 
 
 Static Function QTPed()
+
+	Local C
 
 	_cKey := TSZ4->Z4_CODCLI + TSZ4->Z4_LOJA + TSZ4->Z4_PRODPAS + TSZ4->Z4_PRODCLI + TSZ4->Z4_PEDIDO
 
@@ -1157,18 +1167,18 @@ Static Function CR043D()
 				_cDTCode = TRB->DTCODE
 
 				oFwMsEx:AddRow( cWorkSheet, cTable,{;
-				TRB->DTCODE   	,;
-				TRB->ASN		})
+					TRB->DTCODE   	,;
+					TRB->ASN		})
 
 			Else
 
 				oFwMsEx:AddRow( cWorkSheet, cTable,{;
-				TRB->CLIENTE	,;
-				TRB->LOJA    	,;
-				TRB->DTCODE   	,;
-				TRB->PRODCLI    ,;
-				TRB->PEDCLI    	,;
-				TRB->REVISAO    })
+					TRB->CLIENTE	,;
+					TRB->LOJA    	,;
+					TRB->DTCODE   	,;
+					TRB->PRODCLI    ,;
+					TRB->PEDCLI    	,;
+					TRB->REVISAO    })
 			Endif
 
 			TRB->(dbSkip())

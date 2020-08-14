@@ -12,7 +12,8 @@ GEEC002()	:	Atualiza o preço de Venda conforme cadastro de produto X Cliente (SZ
 
 User Function GEXP001()
 	
-	Local _aListBox   := {}
+	Local i, F
+	Local _aListBox := {}
 	
 	_aAliOri  := GetArea()
 	_aAliEE8  := EE8->(GetArea())
@@ -21,8 +22,7 @@ User Function GEXP001()
 	_aAliSF4  := SF4->(GetArea())
 	
 	_nPreco   := M->EE8_PRECO
-	
-	
+
 	SZ2->(dbSetOrder(6))
 	If SZ2->(dbSeek(xFilial("SZ2")+M->EE7_IMPORT + M->EE7_IMLOJA + M->EE8_CODCLI+"1" ))
 		
@@ -51,7 +51,7 @@ User Function GEXP001()
 			For i := 2 to 12
 				If &("SZ2->Z2_DTREF"+StrZero(i,2)) >= dDataRef
 					dDataRef := &("SZ2->Z2_DTREF"+StrZero(i,2))
-					_nValor   := &("SZ2->Z2_PRECO"+StrZero(i,2))
+					_nValor  := &("SZ2->Z2_PRECO"+StrZero(i,2))
 				Endif
 			Next i
 			
@@ -72,7 +72,8 @@ User Function GEXP001()
 			SZ2->Z2_REVISAO								,; //12
 			SZ2->Z2_RELEASE								,; //13
 			SB1->B1_PESO								,; //14
-			SB1->B1_POSIPI								}) //15
+			SB1->B1_POSIPI								,; //15
+			SZ2->Z2_POLINE								}) //16
 			
 			SZ2->(dbSkip())
 		EndDo
@@ -127,6 +128,7 @@ User Function GEXP001()
 				M->EE8_POSIPI   := _aListBox[F][15]
 				M->EE8_QE   	:= 0
 				M->EE8_QTDEM1  	:= 0
+				M->EE8_POLINE	:= _aListBox[F][16]
 			Endif
 		Next F
 	Endif
@@ -217,11 +219,13 @@ Return(_nPreco)
 
 
 Static Function CheckBox(_aListBox,_oListbox)
+
+	Local F
 	
 	_aListBox[_oListbox:nAt][1] := !_aListBox[_oListbox:nAt][1]
 	
 	For F:=1 To Len(_aListBox)
-		                           
+
 		If F <> _oListbox:nAt
 			_aListBox[F][1] := .F.
 		Endif

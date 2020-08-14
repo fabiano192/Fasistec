@@ -48,7 +48,8 @@ Static Function ECO05_01()
 
 	local AX,a
 
-	Private _aKeySF4 := {Array(2)}
+	Private _aKeySF4 := LoadSF4()
+	// Private _aKeySF4 := {Array(2)}
 
 	Private _aItem  := {}
 
@@ -60,13 +61,13 @@ Static Function ECO05_01()
 	Pergunte("ECO005",.F.)
 
 	//Exclui daddos da tabela SF4
-	_cUpd := " DELETE SF4010 FROM SF4010 WHERE F4_TIPO = 'S' "
-	_cUpd += " AND F4_CODIGO <> '501' "
+	// _cUpd := " DELETE SF4010 FROM SF4010 WHERE F4_TIPO = 'S' "
+	// _cUpd += " AND F4_CODIGO <> '501' "
 
-	TCSQLEXEC(_cUpd )
+	// TCSQLEXEC(_cUpd )
 
 
-	_aEmp:= {{'A','0101','91'},{'A','0103','93'},{'B','0201','101'},{'B','0203','103'},{'B','0204','104'},{'C','0301','111'},{'C','0303','113'}}
+	_aEmp:= {{'A','0101','91'},{'A','0102','92'},{'A','0103','93'},{'B','0201','101'},{'B','0203','103'},{'B','0204','104'},{'C','0301','111'},{'C','0303','113'}}
 	// _aEmp:= {{'B','0201','101'}}
 
 	ProcRegua(Len(_aEmp))
@@ -226,12 +227,12 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 			_cKey1   := Alltrim(cValToChar(TRB->CODCOLIGADA))
 			While TRB->(!EOF())  .And. _cKey1 == Alltrim(cValToChar(TRB->CODCOLIGADA))
 
-				
+
 				If TRB->CODTMV = '2.2.12'
 					_F2TIPO    := "D"
 					//Verifica se o Fornecedor está cadastrado na tabela ZF6, que relaciona o código RM X Protheus
-					CheckZF6(3,_cFil,_cAliasZF6,_cAliasSA2,_cAliasSB1,_cAliasSA2)					
-				else
+					CheckZF6(3,_cFil,_cAliasZF6,_cAliasSA2,_cAliasSB1,_cAliasSA2)
+				Else
 					_F2TIPO    := "N"
 					//Verifica se o Cliente está cadastrado na tabela ZF6, que relaciona o código RM X Protheus
 					CheckZF6(1,_cFil,_cAliasZF6,_cAliasSA1,_cAliasSB1,_cAliasSA2)
@@ -322,7 +323,8 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 					_D2PRCVEN  := TRB->PRECOUNITARIO
 					_D2TOTAL   := TRB->VALORLIQUIDO
 					_D2CF      := Left(StrTran(TRB->CODNAT,".",""),4)
-					_D2COD     := Alltrim(StrTran(TRB->CODIGOPRD,".",""))
+					// _D2COD     := Alltrim(StrTran(TRB->CODIGOPRD,".",""))
+					_D2COD     := ''
 					_D2TES     := ''
 					_D2DESC    := 0
 					_D2VALIPI  := 0
@@ -383,10 +385,11 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 					_cSTICMS := _cSTINSS := _cSTIPI := _cSTIRRF := _cSTISS := _cSTCOFINS := _cSTPIS := _cSTICMSST := _cSTII := ''
 					_cKeyICMS:= _cKeyIPI := _cKeyCOFINS := _cKeyPIS := _cKeyINS := _cKeyIRRF := _cKeyISS := _cKeyICMSST := _cKeyII := ''
 
-					_cMotDes   := ''
+					_F4MOTICMS   := ''
 					_cNomeF4   := TRB->NOME
 					_F4BASEICM := 0
 					_F4AGREG   := "N"
+					_F4ICM     := "N"
 
 					//Verifica se o Produto está cadastrado na tabela ZF6, que relaciona o código RM X Protheus
 					CheckZF6(2,_cFil,_cAliasZF6,_cAliasSA1,_cAliasSB1,_cAliasSA2)
@@ -400,11 +403,13 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 							_D2VALICM  := TRB->VALOR
 							_cSTICMS   := Alltrim(cValToChar(TRB->SITTRIBUTARIA))
 							_D2CLASFIS := '0'+_cSTICMS
-							_cMotDes   := Alltrim(cValToChar(TRB->MOTDESICMS))
+							_F4MOTICMS := Alltrim(cValToChar(TRB->MOTDESICMS))
 							_D2DESCICM := TRB->VALORICMSDESONERADO
 							_F4BASEICM := TRB->FATORREDUCAO
-							_F4AGREG   := If(_D2DESCICM > 0 .And. _F4BASEICM > 0 .And. _cMotDes = "9","S","N")
-							_cKeyICMS  := If(_D2VALICM > 0,"S","N")+'_'+_cSTICMS+'_'+_cMotDes+'_'+_F4AGREG
+							_F4AGREG   := If(_D2DESCICM > 0 .And. _F4BASEICM > 0 .And. _F4MOTICMS = "9","S","N")
+							_F4ICM     := If(_D2VALICM > 0,"S","N")
+							_cKeyICMS  := _F4ICM+'_'+_cSTICMS+'_'+_F4MOTICMS+'_'+_F4AGREG
+							// _cKeyICMS  := If(_D2VALICM > 0,"S","N")+'_'+_cSTICMS+'_'+_F4MOTICMS+'_'+_F4AGREG
 						ElseIf Alltrim(TRB->CODTRB) = 'IPI'
 							_D2BASEIPI := TRB->BASEDECALCULO
 							_D2IPI     := TRB->ALIQUOTA
@@ -450,13 +455,15 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 						TRB->(dbSkip())
 					EndDo
 
-					_cKeyF4 := _cKeyICMS + _cKeyIPI + _cKeyCOFINS + _cKeyPIS + _cKeyINS + _cKeyIRRF + _cKeyISS + _cKeyICMSST + _cKeyII
+					_cGeraFin := VldGeraFin(_D2CF,_F2TIPO)
+
+					_cKeyF4 := _cGeraFin + _cKeyICMS + _cKeyIPI + _cKeyCOFINS + _cKeyPIS + _cKeyINS + _cKeyIRRF + _cKeyISS + _cKeyICMSST + _cKeyII
 					_nPosF4 := aScan(_aKeySF4,{|x| x[1] = _cKeyF4})
 
 					If _nPosF4 > 0
 						_D2TES := _aKeySF4[_nPosF4][2]
 					Else
-						_D2TES := GetSF4(_cAliasSF4,_D2CF,_cNomeF4,_cSTICMS,_cSTIPI,_cSTCOFINS,_cSTPIS,_D2VALIMP5,_D2VALIMP6,_D2ICMSRET)
+						_D2TES := GetSF4(_cKeyF4,_cAliasSF4,_D2CF,_cNomeF4,_cSTICMS,_cSTIPI,_cSTCOFINS,_cSTPIS,_D2VALIMP5,_D2VALIMP6,_D2ICMSRET,_cGeraFin)
 						AAdd(_aKeySF4,{_cKeyF4,_D2TES})
 					Endif
 
@@ -756,33 +763,75 @@ Static Function CheckZF6(_nOpc,_cFil,_cAliasZF6,_cAliasSA1,_cAliasSB1,_cAliasSA2
 		Endif
 
 	ElseIf _nOpc = 2
-		(_cAliasZF6)->(dbSetOrder(1))
-		If !(_cAliasZF6)->(MsSeek(xFilial("ZF6")+"SB1"+PADR("B1_COD",TAMSX3("ZF6_CAMPO")[1])+Alltrim(TRB->CODIGOPRD)))
-			// ZF6_FILIAL, ZF6_TABELA, ZF6_CAMPO, ZF6_CODRM, R_E_C_N_O_, D_E_L_E_T_
 
-			If Select("TPROD") > 0
-				TPROD->(dbCloseArea())
+		_D2COD := ''
+		_lGeraZF6 := .T.
+
+		If Select("TPROD") > 0
+			TPROD->(dbCloseArea())
+		Endif
+
+		_cQry := " SELECT * FROM [10.140.1.5].[CorporeRM].dbo.TPRODUTO A " +CRLF
+		_cQry += " INNER JOIN [10.140.1.5].[CorporeRM].dbo.TPRODUTODEF B ON A.CODCOLPRD = B.CODCOLIGADA AND A.IDPRD = B.IDPRD " +CRLF
+		_cQry += " WHERE RTRIM(CODCOLPRD) = "+Alltrim(cValToChar(TRB->CODCOLIGADA))+" " +CRLF
+		_cQry += " AND CODIGOPRD = '"+TRB->CODIGOPRD+"' " + CRLF
+
+		TcQuery _cQry New Alias "TPROD"
+
+		_nReg := Contar("TPROD","!EOF()")
+
+		If _nReg > 0
+
+			TPROD->(dbGoTop())
+
+			_cDesc := U_RM_NoAcento(UPPER(Alltrim(TPROD->DESCRICAO)))
+
+			If Select("TTSB1") > 0
+				TTSB1->(dbCloseArea())
 			Endif
 
-			_cQry := " SELECT * FROM [10.140.1.5].[CorporeRM].dbo.TPRODUTO A " +CRLF
-			_cQry += " INNER JOIN [10.140.1.5].[CorporeRM].dbo.TPRODUTODEF B ON A.CODCOLPRD = B.CODCOLIGADA  AND A.IDPRD = B.IDPRD " +CRLF
-			_cQry += " WHERE RTRIM(CODCOLPRD) = "+Alltrim(cValToChar(TRB->CODCOLIGADA))+" " +CRLF
-			// _cQry += " WHERE RTRIM(CODCOLPRD) IN  ('0','9','10','11') " +CRLF
-			_cQry += " AND CODIGOPRD = '"+TRB->CODIGOPRD+"' " + CRLF
+			_cQryB1 := " SELECT DADOS.* FROM " + CRLF
+			_cQryB1 += "	( " + CRLF
+			_cQryB1 += " 		SELECT ZF6_CODRM,ZF6_TOTVS,ZF6_DESC,EMP = '01', ZF6_FILIAL from ZF6010 A " + CRLF
+			_cQryB1 += " 		WHERE A.ZF6_CAMPO = 'B1_COD' AND A.D_E_L_E_T_ = '' " + CRLF
+			_cQryB1 += " 	UNION  " + CRLF
+			_cQryB1 += " 		SELECT ZF6_CODRM,ZF6_TOTVS,ZF6_DESC,EMP = '02', ZF6_FILIAL from ZF6020 B " + CRLF
+			_cQryB1 += " 		WHERE B.ZF6_CAMPO = 'B1_COD' AND B.D_E_L_E_T_ = '' " + CRLF
+			_cQryB1 += " 	UNION  " + CRLF
+			_cQryB1 += " 		SELECT ZF6_CODRM,ZF6_TOTVS,ZF6_DESC,EMP = '03', ZF6_FILIAL from ZF6030 C " + CRLF
+			_cQryB1 += " 		WHERE C.ZF6_CAMPO = 'B1_COD' AND C.D_E_L_E_T_ = ''
+			_cQryB1 += " 	) AS DADOS " + CRLF
+			_cQryB1 += " WHERE DADOS.ZF6_CODRM = '"+Alltrim(TRB->CODIGOPRD)+"' " + CRLF
 
-			TcQuery _cQry New Alias "TPROD"
+			TcQuery _cQryB1 New Alias "TTSB1"
 
-			_nReg := Contar("TPROD","!EOF()")
+			If Contar("TTSB1","!EOF()") > 0
 
-			If _nReg > 0
-				TPROD->(dbGoTop())
+				TTSB1->(dbGoTop())
 
-				_cProd := Alltrim(StrTran(TPROD->CODIGOPRD,".",""))
+				While TTSB1->(!EOF()) .And. _lGeraZF6
 
-				(_cAliasSB1)->(dbSetOrder(1))
-				If !(_cAliasSB1)->(MsSeek(_cFil+_cProd))
-					GeraProd(_cFil,_cProd,_cAliasSB1)
-				Endif
+					If Alltrim(TTSB1->ZF6_DESC) = _cDesc
+						_D2COD := TTSB1->ZF6_TOTVS
+						If TTSB1->EMP = _cEmp .And. TTSB1->ZF6_FILIAL = _cFil
+							_lGeraZF6 := .F.
+						Endif
+					Endif
+
+					TTSB1->(dbSkip())
+				EndDo
+			Endif
+
+			TTSB1->(dbCloseArea())
+
+			If Empty(_D2COD)
+
+				_D2COD := GetNxtProd()
+
+				// (_cAliasSB1)->(dbSetOrder(1))
+				// If !(_cAliasSB1)->(MsSeek(_cFil+_cProd))
+				GeraProd(_cFil,_D2COD,_cAliasSB1)
+				// Endif
 
 				(_cAliasZF6)->(RecLock(_cAliasZF6,.T.))
 				(_cAliasZF6)->ZF6_FILIAL := _cFil
@@ -790,12 +839,25 @@ Static Function CheckZF6(_nOpc,_cFil,_cAliasZF6,_cAliasSA1,_cAliasSB1,_cAliasSA2
 				(_cAliasZF6)->ZF6_CAMPO  := "B1_COD"
 				(_cAliasZF6)->ZF6_CODRM  := TPROD->CODIGOPRD
 				(_cAliasZF6)->ZF6_IDRM   := TPROD->IDPRD
-				(_cAliasZF6)->ZF6_TOTVS  := _cProd
+				(_cAliasZF6)->ZF6_TOTVS  := _D2COD
+				(_cAliasZF6)->ZF6_DESC   := _cDesc
+				(_cAliasZF6)->(MsUnLock())
+
+			ElseIf _lGeraZF6
+
+				(_cAliasZF6)->(RecLock(_cAliasZF6,.T.))
+				(_cAliasZF6)->ZF6_FILIAL := _cFil
+				(_cAliasZF6)->ZF6_TABELA := "SB1"
+				(_cAliasZF6)->ZF6_CAMPO  := "B1_COD"
+				(_cAliasZF6)->ZF6_CODRM  := TPROD->CODIGOPRD
+				(_cAliasZF6)->ZF6_IDRM   := TPROD->IDPRD
+				(_cAliasZF6)->ZF6_TOTVS  := _D2COD
+				(_cAliasZF6)->ZF6_DESC   := _cDesc
 				(_cAliasZF6)->(MsUnLock())
 			Endif
-
-			TPROD->(dbCloseArea())
 		Endif
+
+		TPROD->(dbCloseArea())
 	Endif
 
 Return(Nil)
@@ -858,6 +920,38 @@ RETURN(NIL)
 
 
 
+Static Function GetNxtProd()
+
+	Local _cNxtProd := ''
+	Local _cPrefixo := ''
+
+	If _F2TIPO = 'N'
+		_cPrefixo := "VEN"
+	Else
+		_cPrefixo := "M00"
+	Endif
+
+	_cQrySA1 := " SELECT MAX(B1_COD) AS COD FROM "+RetSqlName("SB1")+" B1 " +CRLF
+	_cQrySA1 += " WHERE B1.D_E_L_E_T_ = '' AND B1_FILIAL = '"+xFilial("SB1")+"' " +CRLF
+	_cQrySA1 += " AND LEFT(B1_COD,3) = '"+_cPrefixo+"' " +CRLF
+
+	TcQuery _cQrySA1 New Alias "TNEXT"
+
+	TNEXT->(dbGoTop())
+
+	If !Empty(TNEXT->COD)
+		_cNxtProd := _cPrefixo+Padl(Val(Right(Alltrim(TNEXT->COD),5))+1,5,"0")
+		// _cNxtProd := SOMA1(Alltrim(TNEXT->COD))
+	Else
+		_cNxtProd := _cPrefixo+"00001"
+	Endif
+
+	TNEXT->(dbCloseArea())
+
+Return(_cNxtProd)
+
+
+
 Static Function GetNxtA1(_cCod,_cLoja)
 
 	Local _cQrySA1 := ""
@@ -899,7 +993,7 @@ Static Function GeraProd(_cFil,_cProd,_cAliasSB1)
 
 	(_cAliasSB1)->(RecLock(_cAliasSB1,.T.))
 	// (_cAliasSB1)->B1_YID    := TPROD->IDPRD
-	(_cAliasSB1)->B1_FILIAL    := _cFil
+	// (_cAliasSB1)->B1_FILIAL    := _cFil
 	(_cAliasSB1)->B1_COD       := _cProd
 	(_cAliasSB1)->B1_DESC      := U_RM_NoAcento(UPPER(Alltrim(TPROD->DESCRICAO)))
 	(_cAliasSB1)->B1_MSBLQL    := (TPROD->INATIVO=1,"1","2")
@@ -924,7 +1018,7 @@ Return(Nil)
 
 
 
-Static Function GetSF4(_cAliasSF4,_D2CF,_cNomeF4,_cSTICMS,_cSTIPI,_cSTCOFINS,_cSTPIS,_D2VALIMP5,_D2VALIMP6,_D2ICMSRET)
+Static Function GetSF4(_cKeyF4,_cAliasSF4,_D2CF,_cNomeF4,_cSTICMS,_cSTIPI,_cSTCOFINS,_cSTPIS,_D2VALIMP5,_D2VALIMP6,_D2ICMSRET,_cGeraFin)
 
 	Local _cRetSF4 := ""
 	Local _cQryF4  := ''
@@ -953,11 +1047,11 @@ Static Function GetSF4(_cAliasSF4,_D2CF,_cNomeF4,_cSTICMS,_cSTIPI,_cSTCOFINS,_cS
 		(_cAliasSF4)->(RecLock(_cAliasSF4,.T.))
 		(_cAliasSF4)->F4_CODIGO  := _cRetSF4
 		(_cAliasSF4)->F4_TIPO    := "S"
-		(_cAliasSF4)->F4_ICM     := "S"
+		(_cAliasSF4)->F4_ICM     := _F4ICM
 		(_cAliasSF4)->F4_IPI     := "S"
-		(_cAliasSF4)->F4_CREDICM := "S"
+		(_cAliasSF4)->F4_CREDICM := _F4ICM
 		(_cAliasSF4)->F4_CREDIPI := "S"
-		(_cAliasSF4)->F4_DUPLIC  := "S"
+		(_cAliasSF4)->F4_DUPLIC  := _cGeraFin
 		(_cAliasSF4)->F4_ESTOQUE := "N"
 		(_cAliasSF4)->F4_CF      := _D2CF
 		(_cAliasSF4)->F4_TEXTO   := _cNomeF4
@@ -989,6 +1083,8 @@ Static Function GetSF4(_cAliasSF4,_D2CF,_cNomeF4,_cSTICMS,_cSTIPI,_cSTCOFINS,_cS
 		(_cAliasSF4)->F4_YPEDCOM := "2"
 		(_cAliasSF4)->F4_BASEICM := _F4BASEICM
 		(_cAliasSF4)->F4_AGREG   := _F4AGREG
+		(_cAliasSF4)->F4_MOTICMS := _F4MOTICMS
+		(_cAliasSF4)->F4_YCHAVRM := _cKeyF4
 		(_cAliasSF4)->(MsUnLock())
 	Endif
 
@@ -1184,34 +1280,33 @@ Static Function GeraFOR(_cFil,_cCNPJ,_cCod,_cLoja,_cAliasSA2)
 
 	GetNxtA2(@_cCod,@_cLoja)
 
-
-	(_cAlias)->(RecLock(_cAlias,.T.))
-	(_cAlias)->A2_COD     := _cCod
-	(_cAlias)->A2_LOJA    := _cLoja
-	(_cAlias)->A2_NOME    := UPPER(U_RM_NoAcento(TFOR->NOME))
-	(_cAlias)->A2_NREDUZ  := UPPER(U_RM_NoAcento(TFOR->NOMEFANTASIA))
-	(_cAlias)->A2_END     := UPPER(U_RM_NoAcento(Alltrim(TFOR->RUA)))+" "+UPPER(U_RM_NoAcento(ALLTRIM(TFOR->NUMERO)))
-	(_cAlias)->A2_COMPLEM := UPPER(U_RM_NoAcento(Alltrim(TFOR->COMPLEMENTO)))
-	(_cAlias)->A2_TIPO    := TFOR->PESSOAFISOUJUR
-	(_cAlias)->A2_EST     := TFOR->CODETD
-	(_cAlias)->A2_COD_MUN := TFOR->CODMUNICIPIO
-	(_cAlias)->A2_MUN     := UPPER(U_RM_NoAcento(Alltrim(TFOR->CIDADE)))
-	(_cAlias)->A2_BAIRRO  := UPPER(U_RM_NoAcento(Alltrim(TFOR->BAIRRO)))
-	// (_cAlias)->A2_NATUREZ := TFOR->
-	(_cAlias)->A2_CEP     := TFOR->CEP
-	// (_cAlias)->A2_DDD     := TFOR->
-	(_cAlias)->A2_TEL     := TFOR->TELEFONE
-	(_cAlias)->A2_PAIS    := "105"
-	(_cAlias)->A2_CGC     := _cCNPJ
-	(_cAlias)->A2_CONTATO := TFOR->CONTATO
-	(_cAlias)->A2_INSCR   := TFOR->INSCRESTADUAL
-	(_cAlias)->A2_CODPAIS := "01058"
-	(_cAlias)->A2_EMAIL   := TFOR->EMAIL
-	(_cAlias)->A2_MSBLQL  := If(TFOR->ATIVO=1,"2","1")
-	// (_cAlias)->A2_LC      := TFOR->LIMITECREDITO
-	(_cAlias)->A2_INSCRM  := TFOR->INSCRMUNICIPAL
-	(_cAlias)->A2_CONTRIB  := If(TFOR->CONTRIBUINTE=1,"2","1")
-	(_cAlias)->(MsUnLock())
+	(_cAliasSA2)->(RecLock(_cAliasSA2,.T.))
+	(_cAliasSA2)->A2_COD     := _cCod
+	(_cAliasSA2)->A2_LOJA    := _cLoja
+	(_cAliasSA2)->A2_NOME    := UPPER(U_RM_NoAcento(TFOR->NOME))
+	(_cAliasSA2)->A2_NREDUZ  := UPPER(U_RM_NoAcento(TFOR->NOMEFANTASIA))
+	(_cAliasSA2)->A2_END     := UPPER(U_RM_NoAcento(Alltrim(TFOR->RUA)))+" "+UPPER(U_RM_NoAcento(ALLTRIM(TFOR->NUMERO)))
+	(_cAliasSA2)->A2_COMPLEM := UPPER(U_RM_NoAcento(Alltrim(TFOR->COMPLEMENTO)))
+	(_cAliasSA2)->A2_TIPO    := TFOR->PESSOAFISOUJUR
+	(_cAliasSA2)->A2_EST     := TFOR->CODETD
+	(_cAliasSA2)->A2_COD_MUN := TFOR->CODMUNICIPIO
+	(_cAliasSA2)->A2_MUN     := UPPER(U_RM_NoAcento(Alltrim(TFOR->CIDADE)))
+	(_cAliasSA2)->A2_BAIRRO  := UPPER(U_RM_NoAcento(Alltrim(TFOR->BAIRRO)))
+	// (_cAliasSA2)->A2_NATUREZ := TFOR->
+	(_cAliasSA2)->A2_CEP     := TFOR->CEP
+	// (_cAliasSA2)->A2_DDD     := TFOR->
+	(_cAliasSA2)->A2_TEL     := TFOR->TELEFONE
+	(_cAliasSA2)->A2_PAIS    := "105"
+	(_cAliasSA2)->A2_CGC     := _cCNPJ
+	(_cAliasSA2)->A2_CONTATO := TFOR->CONTATO
+	(_cAliasSA2)->A2_INSCR   := TFOR->INSCRESTADUAL
+	(_cAliasSA2)->A2_CODPAIS := "01058"
+	(_cAliasSA2)->A2_EMAIL   := TFOR->EMAIL
+	(_cAliasSA2)->A2_MSBLQL  := If(TFOR->ATIVO=1,"2","1")
+	// (_cAliasSA2)->A2_LC      := TFOR->LIMITECREDITO
+	(_cAliasSA2)->A2_INSCRM  := TFOR->INSCRMUNICIPAL
+	(_cAliasSA2)->A2_CONTRIB  := If(TFOR->CONTRIBUINTE=1,"2","1")
+	(_cAliasSA2)->(MsUnLock())
 
 RETURN(NIL)
 
@@ -1252,3 +1347,35 @@ Static Function GetNxtA2(_cCod,_cLoja)
 
 Return(Nil)
 
+
+
+Static Function VldGeraFin(_D2CF,_F2TIPO)
+
+	Local _cRetFin := 'S'
+	Local _aCFOPRem:= {'5116','5151','5152','5901','5902','5903','5908','5909','5910','5915','5949','6901','6902','6910','6915','6949','5201','5413','5556','5921','5949','6202','6413','6556'}
+	Local _lRem    := (aScan(_aCFOPRem,_D2CF) > 0)
+
+	If _F2TIPO = 'D' .Or. _lRem
+		_cRetFin := 'N'
+	Endif
+
+Return(_cRetFin)
+
+
+
+Static Function LoadSF4()
+
+	Local _aRetSF4 := {}
+
+	SF4->(dbSetOrder(1))
+
+	SF4->(dbGoTop())
+
+	While !SF4->(!EOF())
+
+		AAdd(_aKeySF4,{_cKeyF4,SF4->F4_YCHAVRM})
+
+		SF4->(dbSkip())
+	EndDo
+
+Return(_aRetSF4)

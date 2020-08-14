@@ -1331,7 +1331,8 @@ If cTipo == "1"
 					EndIf
 				EndIf		
 				dbSelectArea("SF2")
-				If SF2->F2_TIPO = 'N' .And. !SF2->F2_CLIENTE $ '000017|000018' .And. SA1->A1_TIPOCLI <> 'X'
+				If SF2->F2_TIPO = 'N' .And. !SF2->F2_CLIENTE $ '000018' .And. SA1->A1_TIPOCLI <> 'X'
+				// If SF2->F2_TIPO = 'N' .And. !SF2->F2_CLIENTE $ '000017|000018' .And. SA1->A1_TIPOCLI <> 'X'
 
 					/*
 					//?????????????????????????????????????????????????????????????????????????
@@ -1631,7 +1632,8 @@ If cTipo == "1"
 							xAFM        := ""
 							xAEM        := ""
 							//					If SF2->F2_CLIENTE <> '000051' .Or. SA1->A1_TIPOCLI = 'X'
-							If SF2->F2_TIPO <> 'N' .Or. SF2->F2_CLIENTE $ '000017|000018' .Or. SA1->A1_TIPOCLI = 'X'
+							If SF2->F2_TIPO <> 'N' .Or. SF2->F2_CLIENTE $ '000018' .Or. SA1->A1_TIPOCLI = 'X'
+							// If SF2->F2_TIPO <> 'N' .Or. SF2->F2_CLIENTE $ '000017|000018' .Or. SA1->A1_TIPOCLI = 'X'
 								aEspVol   	:= {}
 							Endif
 
@@ -2142,37 +2144,38 @@ If cTipo == "1"
 						if lNfCup
 							cTpCliente := "F"
 						EndIf
-							_cDESCSZ2 := SC6->C6_DESCRI
-									If (cAliasSD2)->D2_CLIENTE == "000017"
-								dbSelectArea("SZ2")
-								dbSetOrder(6)
-										If dbSeek(xFilial("SZ2")+(cAliasSD2)->D2_CLIENTE+(cAliasSD2)->D2_LOJA+SD2->D2_PROCLI)
-									_nVal    := 0
-									_nPerDes := 0
-											If Substr(SC6->C6_PEDCLI,1,4) $ "QAPC/QAPP/QHPP"
-										_lCart := .T.
-										dDataRef := SZ2->Z2_DTREF01
-										_nVal    := SZ2->Z2_PRECO01
-												For A := 2 to 12
-													If &("SZ2->Z2_DTREF"+StrZero(A,2)) >= dDataRef
-												dDataRef := &("SZ2->Z2_DTREF"+StrZero(A,2))
-												_nVal   := &("SZ2->Z2_PRECO"+StrZero(A,2))
-													Endif
-												Next A
 
-												If SB1->B1_PICM > 0
-											_nPerDes := SB1->B1_PICM
-												Else
-											_nPerDes := 18
-												Endif
-											Endif
-
-									_nValICM += (_nVal * SD2->D2_QUANT)  * (_nPerDes/100)
+						_cDESCSZ2 := SC6->C6_DESCRI
+						If (cAliasSD2)->D2_CLIENTE == "000017"
+							dbSelectArea("SZ2")
+							dbSetOrder(6)
+							If dbSeek(xFilial("SZ2")+(cAliasSD2)->D2_CLIENTE+(cAliasSD2)->D2_LOJA+SD2->D2_PROCLI)
+								_nVal    := 0
+								_nPerDes := 0
+								If Substr(SC6->C6_PEDCLI,1,4) $ "QAPC/QAPP/QHPP"
+									_lCart := .T.
+									dDataRef := SZ2->Z2_DTREF01
+									_nVal    := SZ2->Z2_PRECO01
+									For A := 2 to 12
+										If &("SZ2->Z2_DTREF"+StrZero(A,2)) >= dDataRef
+											dDataRef := &("SZ2->Z2_DTREF"+StrZero(A,2))
+											_nVal   := &("SZ2->Z2_PRECO"+StrZero(A,2))
 										Endif
-									EndiF
+									Next A
 
-							xMARCA      := "CRONNOS"
-							xNUMERO     := ""
+									If SB1->B1_PICM > 0
+										_nPerDes := SB1->B1_PICM
+									Else
+										_nPerDes := 18
+									Endif
+								Endif
+
+								_nValICM += (_nVal * SD2->D2_QUANT)  * (_nPerDes/100)
+							Endif
+						EndiF
+
+						xMARCA      := "CRONNOS"
+						xNUMERO     := ""
 						
 						If !AllTrim(SC5->C5_MENNOTA) $ cMensCli
 							If Len(cMensCli) > 0 .And. SubStr(cMensCli, Len(cMensCli), 1) <> " "
@@ -7399,9 +7402,27 @@ EndIf
 			cString += '<nItemPed>'+ConvType(aPedCom[02])+'</nItemPed>'
 		Endif
 	Endif
-*/
+
 
 	If Len(aPedCom) = 3
+		If aPedCom[03] == "000051" // CNH
+			cString += '<xPed>'+ConvType(aPedCom[01])+'</xPed>'
+			If Empty(aPedCom[02])
+				cString += '<nItemPed>1</nItemPed>'
+			Else
+				cString += '<nItemPed>'+ConvType(aPedCom[02])+'</nItemPed>'
+			Endif
+		Else
+			cString += '<xPed>'+ConvType(aPedCom[01])+'</xPed>'
+			cString += '<nItemPed>'+ConvType(aPedCom[02])+'</nItemPed>'
+		Endif
+	ElseIf Len(aPedCom) > 0 .And. !Empty(aPedCom[01]).And. !Empty(aPedCom[02])
+		cString += '<xPed>'+ConvType(aPedCom[01])+'</xPed>'
+		cString += '<nItemPed>'+ConvType(aPedCom[02])+'</nItemPed>'
+	Endif
+*/
+
+	If Len(aPedCom) = 3 
 		If aPedCom[03] == "000051" // CNH
 			cString += '<xPed>'+ConvType(aPedCom[01])+'</xPed>'
 			If Empty(aPedCom[02])
@@ -7419,7 +7440,6 @@ EndIf
 		cString += '<xPed>'+ConvType(aPedCom[01])+'</xPed>'
 		cString += '<nItemPed>'+ConvType(aPedCom[02])+'</nItemPed>'
 	Endif
-
 
 //Nota T?cnica 2013/006
 If !Empty(aFCI)

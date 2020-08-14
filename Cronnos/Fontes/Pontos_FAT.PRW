@@ -53,6 +53,7 @@ Descrição :	PONTO DE ENTRADA EXECUTADO APOS A GERACAO E GRAVACAO DO DOCUMENTO DE
 */
 User Function M460Fim()
 
+	Local E,N
 	Local _aAliOri	:= GetArea()
 	Local _aAliSF2	:= SF2->(GetArea())
 	Local _aAliSA1	:= SA1->(GetArea())
@@ -80,7 +81,7 @@ User Function M460Fim()
 
 			While !SD2->(EOF()) .And. _cKey == SD2->D2_DOC+SD2->D2_SERIE+SD2->D2_CLIENTE+SD2->D2_LOJA
 
-				If SA1->A1_TIPOCLI <> 'X' .And. !SF2->F2_CLIENTE $ '000017'
+				If SA1->A1_TIPOCLI <> 'X' //.And. !SF2->F2_CLIENTE $ '000017'
 					SB1->(dbsetOrder(1))
 					If SB1->(msSeek(xFilial("SB1")+SD2->D2_COD))
 						_nPeso += (SD2->D2_QUANT * SB1->B1_PESO)
@@ -138,13 +139,12 @@ User Function M460Fim()
 					SZM->ZM_TIPO	:= 'S'
 					SZM->ZM_USUARIO	:= Capital(UsrFullName(RetCodUsr()))
 					SZM->(MsUnLock())
-
 				Next N
 
 				SD2->(dbSkip())
 			EndDo
 
-			If SA1->A1_TIPOCLI <> 'X' .And. !SF2->F2_CLIENTE $ '000017'
+			If SA1->A1_TIPOCLI <> 'X' //.And. !SF2->F2_CLIENTE $ '000017'
 				Private _nVol1	:= SF2->F2_VOLUME1
 				Private _nPLi1	:= SF2->F2_PLIQUI
 				Private _nPBr1	:= SF2->F2_PBRUTO
@@ -222,6 +222,7 @@ que foram marcados pelo usuário.
 /*/
 User Function M460MARK()
 
+	lOCAL E,N
 	Local _AreaOri	:= GetArea()
 	Local _AreaSC9	:= SC9->(GetArea())
 	Local _AreaSB1	:= SB1->(GetArea())
@@ -264,14 +265,14 @@ User Function M460MARK()
 				If !SZL->(msSeek(xFilial("SZL")+_aMolde[N][1]))
 					_lRet := .F.
 					ShowHelpDlg("M460MARK_1", {'Molde não cadastrado no controle de ferramental:','',;
-					'Produto: '+Alltrim((_cAlias)->C9_PRODUTO),'Molde: '+_aMolde[N][1]},4,;
-					{'Solicite o ajuste do cadastro de ferramental ao setor de Engenharia.'},2)
+						'Produto: '+Alltrim((_cAlias)->C9_PRODUTO),'Molde: '+_aMolde[N][1]},4,;
+						{'Solicite o ajuste do cadastro de ferramental ao setor de Engenharia.'},2)
 				Else
 					If SZL->ZL_DIF	< 0
 						_lRet := .F.
 						ShowHelpDlg("M460MARK_2", {'Não é permitido a geração de NF para:','',;
-						'Produto: '+Alltrim((_cAlias)->C9_PRODUTO),'Molde: '+_aMolde[N][1]},4,;
-						{'Solicite o ajuste do cadastro de ferramental ao setor de Engenharia.'},2)
+							'Produto: '+Alltrim((_cAlias)->C9_PRODUTO),'Molde: '+_aMolde[N][1]},4,;
+							{'Solicite o ajuste do cadastro de ferramental ao setor de Engenharia.'},2)
 					Endif
 				Endif
 
@@ -283,15 +284,15 @@ User Function M460MARK()
 					If SB1->B1_PESO <= 0 .Or. SB1->B1_PESO > 100
 						_lRet := .F.
 						ShowHelpDlg("M460MARK_3", {'Não é permitido a geração de NF para o item '+Alltrim((_cAlias)->C9_PRODUTO)+;
-						', pois está com o peso incorreto no cadastro de Produto'},1,;
-						{'Solicite o ajuste do peso do Produto.'},1)
+							', pois está com o peso incorreto no cadastro de Produto'},1,;
+							{'Solicite o ajuste do peso do Produto.'},1)
 					Endif
 				ELSE
 					If SB1->B1_PESO > 10000
 						_lRet := .F.
 						ShowHelpDlg("M460MARK_4", {'Não é permitido a geração de NF para o item '+Alltrim((_cAlias)->C9_PRODUTO)+;
-						', pois está com o peso incorreto no cadastro de Produto'},1,;
-						{'Solicite o ajuste do peso do Produto.'},1)
+							', pois está com o peso incorreto no cadastro de Produto'},1,;
+							{'Solicite o ajuste do peso do Produto.'},1)
 					Endif
 				Endif
 			Endif
@@ -309,3 +310,4 @@ User Function M460MARK()
 	RestArea(_AreaOri)
 
 Return(_lRet)
+
