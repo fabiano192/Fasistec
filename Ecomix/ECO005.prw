@@ -19,7 +19,7 @@ User Function ECO005()
 	_nOpc := 0
 	@ 150,1 TO 380,450 DIALOG oDlg TITLE OemToAnsi("Importa NF Saida ")
 	@ 02,10 TO 080,220
-	@ 10,18 SAY "Importacao do Movimento de NF Saida da Empresa         "     SIZE 160,7
+	@ 10,18 SAY "Importacao do Movimento de NF Saida da Empresa      "     SIZE 160,7
 	@ 18,18 SAY "                                                    "     SIZE 160,7
 	@ 26,18 SAY "                                                    "     SIZE 160,7
 	@ 34,18 SAY "                                                    "     SIZE 160,7
@@ -52,7 +52,6 @@ Static Function ECO05_01()
 	// Private _aKeySF4 := {Array(2)}
 
 	Private _aItem  := {}
-
 
 	For a := 1 to 200
 		AAdd(_aItem,{a,soma1(PadL(Alltrim(Str(a-1)),2,"0"))})
@@ -124,7 +123,7 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 	Endif
 
 	_cQry := " SELECT A.CODCOLIGADA,A.CODFILIAL,A.CODCFO,A.NUMEROMOV,A.SERIE,A.DATAEMISSAO,A.VALORLIQUIDO,A.VALORBRUTO,A.CHAVEACESSONFE,A.VALORFRETE,A.NUMEROMOV,A.HORARIOEMISSAO, " + CRLF
-	_cQry += " C.CODIGOPRD,D.CODUNDBASE,B.IDMOV,B.NSEQITMMOV,B.QUANTIDADE,B.PRECOUNITARIO,B.VALORLIQUIDO,B.CODLOC,E.VALORICMSDESONERADO,E.FATORREDUCAO, " + CRLF
+	_cQry += " C.CODIGOPRD,D.CODUNDBASE,B.IDMOV,B.NSEQITMMOV,B.QUANTIDADE,B.PRECOUNITARIO,B.VALORLIQUIDO AS VALITEM,B.CODLOC,E.VALORICMSDESONERADO,E.FATORREDUCAO, " + CRLF
 	_cQry += " E.CODTRB,E.BASEDECALCULO,E.ALIQUOTA,E.VALOR,E.SITTRIBUTARIA,E.MOTDESICMS,F.NOME,F.CODNAT,A.CODTMV,G.CHAVEACESSO " + CRLF
 	_cQry += " FROM [10.140.1.5].[CorporeRM].dbo.TMOV A " + CRLF
 	_cQry += " INNER JOIN [10.140.1.5].[CorporeRM].dbo.TITMMOV B ON A.CODCOLIGADA = B.CODCOLIGADA AND A.IDMOV = B.IDMOV " + CRLF
@@ -321,7 +320,7 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 					_D2UM      := TRB->CODUNDBASE
 					_D2QUANT   := TRB->QUANTIDADE
 					_D2PRCVEN  := TRB->PRECOUNITARIO
-					_D2TOTAL   := TRB->VALORLIQUIDO
+					_D2TOTAL   := TRB->VALITEM
 					_D2CF      := Left(StrTran(TRB->CODNAT,".",""),4)
 					// _D2COD     := Alltrim(StrTran(TRB->CODIGOPRD,".",""))
 					_D2COD     := ''
@@ -408,57 +407,56 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 							_F4BASEICM := TRB->FATORREDUCAO
 							_F4AGREG   := If(_D2DESCICM > 0 .And. _F4BASEICM > 0 .And. _F4MOTICMS = "9","S","N")
 							_F4ICM     := If(_D2VALICM > 0,"S","N")
-							_cKeyICMS  := _F4ICM+'_'+_cSTICMS+'_'+_F4MOTICMS+'_'+_F4AGREG
-							// _cKeyICMS  := If(_D2VALICM > 0,"S","N")+'_'+_cSTICMS+'_'+_F4MOTICMS+'_'+_F4AGREG
 						ElseIf Alltrim(TRB->CODTRB) = 'IPI'
 							_D2BASEIPI := TRB->BASEDECALCULO
 							_D2IPI     := TRB->ALIQUOTA
 							_D2VALIPI  := TRB->VALOR
 							_cSTIPI    :=Alltrim(cValToChar(TRB->SITTRIBUTARIA))
-							_cKeyIPI   := If(_D2VALIPI > 0,"S","N")+'_'+_cSTIPI
-							// _cKeyIPI   := If(_D2BASEIPI > 0,"S","N")+'_'+If(_D2VALIPI > 0,"S","N")+'_'+_cSTIPI
 						ElseIf Alltrim(TRB->CODTRB) = 'COFINS'
 							_D2VALIMP5 := TRB->VALOR
 							_D2BASIMP5 := TRB->BASEDECALCULO
 							_D2ALQIMP5 := TRB->ALIQUOTA
 							_cSTCOFINS :=Alltrim(cValToChar(TRB->SITTRIBUTARIA))
-							_cKeyCOFINS:= If(_D2VALIMP5 > 0,"S","N")+'_'+_cSTCOFINS
 						ElseIf Alltrim(TRB->CODTRB) = 'PIS'
 							_D2VALIMP6 := TRB->VALOR
 							_D2BASIMP6 := TRB->BASEDECALCULO
 							_D2ALQIMP6 := TRB->ALIQUOTA
 							_cSTPIS    :=Alltrim(cValToChar(TRB->SITTRIBUTARIA))
-							_cKeyPIS:= If(_D2VALIMP6 > 0,"S","N")+'_'+_cSTPIS
 						ElseIf Alltrim(TRB->CODTRB) = 'INSS'
 							_D2VALINS  := TRB->VALOR
 							_D2BASEINS := TRB->BASEDECALCULO
 							_D2ALIQINS := TRB->ALIQUOTA
-							_cKeyINS   := If(_D2VALINS > 0,"S","N")
 						ElseIf Alltrim(TRB->CODTRB) = 'IRRF'
 							_D2VALIRRF := TRB->VALOR
 							_D2BASEIRR := TRB->BASEDECALCULO
 							_D2ALQIRRF := TRB->ALIQUOTA
-							_cKeyIRRF   := If(_D2VALIRRF > 0,"S","N")
 						ElseIf Alltrim(TRB->CODTRB) = 'ISS'
 							_D2VALISS  := TRB->VALOR
 							_D2BASEISS := TRB->BASEDECALCULO
 							_D2ALIQISS := TRB->ALIQUOTA
-							_cKeyISS   := If(_D2VALISS > 0,"S","N")
 						ElseIf Alltrim(TRB->CODTRB) = 'ICMSST'
 							_D2ICMSRET := TRB->VALOR
-							_cKeyICMSST   := If(_D2ICMSRET > 0,"S","N")
 						ElseIf Alltrim(TRB->CODTRB) = 'II'
 
-							// _cKeyII   := If(_D2VALISS > 0,"S","N")
 						Endif
 
 						TRB->(dbSkip())
 					EndDo
 
+					_cKeyICMS   := _F4ICM+'_'+_cSTICMS+'_'+_F4MOTICMS+'_'+_F4AGREG
+					_cKeyIPI    := If(_D2VALIPI  > 0,"S","N")+'_'+_cSTIPI
+					_cKeyCOFINS := If(_D2VALIMP5 > 0,"S","N")+'_'+_cSTCOFINS
+					_cKeyPIS    := If(_D2VALIMP6 > 0,"S","N")+'_'+_cSTPIS
+					_cKeyINS    := If(_D2VALINS  > 0,"S","N")
+					_cKeyIRRF   := If(_D2VALIRRF > 0,"S","N")
+					_cKeyISS    := If(_D2VALISS  > 0,"S","N")
+					_cKeyICMSST := If(_D2ICMSRET > 0,"S","N")
+					// _cKeyII   := If(xxxx > 0,"S","N")
+					
 					_cGeraFin := VldGeraFin(_D2CF,_F2TIPO)
 
 					_cKeyF4 := _cGeraFin + _cKeyICMS + _cKeyIPI + _cKeyCOFINS + _cKeyPIS + _cKeyINS + _cKeyIRRF + _cKeyISS + _cKeyICMSST + _cKeyII
-					_nPosF4 := aScan(_aKeySF4,{|x| x[1] = _cKeyF4})
+					_nPosF4 := aScan(_aKeySF4,{|x| x[1] = Alltrim(_cKeyF4)})
 
 					If _nPosF4 > 0
 						_D2TES := _aKeySF4[_nPosF4][2]
@@ -1084,7 +1082,7 @@ Static Function GetSF4(_cKeyF4,_cAliasSF4,_D2CF,_cNomeF4,_cSTICMS,_cSTIPI,_cSTCO
 		(_cAliasSF4)->F4_BASEICM := _F4BASEICM
 		(_cAliasSF4)->F4_AGREG   := _F4AGREG
 		(_cAliasSF4)->F4_MOTICMS := _F4MOTICMS
-		(_cAliasSF4)->F4_YCHAVRM := _cKeyF4
+		(_cAliasSF4)->F4_YCHAVRM := Alltrim(_cKeyF4)
 		(_cAliasSF4)->(MsUnLock())
 	Endif
 
@@ -1104,7 +1102,9 @@ Static Function GeraSE1(_cAliasSE1,_cKey1,_cIDMov,_cCodCli,_cLojCli,_cNomCli,_F2
 		_lPare := .T.
 	Endif
 
-	_cQry := " SELECT CODFILIAL AS FILIAL,DATAVENCIMENTO AS DTVENC, * FROM [10.140.1.5].[CorporeRM].dbo.FLAN A " + CRLF
+	// _cQry := " SELECT CODFILIAL AS FILIAL,DATAVENCIMENTO AS DTVENC, * FROM [10.140.1.5].[CorporeRM].dbo.FLAN A " + CRLF
+	_cQry := " SELECT CODFILIAL AS FILIAL,DATAVENCIMENTO AS DTVENC,VALORORIGINAL AS VALOR,VALORJUROS AS JUROS,VALORMULTA AS MULTA,VALORDESCONTO AS DESCONTO, VALORBAIXADO AS VLBAIXA,* " + CRLF
+	_cQry += " FROM [10.140.1.5].[CorporeRM].dbo.FLAN A " + CRLF
 	_cQry += " WHERE A.CODCOLIGADA = "+_cKey1+" " + CRLF
 	_cQry += " AND A.IDMOV = "+_cIDMov+"  " + CRLF
 	_cQry += " AND PAGREC = '1' " + CRLF
@@ -1155,19 +1155,19 @@ Static Function GeraSE1(_cAliasSE1,_cKey1,_cIDMov,_cCodCli,_cLojCli,_cNomCli,_F2
 			(_cAliasSE1)->E1_VENCORI    := TREC->DTVENC
 			(_cAliasSE1)->E1_BAIXA      := TREC->DATABAIXA
 
-			(_cAliasSE1)->E1_VALOR      := TREC->VALORORIGINAL
-			(_cAliasSE1)->E1_VLCRUZ     := TREC->VALORORIGINAL
+			(_cAliasSE1)->E1_VALOR      := TREC->VALOR
+			(_cAliasSE1)->E1_VLCRUZ     := TREC->VALOR
 			(_cAliasSE1)->E1_CODBAR     := TREC->CODIGOBARRA
 			(_cAliasSE1)->E1_BASEIRF    := TREC->VALORBASEIRRF
 			(_cAliasSE1)->E1_IRRF       := TREC->VALORIRRF
-			(_cAliasSE1)->E1_VALLIQ     := TREC->VALORORIGINAL + TREC->VALORJUROS + TREC->VALORMULTA - TREC->VALORDESCONTO
-			(_cAliasSE1)->E1_JUROS      := TREC->VALORJUROS
-			(_cAliasSE1)->E1_MULTA      := TREC->VALORMULTA
-			(_cAliasSE1)->E1_DESCONT    := TREC->VALORDESCONTO
+			(_cAliasSE1)->E1_VALLIQ     := TREC->VALOR + TREC->JUROS + TREC->MULTA - TREC->DESCONTO
+			(_cAliasSE1)->E1_JUROS      := TREC->JUROS
+			(_cAliasSE1)->E1_MULTA      := TREC->MULTA
+			(_cAliasSE1)->E1_DESCONT    := TREC->DESCONTO
 			(_cAliasSE1)->E1_MOEDA      := 1
 
 			(_cAliasSE1)->E1_HIST       := TREC->HISTORICO
-			(_cAliasSE1)->E1_SALDO      := If(TREC->VALORBAIXADO >= TREC->VALORORIGINAL, 0 , TREC->VALORORIGINAL - TREC->VALORBAIXADO)
+			(_cAliasSE1)->E1_SALDO      := If(TREC->VLBAIXA >= TREC->VALOR, 0 , TREC->VALOR - TREC->VLBAIXA)
 
 			(_cAliasSE1)->E1_MODSPB     := "1"
 			(_cAliasSE1)->E1_DESDOBR    := "2"
@@ -1371,9 +1371,9 @@ Static Function LoadSF4()
 
 	SF4->(dbGoTop())
 
-	While !SF4->(!EOF())
+	While SF4->(!EOF())
 
-		AAdd(_aKeySF4,{_cKeyF4,SF4->F4_YCHAVRM})
+		AAdd(_aRetSF4,{Alltrim(SF4->F4_YCHAVRM),SF4->F4_CODIGO})
 
 		SF4->(dbSkip())
 	EndDo
