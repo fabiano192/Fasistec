@@ -59,15 +59,25 @@ Static Function ECO05_01()
 
 	Pergunte("ECO005",.F.)
 
-	//Exclui daddos da tabela SF4
-	// _cUpd := " DELETE SF4010 FROM SF4010 WHERE F4_TIPO = 'S' "
-	// _cUpd += " AND F4_CODIGO <> '501' "
+	_cQry2 := " SELECT RIGHT('00'+RTRIM(CAST(CODCOLIGADA AS CHAR(02))),2) AS CODEMP,CAST(CODCFO AS CHAR(07)) AS CODCFO, NOMEFANTASIA AS NREDUZ,NOME,CGCCFO,INSCRESTADUAL AS INSCR,"+ CRLF
+	_cQry2 += " CAST(PAGREC AS CHAR(01)) AS PAGREC, RUA,NUMERO,COMPLEMENTO AS COMPLEM,PESSOAFISOUJUR AS PESSOA,CODMUNICIPIO AS COD_MUN,CODETD,CIDADE,"+ CRLF
+	_cQry2 += " BAIRRO,CEP,TELEFONE,CONTATO,EMAIL,ATIVO,LIMITECREDITO AS LC,CONTRIBUINTE AS CONTRIB,INSCRMUNICIPAL AS INSCRM, "+ CRLF
+	_cQry2 += " IDCFO FROM [10.140.1.5].[CorporeRM].dbo.FCFO "+ CRLF
+	_cQry2 += " ORDER BY CODCFO,CODEMP,PAGREC " + CRLF
 
-	// TCSQLEXEC(_cUpd )
+	TcQuery _cQry2 New Alias "TCLI"
 
+	_cArq := CriaTrab(NIL,.F.)
+	Copy To &_cArq
+
+	dbCloseArea()
+
+	dbUseArea(.T.,,_cArq,"TCLI",.T.)
+	_cInd := "CODCFO + CODEMP + PAGREC"
+	IndRegua("TCLI",_cArq,_cInd,,,"Selecionando Arquivo Trabalho")
 
 	_aEmp:= {{'A','0101','91'},{'A','0102','92'},{'A','0103','93'},{'B','0201','101'},{'B','0203','103'},{'B','0204','104'},{'C','0301','111'},{'C','0303','113'}}
-	// _aEmp:= {{'B','0201','101'}}
+	//_aEmp:= {{'A','0103','93'}}
 
 	ProcRegua(Len(_aEmp))
 
@@ -82,6 +92,8 @@ Static Function ECO05_01()
 		ECO05_01C(_cEmp,_cFil,_cFilRM)
 
 	Next AX
+
+	TCLI->(dbCloseArea())
 
 Return
 
@@ -122,7 +134,7 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 		TRB->(dbCloseArea())
 	Endif
 
-	_cQry := " SELECT A.CODCOLIGADA,A.CODFILIAL,A.CODCFO,A.NUMEROMOV,A.SERIE,A.DATAEMISSAO,A.VALORLIQUIDO,A.VALORBRUTO,A.CHAVEACESSONFE,A.VALORFRETE,A.NUMEROMOV,A.HORARIOEMISSAO, " + CRLF
+	_cQry := " SELECT A.CODCOLIGADA,A.CODFILIAL,CAST(A.CODCFO AS CHAR(07)) AS CODCFO,A.NUMEROMOV,A.SERIE,A.DATAEMISSAO,A.VALORLIQUIDO,A.VALORBRUTO,A.CHAVEACESSONFE,A.VALORFRETE,A.NUMEROMOV,A.HORARIOEMISSAO, " + CRLF
 	_cQry += " C.CODIGOPRD,D.CODUNDBASE,B.IDMOV,B.NSEQITMMOV,B.QUANTIDADE,B.PRECOUNITARIO,B.VALORLIQUIDO AS VALITEM,B.CODLOC,E.VALORICMSDESONERADO,E.FATORREDUCAO, " + CRLF
 	_cQry += " E.CODTRB,E.BASEDECALCULO,E.ALIQUOTA,E.VALOR,E.SITTRIBUTARIA,E.MOTDESICMS,F.NOME,F.CODNAT,A.CODTMV,G.CHAVEACESSO " + CRLF
 	_cQry += " FROM [10.140.1.5].[CorporeRM].dbo.TMOV A " + CRLF
@@ -139,8 +151,9 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 	_cQry += " SUBSTRING(CONVERT(char(15), A.DATAEMISSAO, 23),9,2) " +CRLF
 	_cQry += " BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"' " + CRLF
 	_cQry += " AND LEFT(CODTMV,1) = '2' " + CRLF // Movimentos de Vendas
-	// _cQry += " AND A.TIPO = 'A'" + CRLF // Devolução
-	_cQry += " ORDER BY A.CODCOLIGADA,A.CODFILIAL " + CRLF
+	_cQry += " AND A.STATUS <> 'C' " + CRLF
+	//_cQry += " AND NUMEROMOV = '000055859' "
+	_cQry += " ORDER BY A.CODCOLIGADA,A.CODFILIAL,B.IDMOV,A.NUMEROMOV,A.SERIE,E.CODTRB  " + CRLF
 
 	Memowrite("D:\_Temp\ECO005.txt",_cQry)
 
@@ -203,21 +216,18 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 
 		TCSQLEXEC(_cUpd )
 
-
 		//Exclui daddos da tabela SD2
 		_cUpd := " DELETE "+_cTabSD2+ " FROM "+_cTabSD2+" WHERE D2_FILIAL = '"+_cFil+"' "
 		_cUpd += " AND D2_EMISSAO BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"' "
 
 		TCSQLEXEC(_cUpd )
 
-
 		//Exclui daddos da tabela SE1
-		_cUpd := " DELETE "+_cTabSE1+ " FROM "+_cTabSE1+" WHERE E1_FILIAL = '"+_cFil+"' "
-		_cUpd += " AND E1_EMISSAO BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"' "
-		_cUpd += " AND E1_TIPO = 'NF' "
+		// _cUpd := " DELETE "+_cTabSE1+ " FROM "+_cTabSE1+" WHERE E1_FILIAL = '"+_cFil+"' "
+		// _cUpd += " AND E1_EMISSAO BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"' "
+		// _cUpd += " AND E1_TIPO = 'NF' "
 
-		TCSQLEXEC(_cUpd )
-
+		// TCSQLEXEC(_cUpd )
 
 		TRB->(dbGoTop())
 
@@ -226,15 +236,23 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 			_cKey1   := Alltrim(cValToChar(TRB->CODCOLIGADA))
 			While TRB->(!EOF())  .And. _cKey1 == Alltrim(cValToChar(TRB->CODCOLIGADA))
 
-
 				If TRB->CODTMV = '2.2.12'
 					_F2TIPO    := "D"
 					//Verifica se o Fornecedor está cadastrado na tabela ZF6, que relaciona o código RM X Protheus
-					CheckZF6(3,_cFil,_cAliasZF6,_cAliasSA2,_cAliasSB1,_cAliasSA2)
+					_lRet := CheckZF6(3,_cFil,_cAliasZF6,_cAliasSA2,_cAliasSB1,_cAliasSA2)
+
+					If !_lRet
+						return
+					Endif
+
 				Else
 					_F2TIPO    := "N"
 					//Verifica se o Cliente está cadastrado na tabela ZF6, que relaciona o código RM X Protheus
-					CheckZF6(1,_cFil,_cAliasZF6,_cAliasSA1,_cAliasSB1,_cAliasSA2)
+					_lRet := CheckZF6(1,_cFil,_cAliasZF6,_cAliasSA1,_cAliasSB1,_cAliasSA2)
+
+					If !_lRet
+						return
+					Endif
 				Endif
 
 				_cNomCli   := ''
@@ -278,11 +296,11 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 				Endif
 
 				_cIDMov  := Alltrim(cValToChar(TRB->IDMOV))
-				_cKey2   := _cKey1 + Alltrim(cValToChar(TRB->IDMOV))
+				_cKey2   := Alltrim(cValToChar(TRB->CODCOLIGADA)) + Alltrim(cValToChar(TRB->IDMOV))
 
 				_D2ITEM  := "00"
 
-				While TRB->(!EOF())  .And. _cKey2 == _cKey1 + Alltrim(cValToChar(TRB->IDMOV))
+				While TRB->(!EOF())  .And. _cKey2 == Alltrim(cValToChar(TRB->CODCOLIGADA)) + Alltrim(cValToChar(TRB->IDMOV))
 
 					_D2NFORI   := ''
 					_D2SERIORI := ''
@@ -313,7 +331,6 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 
 						TNFORI->(dbCloseArea())
 					Endif
-
 
 					// _D2ITEM    := PadL(Alltrim(STR(TRB->NSEQITMMOV)),TAMSX3("D2_ITEM")[1],"0")
 					_D2ITEM    := Soma1(_D2ITEM)
@@ -377,6 +394,9 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 					_D2VALBRUT := 0
 					_D2ALIQSOL := 0
 
+					_F2BRICMS  := 0
+					_F2ICMSRET := 0
+					_D2BRICMS  := 0
 					_D2ICMSRET := 0
 					_D2DESCICM := 0
 
@@ -391,12 +411,12 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 					_F4ICM     := "N"
 
 					//Verifica se o Produto está cadastrado na tabela ZF6, que relaciona o código RM X Protheus
-					CheckZF6(2,_cFil,_cAliasZF6,_cAliasSA1,_cAliasSB1,_cAliasSA2)
+					_lRet := CheckZF6(2,_cFil,_cAliasZF6,_cAliasSA1,_cAliasSB1,_cAliasSA2)
 
-					_cKey3   := _cKey2 + Alltrim(cValToChar(TRB->NSEQITMMOV))
-					While TRB->(!EOF())  .And. _cKey3  == _cKey2 + Alltrim(cValToChar(TRB->NSEQITMMOV))
+					_cKey3   := Alltrim(cValToChar(TRB->CODCOLIGADA)) + Alltrim(cValToChar(TRB->IDMOV)) + Alltrim(cValToChar(TRB->NSEQITMMOV))
+					While TRB->(!EOF())  .And. _cKey3  == Alltrim(cValToChar(TRB->CODCOLIGADA)) + Alltrim(cValToChar(TRB->IDMOV)) + Alltrim(cValToChar(TRB->NSEQITMMOV))
 
-						If Alltrim(TRB->CODTRB) = 'ICMS'
+						If Alltrim(TRB->CODTRB) == 'ICMS'
 							_D2BASEICM := TRB->BASEDECALCULO
 							_D2PICM    := TRB->ALIQUOTA
 							_D2VALICM  := TRB->VALOR
@@ -407,36 +427,37 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 							_F4BASEICM := TRB->FATORREDUCAO
 							_F4AGREG   := If(_D2DESCICM > 0 .And. _F4BASEICM > 0 .And. _F4MOTICMS = "9","S","N")
 							_F4ICM     := If(_D2VALICM > 0,"S","N")
-						ElseIf Alltrim(TRB->CODTRB) = 'IPI'
+						ElseIf Alltrim(TRB->CODTRB) == 'IPI'
 							_D2BASEIPI := TRB->BASEDECALCULO
 							_D2IPI     := TRB->ALIQUOTA
 							_D2VALIPI  := TRB->VALOR
 							_cSTIPI    :=Alltrim(cValToChar(TRB->SITTRIBUTARIA))
-						ElseIf Alltrim(TRB->CODTRB) = 'COFINS'
+						ElseIf Alltrim(TRB->CODTRB) == 'COFINS'
 							_D2VALIMP5 := TRB->VALOR
 							_D2BASIMP5 := TRB->BASEDECALCULO
 							_D2ALQIMP5 := TRB->ALIQUOTA
 							_cSTCOFINS :=Alltrim(cValToChar(TRB->SITTRIBUTARIA))
-						ElseIf Alltrim(TRB->CODTRB) = 'PIS'
+						ElseIf Alltrim(TRB->CODTRB) == 'PIS'
 							_D2VALIMP6 := TRB->VALOR
 							_D2BASIMP6 := TRB->BASEDECALCULO
 							_D2ALQIMP6 := TRB->ALIQUOTA
 							_cSTPIS    :=Alltrim(cValToChar(TRB->SITTRIBUTARIA))
-						ElseIf Alltrim(TRB->CODTRB) = 'INSS'
+						ElseIf Alltrim(TRB->CODTRB) == 'INSS'
 							_D2VALINS  := TRB->VALOR
 							_D2BASEINS := TRB->BASEDECALCULO
 							_D2ALIQINS := TRB->ALIQUOTA
-						ElseIf Alltrim(TRB->CODTRB) = 'IRRF'
+						ElseIf Alltrim(TRB->CODTRB) == 'IRRF'
 							_D2VALIRRF := TRB->VALOR
 							_D2BASEIRR := TRB->BASEDECALCULO
 							_D2ALQIRRF := TRB->ALIQUOTA
-						ElseIf Alltrim(TRB->CODTRB) = 'ISS'
+						ElseIf Alltrim(TRB->CODTRB) == 'ISS'
 							_D2VALISS  := TRB->VALOR
 							_D2BASEISS := TRB->BASEDECALCULO
 							_D2ALIQISS := TRB->ALIQUOTA
-						ElseIf Alltrim(TRB->CODTRB) = 'ICMSST'
-							_D2ICMSRET := TRB->VALOR
-						ElseIf Alltrim(TRB->CODTRB) = 'II'
+						ElseIf Alltrim(TRB->CODTRB) == 'ICMSST'
+							_D2ICMSRET := TRB->VALOR - _D2VALICM
+							_D2BRICMS  := TRB->BASEDECALCULO
+						ElseIf Alltrim(TRB->CODTRB) == 'II'
 
 						Endif
 
@@ -452,7 +473,7 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 					_cKeyISS    := If(_D2VALISS  > 0,"S","N")
 					_cKeyICMSST := If(_D2ICMSRET > 0,"S","N")
 					// _cKeyII   := If(xxxx > 0,"S","N")
-					
+
 					_cGeraFin := VldGeraFin(_D2CF,_F2TIPO)
 
 					_cKeyF4 := _cGeraFin + _cKeyICMS + _cKeyIPI + _cKeyCOFINS + _cKeyPIS + _cKeyINS + _cKeyIRRF + _cKeyISS + _cKeyICMSST + _cKeyII
@@ -515,6 +536,7 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 					(_cAliasSD2)->D2_VALISS  := _D2VALISS
 					(_cAliasSD2)->D2_BASEISS := _D2BASEISS
 					(_cAliasSD2)->D2_ALIQISS := _D2ALIQISS
+					(_cAliasSD2)->D2_BRICMS :=  _D2BRICMS
 					(_cAliasSD2)->D2_ICMSRET := _D2ICMSRET
 					(_cAliasSD2)->D2_DESCICM := _D2DESCICM
 					(_cAliasSD2)->D2_DESC    := _D2DESC
@@ -537,12 +559,14 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 					(_cAliasSD2)->D2_BASEISS := _D2BASEISS
 					(_cAliasSD2)->D2_VALISS  := _D2VALISS
 					(_cAliasSD2)->D2_VALFRE  := _D2VALFRE
-					// (_cAliasSD2)->D2_VALBRUT := _D2VALBRUT
+					(_cAliasSD2)->D2_VALBRUT := _D2TOTAL + _D2VALFRE + _D2ICMSRET + _D2IPI
 					(_cAliasSD2)->D2_ALIQSOL := _D2ALIQSOL
 					(_cAliasSD2)->(MsUnLock())
 
 					_F2BASEICM += _D2BASEICM
 					_F2VALICM  += _D2VALICM
+					_F2BRICMS  += _D2BRICMS
+					_F2ICMSRET += _D2ICMSRET
 					_F2BASEIPI += _D2BASEIPI
 					_F2VALIPI  += _D2VALIPI
 					_F2VALIMP1 += _D2VALIMP1
@@ -594,6 +618,8 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 				(_cAliasSF2)->F2_VALIMP5 := _F2VALIMP5
 				(_cAliasSF2)->F2_BASIMP6 := _F2BASIMP6
 				(_cAliasSF2)->F2_VALIMP6 := _F2VALIMP6
+				(_cAliasSF2)->F2_BRICMS  := _F2BRICMS
+				(_cAliasSF2)->F2_ICMSRET := _F2ICMSRET
 				(_cAliasSF2)->F2_ESPECIE := "SPED"
 				(_cAliasSF2)->F2_TIPO    := _F2TIPO
 				(_cAliasSF2)->F2_TIPOCLI := _cTpCli
@@ -601,7 +627,7 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 				// (_cAliasSF2)->F2_HORA    := _F2HORA
 				(_cAliasSF2)->(MsUnLock())
 
-				GeraSE1(_cAliasSE1,_cKey1,_cIDMov,_cCodCli,_cLojCli,_cNomCli,_F2DOC,_F2SERIE)
+				// GeraSE1(_cAliasSE1,_cKey1,_cIDMov,_cCodCli,_cLojCli,_cNomCli,_F2DOC,_F2SERIE)
 
 			EndDo
 		EndDo
@@ -648,7 +674,7 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 	ENDIF
 
 	TRB->(dbCloseArea())
-
+	
 Return()
 
 
@@ -668,27 +694,28 @@ Return (Nil)
 
 Static Function CheckZF6(_nOpc,_cFil,_cAliasZF6,_cAliasSA1,_cAliasSB1,_cAliasSA2)
 
+	Local _lGrava
+	Local _lRet2 := .T.
+
 	If _nOpc = 1
 		(_cAliasZF6)->(dbSetOrder(1))
 		If !(_cAliasZF6)->(MsSeek(xFilial("ZF6")+"SA1"+PADR("A1_COD",TAMSX3("ZF6_CAMPO")[1])+Alltrim(TRB->CODCFO)))
 			// ZF6_FILIAL, ZF6_TABELA, ZF6_CAMPO, ZF6_CODRM, R_E_C_N_O_, D_E_L_E_T_
 
-			If Select("TCLI") > 0
-				TCLI->(dbCloseArea())
+			_lGrava := .F.
+			If TCLI->(MsSeek(TRB->CODCFO + STRZERO(TRB->CODCOLIGADA,2)+ "2"))
+				_lGrava := .T.
+			Else
+				If TCLI->(MsSeek(TRB->CODCFO + STRZERO(TRB->CODCOLIGADA,2)) )
+					_lGrava := .T.
+				Else
+					If TCLI->(MsSeek(TRB->CODCFO + "00" ))
+						_lGrava := .T.
+					Endif
+				Endif
 			Endif
 
-			_cQry := " SELECT * FROM [10.140.1.5].[CorporeRM].dbo.FCFO " + CRLF
-			_cQry += " WHERE PAGREC <> 2 " + CRLF
-			_cQry += " AND CODCFO = '"+Alltrim(TRB->CODCFO)+"' " + CRLF
-			// _cQry += " ORDER BY CGCCFO,EMP " + CRLF
-
-			TcQuery _cQry New Alias "TCLI"
-
-			_nReg := Contar("TCLI","!EOF()")
-
-			If _nReg > 0
-				TCLI->(dbGoTop())
-
+			If _lGrava
 				_cCNPJ := Alltrim(StrTran(StrTran(StrTran(TCLI->CGCCFO,".",""),"-",""),"/",""))
 				_cCod  := ''
 				_cLoja := ''
@@ -710,31 +737,31 @@ Static Function CheckZF6(_nOpc,_cFil,_cAliasZF6,_cAliasSA1,_cAliasSB1,_cAliasSA2
 				(_cAliasZF6)->ZF6_TOTVS  := _cCod+_cLoja
 				(_cAliasZF6)->(MsUnLock())
 
+			Else
+				MSGINFO("Cliente Nao Cadastrado!! "+TRB->CODCFO+" NF: "+Alltrim(TRB->NUMEROMOV))
+				TCLI->(dbCloseArea())
+				Return(.F.)
 			Endif
-
-			TCLI->(dbCloseArea())
 		Endif
 	ElseIf _nOpc = 3
 		(_cAliasZF6)->(dbSetOrder(1))
 		If !(_cAliasZF6)->(MsSeek(xFilial("ZF6")+"SA2"+PADR("A2_COD",TAMSX3("ZF6_CAMPO")[1])+Alltrim(TRB->CODCFO)))
 
-			If Select("TFOR") > 0
-				TFOR->(dbCloseArea())
+			_lGrava := .F.
+			If TCLI->(MsSeek(TRB->CODCFO + STRZERO(TRB->CODCOLIGADA,2)+ "2"))
+				_lGrava := .T.
+			Else
+				If TCLI->(MsSeek(TRB->CODCFO + STRZERO(TRB->CODCOLIGADA,2)) )
+					_lGrava := .T.
+				Else
+					If TCLI->(MsSeek(TRB->CODCFO + "0" ))
+						_lGrava := .T.
+					Endif
+				Endif
 			Endif
 
-			_cQry := " SELECT * FROM [10.140.1.5].[CorporeRM].dbo.FCFO " + CRLF
-			_cQry += " WHERE PAGREC <> 1 " + CRLF
-			_cQry += " AND CODCFO = '"+Alltrim(TRB->CODCFO)+"' " + CRLF
-			// _cQry += " ORDER BY CGCCFO,EMP " + CRLF
-
-			TcQuery _cQry New Alias "TFOR"
-
-			_nReg := Contar("TFOR","!EOF()")
-
-			If _nReg > 0
-				TFOR->(dbGoTop())
-
-				_cCNPJ := Alltrim(StrTran(StrTran(StrTran(TFOR->CGCCFO,".",""),"-",""),"/",""))
+			If _lGrava
+				_cCNPJ := Alltrim(StrTran(StrTran(StrTran(TCLI->CGCCFO,".",""),"-",""),"/",""))
 				_cCod  := ''
 				_cLoja := ''
 
@@ -750,14 +777,12 @@ Static Function CheckZF6(_nOpc,_cFil,_cAliasZF6,_cAliasSA1,_cAliasSB1,_cAliasSA2
 				(_cAliasZF6)->ZF6_FILIAL := _cFil
 				(_cAliasZF6)->ZF6_TABELA := "SA2"
 				(_cAliasZF6)->ZF6_CAMPO  := "A2_COD"
-				(_cAliasZF6)->ZF6_CODRM  := TFOR->CODCFO
-				(_cAliasZF6)->ZF6_IDRM   := TFOR->IDCFO
+				(_cAliasZF6)->ZF6_CODRM  := TCLI->CODCFO
+				(_cAliasZF6)->ZF6_IDRM   := TCLI->IDCFO
 				(_cAliasZF6)->ZF6_TOTVS  := _cCod+_cLoja
 				(_cAliasZF6)->(MsUnLock())
 
 			Endif
-
-			TFOR->(dbCloseArea())
 		Endif
 
 	ElseIf _nOpc = 2
@@ -858,13 +883,13 @@ Static Function CheckZF6(_nOpc,_cFil,_cAliasZF6,_cAliasSA1,_cAliasSB1,_cAliasSA2
 		TPROD->(dbCloseArea())
 	Endif
 
-Return(Nil)
+Return(_lRet2)
 
 
 
 Static Function GeraCli(_cFil,_cCNPJ,_cCod,_cLoja,_cAliasSA1)
 
-	If TCLI->PESSOAFISOUJUR = "J"
+	If TCLI->PESSOA = "J"
 		(_cAliasSA1)->(dbSetOrder(3))
 		If (_cAliasSA1)->(MsSeek(xFilial("SA1")+Left(_cCNPJ,8)))
 			_cCod := (_cAliasSA1)->A1_COD
@@ -873,30 +898,37 @@ Static Function GeraCli(_cFil,_cCNPJ,_cCod,_cLoja,_cAliasSA1)
 
 	GetNxtA1(@_cCod,@_cLoja)
 
+	_cCfop:= Left(StrTran(TRB->CODNAT,".",""),4)
+
+
 	(_cAliasSA1)->(RecLock(_cAliasSA1,.T.))
 	// (_cAliasSA1)->A1_YID     := TCLI->IDCFO
 	// (_cAliasSA1)->A1_FILIAL     := xFilial("SA1")
 	// (_cAliasSA1)->A1_YCODRM  := TCLI->CODCFO
 	(_cAliasSA1)->A1_COD        := _cCod
 	(_cAliasSA1)->A1_LOJA       := _cLoja
-	(_cAliasSA1)->A1_PESSOA     := TCLI->PESSOAFISOUJUR
+	(_cAliasSA1)->A1_PESSOA     := TCLI->PESSOA
 	(_cAliasSA1)->A1_NOME       := UPPER(U_RM_NoAcento(TCLI->NOME))
-	(_cAliasSA1)->A1_NREDUZ     := UPPER(U_RM_NoAcento(TCLI->NOMEFANTASIA))
+	(_cAliasSA1)->A1_NREDUZ     := UPPER(U_RM_NoAcento(TCLI->NREDUZ))
 	(_cAliasSA1)->A1_END        := UPPER(U_RM_NoAcento(Alltrim(TCLI->RUA)))+" "+UPPER(U_RM_NoAcento(ALLTRIM(TCLI->NUMERO)))
-	(_cAliasSA1)->A1_COMPLEM    := UPPER(U_RM_NoAcento(Alltrim(TCLI->COMPLEMENTO)))
-	// (_cAliasSA1)->A1_TIPO    := TCLI-> ????
+	(_cAliasSA1)->A1_COMPLEM    := UPPER(U_RM_NoAcento(Alltrim(TCLI->COMPLEM)))
+	If Alltrim(_cCFOP ) $ "5401/5403"
+		(_cAliasSA1)->A1_TIPO       := "S"
+	Else
+		(_cAliasSA1)->A1_TIPO       := "R"
+	Endif
+
 	(_cAliasSA1)->A1_EST        := TCLI->CODETD
-	(_cAliasSA1)->A1_COD_MUN    := TCLI->CODMUNICIPIO
+	(_cAliasSA1)->A1_COD_MUN    := TCLI->COD_MUN
 	(_cAliasSA1)->A1_MUN        := UPPER(U_RM_NoAcento(Alltrim(TCLI->CIDADE)))
 	(_cAliasSA1)->A1_BAIRRO     := UPPER(U_RM_NoAcento(Alltrim(TCLI->BAIRRO)))
-	// (_cAliasSA1)->A1_NATUREZ := TCLI->
-	(_cAliasSA1)->A1_CEP        := TCLI->CEP
-	// (_cAliasSA1)->A1_DDD     := TCLI->
+	(_cAliasSA1)->A1_NATUREZ    := "N1001"
+	(_cAliasSA1)->A1_CEP        := StrTran(TCLI->CEP,".","")
 	(_cAliasSA1)->A1_TEL        := TCLI->TELEFONE
 	(_cAliasSA1)->A1_PAIS       := "105"
 	(_cAliasSA1)->A1_CGC        := _cCNPJ
 	(_cAliasSA1)->A1_CONTATO    := TCLI->CONTATO
-	(_cAliasSA1)->A1_INSCR      := TCLI->INSCRESTADUAL
+	(_cAliasSA1)->A1_INSCR      := IIF (Empty(TCLI->INSCR),"ISENTO",TCLI->INSCR)
 	(_cAliasSA1)->A1_CODPAIS    := "01058"
 	(_cAliasSA1)->A1_SATIV1     := "1"
 	(_cAliasSA1)->A1_SATIV2     := "1"
@@ -907,11 +939,18 @@ Static Function GeraCli(_cFil,_cCNPJ,_cCod,_cLoja,_cAliasSA1)
 	(_cAliasSA1)->A1_SATIV7     := "1"
 	(_cAliasSA1)->A1_SATIV8     := "1"
 	(_cAliasSA1)->A1_EMAIL      := TCLI->EMAIL
+	(_cAliasSA1)->A1_EMAILNF    := TCLI->EMAIL
 	(_cAliasSA1)->A1_MSBLQL     := If(TCLI->ATIVO=1,"2","1")
-	(_cAliasSA1)->A1_LC         := TCLI->LIMITECREDITO
-	(_cAliasSA1)->A1_INSCRM     := TCLI->INSCRMUNICIPAL
-	(_cAliasSA1)->A1_CONTRIB    := If(TCLI->CONTRIBUINTE=1,"2","1")
+	(_cAliasSA1)->A1_LC         := TCLI->LC
+	(_cAliasSA1)->A1_INSCRM     := TCLI->INSCRM
+	(_cAliasSA1)->A1_CONTRIB    := If(TCLI->CONTRIB=1,"2","1")
+	(_cAliasSA1)->A1_XNOMV      := "."
+	(_cAliasSA1)->A1_CONTA      := "10102020000001"
+	(_cAliasSA1)->A1_YTPCLI     := "1"
+	(_cAliasSA1)->A1_YCTARA     := "20101150000002"
+	(_cAliasSA1)->A1_COND       := "001"
 	(_cAliasSA1)->(MsUnLock())
+
 
 RETURN(NIL)
 
@@ -1139,7 +1178,7 @@ Static Function GeraSE1(_cAliasSE1,_cKey1,_cIDMov,_cCodCli,_cLojCli,_cNomCli,_F2
 
 			(_cAliasSE1)->E1_PARCELA   := _cParcela
 			(_cAliasSE1)->E1_TIPO      := "NF"
-			// (_cAliasSE1)->E1_NATUREZ   := ??
+			(_cAliasSE1)->E1_NATUREZ   := 'N1001'
 			// (_cAliasSE1)->E1_PORTADO   := (TREC->CNABBANCO)
 			// (_cAliasSE1)->E1_AGEDEP    := ??
 
@@ -1258,7 +1297,6 @@ Static Function GeraSE1(_cAliasSE1,_cKey1,_cIDMov,_cCodCli,_cLojCli,_cNomCli,_F2
 			// (_cAliasSE1)->E1_FLAGFAT :=
 			(_cAliasSE1)->(MsUnLock())
 
-			//E1_MESBASE E1_ANOBASE E1_PLNUCOB   E1_CODEMP E1_CODINT E1_MATRIC E1_TXMOEDA             E1_ACRESC              E1_SDACRES             E1_DECRESC             E1_SDDECRE             E1_MULTNAT E1_MSFIL E1_MSEMP E1_PROJPMS  E1_NRDOC                                           E1_MODSPB E1_EMITCHQ                               E1_IDCNAB  E1_PLCOEMP   E1_PLTPCOE E1_CODCOR E1_PARCCSS E1_CODORCA E1_CODIMOV   E1_FILDEB E1_NUMRA        E1_NUMSOL E1_INSCRIC E1_SERREC                                     E1_DATAEDI E1_CODDIG                                        E1_CHQDEV E1_LIDESCF E1_VLBOLSA             E1_NUMCRD  E1_VLFIES              E1_DEBITO            E1_CCD    E1_ITEMD  E1_CLVLDB E1_CREDIT            E1_CCC    E1_ITEMC  E1_CLVLCR E1_DESCON1             E1_DESCON2             E1_DTDESC3 E1_DTDESC1 E1_DTDESC2 E1_VLMULTA             E1_DESCON3             E1_MOTNEG E1_SABTPIS             E1_SABTCOF             E1_SABTCSL             E1_FORNISS E1_PARTOT E1_SITFAT E1_BASEPIS             E1_BASECOF             E1_BASECSL             E1_VRETISS             E1_PARCIRF E1_SCORGP E1_FRETISS E1_TXMDCOR             E1_SATBIRF             E1_TIPREG E1_CONEMP    E1_VERCON E1_SUBCON E1_VERSUB E1_PLLOTE  E1_PLOPELT E1_CODRDA E1_FORMREC E1_BCOCLI E1_AGECLI E1_CTACLI  E1_PARCFET E1_FETHAB              E1_MDCRON E1_MDCONTR      E1_MEDNUME E1_MDPLANI E1_MDPARCE E1_MDREVIS E1_NUMMOV E1_PREFORI E1_NODIA   E1_TITPAI                                          E1_DOCTEF            E1_MDMULT              E1_JURFAT                                          E1_MDBONI              E1_MDDESC              E1_RELATO E1_BASEINS             E1_MULTDIA             E1_NFELETR           E1_RETCNTR             E1_NUMCON            E1_TURMA             E1_IDLAN               E1_NSUTEF    E1_SABTIRF             E1_IDAPLIC             E1_PROCEL              E1_NOPER               E1_SERVICO E1_DIACTB E1_IDBOLET             E1_VRETIRF             E1_BASEISS             E1_VLBOLP              E1_APLVLMN E1_LTCXA   E1_NUMINSC             E1_CODISS E1_SEQBX D_E_L_E_T_ R_E_C_N_O_  R_E_C_D_E_L_ E1_VLMINIS E1_TPDP                E1_PARTPDP E1_CODIRRF E1_USERLGI        E1_USERLGA        E1_YFORBKP E1_NUMPRO  E1_INDPRO E1_PRISS               E1_PRINSS              E1_PARCFAC E1_FACS                E1_PARCFAB E1_FABOV               E1_PERLET E1_CHAVENF   E1_PRODUTO      E1_FAMAD               E1_PARCFAM E1_FMPEQ               E1_PARCFMP E1_TPDESC E1_FUNDESA             E1_IMAMT               E1_FASEMT              E1_PARFUND E1_PARIMA E1_PARFASE E1_CODRET E1_CTRBCO                                          E1_IDMOV   E1_BOLETO E1_DESCJUR             E1_CCUSTO E1_CDRETCS E1_CDRETIR E1_CLVL   E1_ITEMCTA E1_TPESOC E1_CNO E1_CONHTL                        E1_TCONHTL E1_SDOC E1_SDOCREC E1_VRETBIS             E1_CODSERV E1_BTRISS              E1_RATFIN
 			TREC->(dbSkip())
 		EndDo
 	Endif
@@ -1271,7 +1309,7 @@ Return(Nil)
 
 Static Function GeraFOR(_cFil,_cCNPJ,_cCod,_cLoja,_cAliasSA2)
 
-	If TFOR->PESSOAFISOUJUR = "J"
+	If TCLI->PESSOA = "J"
 		(_cAliasSA2)->(dbSetOrder(3))
 		If (_cAliasSA2)->(MsSeek(xFilial("SA2")+Left(_cCNPJ,8)))
 			_cCod := (_cAliasSA2)->A2_COD
@@ -1283,29 +1321,27 @@ Static Function GeraFOR(_cFil,_cCNPJ,_cCod,_cLoja,_cAliasSA2)
 	(_cAliasSA2)->(RecLock(_cAliasSA2,.T.))
 	(_cAliasSA2)->A2_COD     := _cCod
 	(_cAliasSA2)->A2_LOJA    := _cLoja
-	(_cAliasSA2)->A2_NOME    := UPPER(U_RM_NoAcento(TFOR->NOME))
-	(_cAliasSA2)->A2_NREDUZ  := UPPER(U_RM_NoAcento(TFOR->NOMEFANTASIA))
-	(_cAliasSA2)->A2_END     := UPPER(U_RM_NoAcento(Alltrim(TFOR->RUA)))+" "+UPPER(U_RM_NoAcento(ALLTRIM(TFOR->NUMERO)))
-	(_cAliasSA2)->A2_COMPLEM := UPPER(U_RM_NoAcento(Alltrim(TFOR->COMPLEMENTO)))
-	(_cAliasSA2)->A2_TIPO    := TFOR->PESSOAFISOUJUR
-	(_cAliasSA2)->A2_EST     := TFOR->CODETD
-	(_cAliasSA2)->A2_COD_MUN := TFOR->CODMUNICIPIO
-	(_cAliasSA2)->A2_MUN     := UPPER(U_RM_NoAcento(Alltrim(TFOR->CIDADE)))
-	(_cAliasSA2)->A2_BAIRRO  := UPPER(U_RM_NoAcento(Alltrim(TFOR->BAIRRO)))
-	// (_cAliasSA2)->A2_NATUREZ := TFOR->
-	(_cAliasSA2)->A2_CEP     := TFOR->CEP
-	// (_cAliasSA2)->A2_DDD     := TFOR->
-	(_cAliasSA2)->A2_TEL     := TFOR->TELEFONE
+	(_cAliasSA2)->A2_NOME    := UPPER(U_RM_NoAcento(TCLI->NOME))
+	(_cAliasSA2)->A2_NREDUZ  := UPPER(U_RM_NoAcento(TCLI->NREDUZ))
+	(_cAliasSA2)->A2_END     := UPPER(U_RM_NoAcento(Alltrim(TCLI->RUA)))+" "+UPPER(U_RM_NoAcento(ALLTRIM(TCLI->NUMERO)))
+	(_cAliasSA2)->A2_COMPLEM := UPPER(U_RM_NoAcento(Alltrim(TCLI->COMPLEM)))
+	(_cAliasSA2)->A2_TIPO    := TCLI->PESSOA
+	(_cAliasSA2)->A2_EST     := TCLI->CODETD
+	(_cAliasSA2)->A2_COD_MUN := TCLI->COD_MUN
+	(_cAliasSA2)->A2_MUN     := UPPER(U_RM_NoAcento(Alltrim(TCLI->CIDADE)))
+	(_cAliasSA2)->A2_BAIRRO  := UPPER(U_RM_NoAcento(Alltrim(TCLI->BAIRRO)))
+	(_cAliasSA2)->A2_NATUREZ := "N3002"
+	(_cAliasSA2)->A2_CEP     := StrTran(TCLI->CEP,".","")
+	(_cAliasSA2)->A2_TEL     := TCLI->TELEFONE
 	(_cAliasSA2)->A2_PAIS    := "105"
 	(_cAliasSA2)->A2_CGC     := _cCNPJ
-	(_cAliasSA2)->A2_CONTATO := TFOR->CONTATO
-	(_cAliasSA2)->A2_INSCR   := TFOR->INSCRESTADUAL
+	(_cAliasSA2)->A2_CONTATO := TCLI->CONTATO
+	(_cAliasSA2)->A2_INSCR   := IIF (EMPTY(TCLI->INSCR),"ISENTO","")
 	(_cAliasSA2)->A2_CODPAIS := "01058"
-	(_cAliasSA2)->A2_EMAIL   := TFOR->EMAIL
-	(_cAliasSA2)->A2_MSBLQL  := If(TFOR->ATIVO=1,"2","1")
-	// (_cAliasSA2)->A2_LC      := TFOR->LIMITECREDITO
-	(_cAliasSA2)->A2_INSCRM  := TFOR->INSCRMUNICIPAL
-	(_cAliasSA2)->A2_CONTRIB  := If(TFOR->CONTRIBUINTE=1,"2","1")
+	(_cAliasSA2)->A2_EMAIL   := TCLI->EMAIL
+	(_cAliasSA2)->A2_MSBLQL  := If(TCLI->ATIVO=1,"2","1")
+	(_cAliasSA2)->A2_INSCRM  := TCLI->INSCRM
+	(_cAliasSA2)->A2_CONTRIB  := If(TCLI->CONTRIB = 1,"2","1")
 	(_cAliasSA2)->(MsUnLock())
 
 RETURN(NIL)
