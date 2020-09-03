@@ -277,8 +277,12 @@ Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 				_F1DOC     := Alltrim(TRB->NUMEROMOV)
 
 				If (_F1DOC = '000036220' .And. TRB->IDMOV = 270637 .And. TRB->CODCOLIGADA = 9) .Or.;
+					(_F1DOC = '000135681' .And. TRB->IDMOV = 275382 .And. TRB->CODCOLIGADA = 9) .or.;
+					(_F1DOC = '000007236' .And. TRB->IDMOV = 277860 .And. TRB->CODCOLIGADA = 9) .or.;
+					(_F1DOC = '000000405' .And. TRB->IDMOV = 275485 .And. TRB->CODCOLIGADA = 9) .or.;
 					(_F1DOC = '000000060' .And. TRB->IDMOV = 387346 .And. TRB->CODCOLIGADA = 10) .or.;
-					(_F1DOC = '000000069' .And. TRB->IDMOV = 373809 .And. TRB->CODCOLIGADA = 10)
+					(_F1DOC = '000000069' .And. TRB->IDMOV = 373809 .And. TRB->CODCOLIGADA = 10) .or.;
+					(_F1DOC = '000000004' .And. TRB->IDMOV = 406195 .And. TRB->CODCOLIGADA = 11)
 
 					_F1SERIE   := '1'
 				Else
@@ -734,7 +738,7 @@ Static Function CheckZF6(_nOpc,_cFil,_cAliasZF6,_cAliasSA2,_cAliasSB1,_cAliasSA1
 		If !(_cAliasZF6)->(MsSeek(xFilial("ZF6")+"SA2"+PADR("A2_COD",TAMSX3("ZF6_CAMPO")[1])+Alltrim(TRB->CODCFO)))
 
 			_lGrava := .F.
-			If TFOR->(MsSeek(TRB->CODCFO + STRZERO(TRB->CODCOLIGADA,2)+ "1"))
+			If TFOR->(MsSeek(TRB->CODCFO + STRZERO(TRB->CODCOLIGADA,2)+ "2"))
 				_lGrava := .T.
 			Else
 				If TFOR->(MsSeek(TRB->CODCFO + STRZERO(TRB->CODCOLIGADA,2)) )
