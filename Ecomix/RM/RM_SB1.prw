@@ -16,7 +16,7 @@ USER FUNCTION RM_SB1E(_oProcess,_cTab,_cPasta,_cBDados)
 	_cQry := " SELECT * FROM "+_cBDados+".TPRODUTO A " +CRLF
 	_cQry += " INNER JOIN "+_cBDados+".TPRODUTODEF B ON A.CODCOLPRD = B.CODCOLIGADA  AND A.IDPRD = B.IDPRD " +CRLF
 	_cQry += " WHERE RTRIM(CODCOLPRD) IN  ('0','9','10','11') " +CRLF
-	_cQry += " ORDER BY CODCOLPRD,CODIGOPRD" +CRLF
+	_cQry += " ORDER BY CODCOLPRD,CODIGOPRD " +CRLF
 
 	TcQuery _cQry New Alias "TPROD"
 

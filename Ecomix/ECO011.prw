@@ -72,8 +72,8 @@ Static Function ECO11_01()
 	_cInd := "CODCFO + CODEMP + PAGREC"
 	IndRegua("TFOR",_cArq,_cInd,,,"Selecionando Arquivo Trabalho")
 
-	_aEmp:= {{'A','0101','91'},{'A','0102','92'},{'A','0103','93'},{'B','0201','101'},{'B','0203','103'},{'B','0204','104'},{'C','0301','111'},{'C','0303','113'}}
-	// _aEmp:= {{'A','0103','93'}}
+	// _aEmp:= {{'A','0101','91'},{'A','0102','92'},{'A','0103','93'},{'B','0201','101'},{'B','0203','103'},{'B','0204','104'},{'C','0301','111'},{'C','0303','113'}}
+	_aEmp:= {{'A','0101','91'}}
 
 	ProcRegua(Len(_aEmp))
 
@@ -527,7 +527,8 @@ Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 					(_cAliasSD1)->D1_UM      := _D1UM
 					(_cAliasSD1)->D1_QUANT   := _D1QUANT
 					(_cAliasSD1)->D1_VUNIT   := _D1VUNIT
-					(_cAliasSD1)->D1_TOTAL   := _D1TOTAL
+					(_cAliasSD1)->D1_TOTAL   := _D1QUANT * _D1VUNIT
+					// (_cAliasSD1)->D1_TOTAL   := _D1TOTAL
 					(_cAliasSD1)->D1_TES     := _D1TES
 					(_cAliasSD1)->D1_CF      := _D1CF
 					(_cAliasSD1)->D1_VALIMP1 := _D1VALIMP1
@@ -738,7 +739,7 @@ Static Function CheckZF6(_nOpc,_cFil,_cAliasZF6,_cAliasSA2,_cAliasSB1,_cAliasSA1
 		If !(_cAliasZF6)->(MsSeek(xFilial("ZF6")+"SA2"+PADR("A2_COD",TAMSX3("ZF6_CAMPO")[1])+Alltrim(TRB->CODCFO)))
 
 			_lGrava := .F.
-			If TFOR->(MsSeek(TRB->CODCFO + STRZERO(TRB->CODCOLIGADA,2)+ "2"))
+			If TFOR->(MsSeek(TRB->CODCFO + STRZERO(TRB->CODCOLIGADA,2)+ "1"))
 				_lGrava := .T.
 			Else
 				If TFOR->(MsSeek(TRB->CODCFO + STRZERO(TRB->CODCOLIGADA,2)) )
