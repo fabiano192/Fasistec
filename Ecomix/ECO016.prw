@@ -69,6 +69,18 @@ Static Function ModelDef()
             _lObri:= .T.
         Endif
 
+        If _aZ17Cab[a] = 'Z17_CLASSE'
+            _aCombo := {'1=Sintetica','2=Analitica'}
+        Else
+            _aCombo := {}
+        Endif
+
+        // If _aZ17Cab[a] = 'Z17_ORDEM'
+        //     _bValid := {||PADL(Alltrim(M->Z17_ORDEM),TAMSX3("Z17_ORDEM")[1],'0')}
+        // Else
+        //     _bValid := Nil
+        // Endif
+
         _oStTmp:AddField(;
             FWSX3Util():GetDescription(_aZ17Cab[a]) ,;                                              // [01]  C   Titulo do campo
         FWSX3Util():GetDescription(_aZ17Cab[a]),;                                                   // [02]  C   ToolTip do campo
@@ -76,9 +88,9 @@ Static Function ModelDef()
         FWSX3Util():GetFieldType( _aZ17Cab[a] ),;                                                   // [04]  C   Tipo do campo
         TamSX3(_aZ17Cab[a])[1],;                                                                    // [05]  N   Tamanho do campo
         TamSX3(_aZ17Cab[a])[2],;                                                                    // [06]  N   Decimal do campo
-        Nil,;                                                                                       // [07]  B   Code-block de validação do campo
+        Nil,;                                                                                   // [07]  B   Code-block de validação do campo
         Nil,;                                                                                       // [08]  B   Code-block de validação When do campo
-        {},;                                                                                        // [09]  A   Lista de valores permitido do campo
+        _aCombo,;                                                                                   // [09]  A   Lista de valores permitido do campo
         _lObri,;                                                                                    // [10]  L   Indica se o campo tem preenchimento obrigatório
         _bIni,;                                                                                     // [11]  B   Code-block de inicializacao do campo
         .T.,;                                                                                       // [12]  L   Indica se trata-se de um campo chave
@@ -92,8 +104,14 @@ Static Function ModelDef()
     _oStFilho:SetProperty('Z17_ORDEM' , MODEL_FIELD_INIT, FwBuildFeature(STRUCT_FEATURE_INIPAD, '"*"'))
     _oStFilho:SetProperty('Z17_CONTAG', MODEL_FIELD_INIT, FwBuildFeature(STRUCT_FEATURE_INIPAD, '"*"'))
 
+
+    _aAux := FWStruTrigger("Z17_ORDEM"	,"Z17_ORDEM"	,"U_ECO16Gat()",.F.)
+    _oStTmp:AddTrigger(_aAux[1],_aAux[2],_aAux[3],_aAux[4])
+
+
     //Criando o FormModel, adicionando o Cabeçalho e Grid
     _oModel := MPFormModel():New("ECO016M", , _bVldPos, _bVldCom)
+
     _oModel:AddFields("FORMCAB",/*cOwner*/,_oStTmp)
     _oModel:AddGrid('Z17DETAIL','FORMCAB',_oStFilho)
 
@@ -114,6 +132,9 @@ Static Function ModelDef()
     _oModel:SetPrimaryKey({})
     _oModel:GetModel("FORMCAB"):SetDescription("Cadastro Visao Gerencial - Mapinha")
 
+    _oModel:GetModel( 'FORMCAB' ):SetOnlyView ( _oModel:GetOperation() != MODEL_OPERATION_INSERT)
+    // oModel:GetModel( 'FORMCAB' ):SetOnlyView ( .T. )
+
 Return _oModel
 
 
@@ -130,6 +151,12 @@ Static Function ViewDef()
 
     For b := 2 to Len(_aZ17Cab)
 
+        If _aZ17Cab[b] = 'Z17_CLASSE'
+            _aCombo := {'1=Sintetica','2=Analitica'}
+        Else
+            _aCombo := {}
+        Endif
+
         _nOrdem ++
 
         _oStTmp:AddField(;
@@ -142,10 +169,10 @@ Static Function ViewDef()
         X3Picture(_aZ17Cab[b]),;                    // [07]  C   Picture
         Nil,;                                       // [08]  B   Bloco de PictTre Var
         Nil,;                                       // [09]  C   Consulta F3
-        Iif(INCLUI, .T., .F.),;                     // [10]  L   Indica se o campo é alteravel
+        .T.,;                                       // [10]  L   Indica se o campo é alteravel
         Nil,;                                       // [11]  C   Pasta do campo
         Nil,;                                       // [12]  C   Agrupamento do campo
-        Nil,;                                       // [13]  A   Lista de valores permitido do campo (Combo)
+        _aCombo,;                                   // [13]  A   Lista de valores permitido do campo (Combo)
         Nil,;                                       // [14]  N   Tamanho maximo da maior opção do combo
         Nil,;                                       // [15]  C   Inicializador de Browse
         Nil,;                                       // [16]  L   Indica se o campo é virtual
@@ -182,6 +209,129 @@ Static Function ViewDef()
 Return(_oView)
 
 
+/*
+User Function ECO016M()
+
+    // Local _aParam   := PARAMIXB
+    // Local _xRet     := .T.
+    // Local _cIdPonto := ""
+
+    // If _aParam <> NIL
+    //     _oObj     := _aParam[1]
+    //     _cIdPonto := _aParam[2]
+    //     _cIdModel := _aParam[3]
+
+    //     If _cIdPonto == "MODELVLDACTIVE"
+    //         _nOper := _oObj:nOperation
+
+    //         // cMsg := "Chamada na ativação do modelo de dados."
+
+    //         // xRet := MsgYesNo(cMsg + "Continua?")
+    //     EndIf
+    // EndIf
+
+    Local aParam := PARAMIXB
+    Local xRet := .T.
+    Local oObj := ''
+    Local cIdPonto := ''
+
+    Local cIdModel := ''
+    Local lIsGrid := .F.
+    Local nLinha := 0
+    Local nQtdLinhas := 0
+    Local cMsg := ''
+    If aParam <> NIL
+        oObj := aParam[1]
+        cIdPonto := aParam[2]
+        cIdModel := aParam[3]
+        lIsGrid := ( Len( aParam ) > 3 )
+        If lIsGrid
+            nQtdLinhas := oObj:GetQtdLine()
+            nLinha := oObj:nLine
+        EndIf
+        If cIdPonto == 'MODELPOS'
+            cMsg := 'Chamada na validação total do modelo (MODELPOS).' + CRLF
+            cMsg += 'ID ' + cIdModel + CRLF
+            If !( xRet := ApMsgYesNo( cMsg + 'Continua ?' ) )
+                Help( ,, 'Help',, 'O MODELPOS retornou .F.', 1, 0 )
+            EndIf
+        ElseIf cIdPonto == 'FORMPOS'
+            cMsg := 'Chamada na validação total do formulário (FORMPOS).' + CRLF
+            cMsg += 'ID ' + cIdModel + CRLF
+            If cClasse == 'FWFORMGRID'
+                cMsg += 'É um FORMGRID com ' + Alltrim( Str( nQtdLinhas ) ) + ;
+                    ' linha(s).' + CRLF
+                cMsg += 'Posicionado na linha ' + Alltrim( Str( nLinha ) ) + CRLF
+            ElseIf cClasse == 'FWFORMFIELD'
+                cMsg += 'É um FORMFIELD' + CRLF
+            EndIf
+            If !( xRet := ApMsgYesNo( cMsg + 'Continua ?' ) )
+                Help( ,, 'Help',, 'O FORMPOS retornou .F.', 1, 0 )
+
+            EndIf
+        ElseIf cIdPonto == 'FORMLINEPRE'
+            If aParam[5] == 'DELETE'
+                cMsg := 'Chamada na pré validação da linha do formulário (FORMLINEPRE).' + CRLF
+                cMsg += 'Onde esta se tentando deletar uma linha' + CRLF
+                cMsg += 'É um FORMGRID com ' + Alltrim( Str( nQtdLinhas ) ) +;
+                    ' linha(s).' + CRLF
+                cMsg += 'Posicionado na linha ' + Alltrim( Str( nLinha ) ) + CRLF
+                cMsg += 'ID ' + cIdModel + CRLF
+                If !( xRet := ApMsgYesNo( cMsg + 'Continua ?' ) )
+                    Help( ,, 'Help',, 'O FORMLINEPRE retornou .F.', 1, 0 )
+                EndIf
+            EndIf
+        ElseIf cIdPonto == 'FORMLINEPOS'
+            cMsg := 'Chamada na validação da linha do formulário (FORMLINEPOS).' + CRLF
+            cMsg += 'ID ' + cIdModel + CRLF
+            cMsg += 'É um FORMGRID com ' + Alltrim( Str( nQtdLinhas ) ) + ;
+                ' linha(s).' + CRLF
+            cMsg += 'Posicionado na linha ' + Alltrim( Str( nLinha ) ) + CRLF
+            If !( xRet := ApMsgYesNo( cMsg + 'Continua ?' ) )
+                Help( ,, 'Help',, 'O FORMLINEPOS retornou .F.', 1, 0 )
+            EndIf
+        ElseIf cIdPonto == 'MODELCOMMITTTS'
+            ApMsgInfo('Chamada apos a gravação total do modelo e dentro da transação (MODELCOMMITTTS).' + CRLF + 'ID ' + cIdModel )
+        ElseIf cIdPonto == 'MODELCOMMITNTTS'
+            ApMsgInfo('Chamada apos a gravação total do modelo e fora da transação (MODELCOMMITNTTS).' + CRLF + 'ID ' + cIdModel)
+//ElseIf cIdPonto == 'FORMCOMMITTTSPRE'
+        ElseIf cIdPonto == 'FORMCOMMITTTSPOS'
+            ApMsgInfo('Chamada apos a gravação da tabela do formulário (FORMCOMMITTTSPOS).' + CRLF + 'ID ' + cIdModel)
+        ElseIf cIdPonto == 'MODELCANCEL'
+            cMsg := 'Chamada no Botão Cancelar (MODELCANCEL).' + CRLF + 'Deseja Realmente Sair ?'
+            If !( xRet := ApMsgYesNo( cMsg ) )
+                Help( ,, 'Help',, 'O MODELCANCEL retornou .F.', 1, 0 )
+            EndIf
+        ElseIf cIdPonto == 'MODELVLDACTIVE'
+            cMsg := 'Chamada na validação da ativação do Model.' + CRLF + 'Continua ?'
+            If !( xRet := ApMsgYesNo( cMsg ) )
+                Help( ,, 'Help',, 'O MODELVLDACTIVE retornou .F.', 1, 0 )
+            EndIf
+        ElseIf cIdPonto == 'BUTTONBAR'
+            ApMsgInfo('Adicionando Botão na Barra de Botões (BUTTONBAR).' + CRLF + 'ID ' + cIdModel )
+            xRet := { {'Salvar', 'SALVAR', { || Alert( 'Salvou' ) }, 'Este botão Salva' } }
+        EndIf
+    EndIf
+Return(xRet)
+*/
+
+
+
+Static Function VldChange(_oModel)
+
+    Local _lRet       := .F.
+    // Local _oModelDad  := FWModelActive()
+    Local _nOpc       := _oModel:GetOperation()
+
+    If _nOpc == MODEL_OPERATION_INSERT
+        _lRet := .T.
+    Endif
+// Iif(INCLUI, .T., .F.)
+
+Return(_lRet)
+
+
+
 
 
 User Function VldZ17Tab()
@@ -189,10 +339,10 @@ User Function VldZ17Tab()
     Local _aArea      := GetArea()
     Local _lRet       := .T.
     Local _oModelDad  := FWModelActive()
-    Local _Z17FILIAL    := _oModelDad:GetValue('FORMCAB', 'Z17_FILIAL')
-    Local _Z17CODPLA    := _oModelDad:GetValue('FORMCAB', 'Z17_CODPLA')
-    Local _Z17ORDEM     := _oModelDad:GetValue('FORMCAB', 'Z17_ORDEM')
-    Local _Z17CONTAG    := _oModelDad:GetValue('FORMCAB', 'Z17_CONTAG')
+    Local _Z17FILIAL  := _oModelDad:GetValue('FORMCAB', 'Z17_FILIAL')
+    Local _Z17CODPLA  := _oModelDad:GetValue('FORMCAB', 'Z17_CODPLA')
+    Local _Z17ORDEM   := _oModelDad:GetValue('FORMCAB', 'Z17_ORDEM')
+    Local _Z17CONTAG  := _oModelDad:GetValue('FORMCAB', 'Z17_CONTAG')
     Local _nOpc       := _oModelDad:GetOperation()
 
     //Se for Inclusão
@@ -306,7 +456,7 @@ User Function SaveZ17()
 
             _oModelGrid:GoLine(_nAtual)
 
-             _cLinha := _oModelGrid:GetValue('Z17_LINHA')
+            _cLinha := _oModelGrid:GetValue('Z17_LINHA')
 
             //Se conseguir posicionar, exclui o registro
             If Z17->(MsSeek(_Z17FILIAL + _Z17CODPLA + _Z17ORDEM + _Z17CONTAG + _cLinha))
@@ -325,3 +475,23 @@ User Function SaveZ17()
     RestArea(_aArea)
 
 Return _lRet
+
+
+
+
+User Function ECO16Gat()
+
+    Local _Area 	:= GetArea()
+    Local _oModel	:= FWModelActive()
+    Local _oView	:= FWViewActive()
+    Local _cRet		:= ''
+
+    _cRet := PADL(Alltrim(_oModel:GetValue('FORMCAB',"Z17_ORDEM")),TAMSX3("Z17_ORDEM")[1],'0')
+
+    _oModel:SetValue('FORMCAB','Z17_ORDEM',_cRet )
+
+    _oView:Refresh()
+
+    Restarea(_Area)
+
+Return(_cRet)

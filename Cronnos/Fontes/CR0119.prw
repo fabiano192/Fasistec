@@ -273,7 +273,7 @@ Static Function CR119IN()
 	_cQuery += " AND EE9_FILIAL = '' AND EEC_FILIAL = '' AND SA1A.A1_FILIAL = '' AND YA1.YA_FILIAL = '' AND YA2.YA_FILIAL = '' " +CRLF
 	_cQuery += " AND EEC_PREEMB = '"+MV_PAR01+"' " + CRLF
 
-	// MemoWrite("C:\TEMP\PORTARIA.txt",_cQuery)
+	// MemoWrite("D:\_TEMP\CR0119.txt",_cQuery)
 
 	TcQuery _cQuery NEW ALIAS "TEXP"
 

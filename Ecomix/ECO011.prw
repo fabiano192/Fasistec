@@ -72,8 +72,8 @@ Static Function ECO11_01()
 	_cInd := "CODCFO + CODEMP + PAGREC"
 	IndRegua("TFOR",_cArq,_cInd,,,"Selecionando Arquivo Trabalho")
 
-	// _aEmp:= {{'A','0101','91'},{'A','0102','92'},{'A','0103','93'},{'B','0201','101'},{'B','0203','103'},{'B','0204','104'},{'C','0301','111'},{'C','0303','113'}}
-	_aEmp:= {{'A','0101','91'}}
+	_aEmp:= {{'A','0101','91'},{'A','0102','92'},{'A','0103','93'},{'B','0201','101'},{'B','0203','103'},{'B','0204','104'},{'C','0301','111'},{'C','0303','113'}}
+	// _aEmp:= {{'A','0103','93'}}
 
 	ProcRegua(Len(_aEmp))
 
@@ -93,12 +93,13 @@ Static Function ECO11_01()
 Return
 
 
-Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
+Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)
 
 	Local _aArea     := GetArea()
 	Local _aAreaSA2  := SA2->( GetArea() )
 	Local _aAreaSA1  := SA1->( GetArea() )
 	Local _aAreaSB1  := SB1->( GetArea() )
+	Local _aAreaSBM  := SBM->( GetArea() )
 	Local _aAreaSD1  := SD1->( GetArea() )
 	Local _aAreaSF1  := SF1->( GetArea() )
 	Local _aAreaSF4  := SF4->( GetArea() )
@@ -107,6 +108,7 @@ Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 	Local _cAliasSA2 := ''
 	Local _cAliasSA1 := ''
 	Local _cAliasSB1 := ''
+	Local _cAliasSBM := ''
 	Local _cAliasSD1 := ''
 	Local _cAliasSF1 := ''
 	Local _cAliasSF4 := ''
@@ -118,6 +120,7 @@ Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 	Local _lOutSA2   := .F.
 	Local _lOutSA1   := .F.
 	Local _lOutSB1   := .F.
+	Local _lOutSBM   := .F.
 	Local _lOutSD1   := .F.
 	Local _lOutSF1   := .F.
 	Local _lOutSF4   := .F.
@@ -147,10 +150,10 @@ Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 	_cQry += " BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"' " + CRLF
 	_cQry += " AND LEFT(CODTMV,1) = '1' " + CRLF // Movimentos de Compras
 	_cQry += " AND A.STATUS <> 'C' " + CRLF
-	// _cQry += " AND NUMEROMOV = '000055852' " //C18728
+	// _cQry += " AND NUMEROMOV = '000000126' " //C18728
 	// _cQry += " AND A.NUMEROMOV = '000000001' " + CRLF
  	// _cQry += " AND A.CODCFO = 'F03090' " + CRLF
-	_cQry += " ORDER BY A.CODCOLIGADA,A.CODFILIAL,B.IDMOV,A.NUMEROMOV,A.SERIE,E.CODTRB  " + CRLF
+    _cQry += " ORDER BY A.CODCOLIGADA,A.CODFILIAL,B.IDMOV,A.NUMEROMOV,A.SERIE,B.NSEQITMMOV,E.CODTRB  " + CRLF
 
 	Memowrite("D:\_Temp\ECO011.txt",_cQry)
 
@@ -165,6 +168,7 @@ Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 		_cAliasSF1 := "SF1"
 		_cAliasSD1 := "SD1"
 		_cAliasSB1 := "SB1"
+		_cAliasSBM := "SBM"
 		_cAliasSA2 := "SA2"
 		_cAliasSA1 := "SA1"
 		_cAliasZF6 := "ZF6"
@@ -183,6 +187,12 @@ Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 			_cAliasSB1  := "TSB1"
 			_lOutSB1 := .T.
 		Endif
+
+		If EmpOpenFile("TSBM","SBM",1,.T., _cEmp,@_cModo)
+			_cAliasSBM  := "TSBM"
+			_lOutSBM := .T.
+		Endif
+
 		If EmpOpenFile("TSA2","SA2",1,.T., _cEmp,@_cModo)
 			_cAliasSA2  := "TSA2"
 			_lOutSA2 := .T.
@@ -237,7 +247,7 @@ Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 					_F1TIPO    := "D"
 
 					//Verifica se o Cliente está cadastrado na tabela ZF6, que relaciona o código RM X Protheus
-					_lRet := CheckZF6(3,_cFil,_cAliasZF6,_cAliasSA2,_cAliasSB1,_cAliasSA1)
+					_lRet := CheckZF6(3,_cFil,_cAliasZF6,_cAliasSA2,_cAliasSB1,_cAliasSA1,_cAliasSBM)
 
 					If !_lRet
 						return
@@ -245,7 +255,7 @@ Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 				Else
 					_F1TIPO    := "N"
 					//Verifica se o Fornecedor está cadastrado na tabela ZF6, que relaciona o código RM X Protheus
-					_lRet := CheckZF6(1,_cFil,_cAliasZF6,_cAliasSA2,_cAliasSB1,_cAliasSA1)
+					_lRet := CheckZF6(1,_cFil,_cAliasZF6,_cAliasSA2,_cAliasSB1,_cAliasSA1,_cAliasSBM)
 
 					If !_lRet
 						return
@@ -383,7 +393,6 @@ Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 					_D1PEDIDO  := ''
 					_D1ITEMPV  := ''
 					_D1LOCAL   := '01'
-					_D1GRUPO   := ''
 					_D1TP      := ''
 					_D1PRUNIT  := 0
 					_D1NUMSEQ  := ''
@@ -438,9 +447,10 @@ Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 					_F4ICM     := "N"
 
 					//Verifica se o Produto está cadastrado na tabela ZF6, que relaciona o código RM X Protheus
-					_lRet  := CheckZF6(2,_cFil,_cAliasZF6,_cAliasSA2,_cAliasSB1,_cAliasSA1)
+					_lRet      := CheckZF6(2,_cFil,_cAliasZF6,_cAliasSA2,_cAliasSB1,_cAliasSA1,_cAliasSBM)
 
-					_cKey3 := Alltrim(cValToChar(TRB->CODCOLIGADA)) + Alltrim(cValToChar(TRB->IDMOV)) + Alltrim(cValToChar(TRB->NSEQITMMOV))
+					_D1GRUPO   := (_cAliasSB1)->B1_GRUPO
+					_cKey3     := Alltrim(cValToChar(TRB->CODCOLIGADA)) + Alltrim(cValToChar(TRB->IDMOV)) + Alltrim(cValToChar(TRB->NSEQITMMOV))
 
 					While TRB->(!EOF())  .And. _cKey3  == Alltrim(cValToChar(TRB->CODCOLIGADA)) + Alltrim(cValToChar(TRB->IDMOV)) + Alltrim(cValToChar(TRB->NSEQITMMOV))
 
@@ -527,8 +537,7 @@ Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 					(_cAliasSD1)->D1_UM      := _D1UM
 					(_cAliasSD1)->D1_QUANT   := _D1QUANT
 					(_cAliasSD1)->D1_VUNIT   := _D1VUNIT
-					(_cAliasSD1)->D1_TOTAL   := _D1QUANT * _D1VUNIT
-					// (_cAliasSD1)->D1_TOTAL   := _D1TOTAL
+					(_cAliasSD1)->D1_TOTAL   := _D1TOTAL
 					(_cAliasSD1)->D1_TES     := _D1TES
 					(_cAliasSD1)->D1_CF      := _D1CF
 					(_cAliasSD1)->D1_VALIMP1 := _D1VALIMP1
@@ -677,6 +686,7 @@ Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 		RestArea( _aAreaSA2 )
 		RestArea( _aAreaSA1 )
 		RestArea( _aAreaSB1 )
+		RestArea( _aAreaSBM )
 		RestArea( _aAreaZF6 )
 		RestArea( _aAreaSF4 )
 		RestArea( _aAreaSE2 )
@@ -694,6 +704,11 @@ Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)  // MOVIMENTOS CONT?BEIS
 	If _lOutSB1
 		TSB1->(dbCloseArea())
 	ENDIF
+
+	If _lOutSBM
+		TSBM->(dbCloseArea())
+	ENDIF
+
 	If _lOutSA2
 		TSA2->(dbCloseArea())
 	ENDIF
@@ -729,7 +744,7 @@ Return (Nil)
 
 
 
-Static Function CheckZF6(_nOpc,_cFil,_cAliasZF6,_cAliasSA2,_cAliasSB1,_cAliasSA1)
+Static Function CheckZF6(_nOpc,_cFil,_cAliasZF6,_cAliasSA2,_cAliasSB1,_cAliasSA1,_cAliasSBM)
 
 	Local _lGrava
 	Local _lRet2 := .T.
@@ -848,7 +863,7 @@ Static Function CheckZF6(_nOpc,_cFil,_cAliasZF6,_cAliasSA2,_cAliasSB1,_cAliasSA1
 			TPROD->(dbGoTop())
 
 			_cDesc := U_RM_NoAcento(UPPER(Alltrim(TPROD->DESCRICAO)))
-
+			/*
 			If Select("TTSB1") > 0
 				TTSB1->(dbCloseArea())
 			Endif
@@ -886,23 +901,45 @@ Static Function CheckZF6(_nOpc,_cFil,_cAliasZF6,_cAliasSA2,_cAliasSB1,_cAliasSA1
 			Endif
 
 			TTSB1->(dbCloseArea())
-
+			*/
 			If Empty(_D1COD)
 
-				_D1COD := GetNxtProd()
+				_D1COD := Alltrim(TPROD->CODIGOPRD)
 
-				GeraProd(_cFil,_D1COD,_cAliasSB1)
+				(_cAliasSB1)->(dbOrderNickName("INDSB1"))
+				If !(_cAliasSB1)->(MsSeek(xFilial("SB1") + _D1COD))
 
-				(_cAliasZF6)->(RecLock(_cAliasZF6,.T.))
-				(_cAliasZF6)->ZF6_FILIAL := _cFil
-				(_cAliasZF6)->ZF6_TABELA := "SB1"
-				(_cAliasZF6)->ZF6_CAMPO  := "B1_COD"
-				(_cAliasZF6)->ZF6_CODRM  := TPROD->CODIGOPRD
-				(_cAliasZF6)->ZF6_IDRM   := TPROD->IDPRD
-				(_cAliasZF6)->ZF6_TOTVS  := _D1COD
-				(_cAliasZF6)->ZF6_DESC   := _cDesc
-				(_cAliasZF6)->(MsUnLock())
+					GeraProd(_cFil,_D1COD,_cAliasSB1,_cAliasSBM)
 
+					(_cAliasZF6)->(RecLock(_cAliasZF6,.T.))
+					(_cAliasZF6)->ZF6_FILIAL := _cFil
+					(_cAliasZF6)->ZF6_TABELA := "SB1"
+					(_cAliasZF6)->ZF6_CAMPO  := "B1_COD"
+					(_cAliasZF6)->ZF6_CODRM  := TPROD->CODIGOPRD
+					(_cAliasZF6)->ZF6_IDRM   := TPROD->IDPRD
+					(_cAliasZF6)->ZF6_TOTVS  := _D1COD
+					(_cAliasZF6)->ZF6_DESC   := _cDesc
+					(_cAliasZF6)->(MsUnLock())
+				Else
+					If ALLTRIM(UPPER((_cAliasSB1)->B1_DESC)) <> Alltrim(UPPER(_cDesc))
+						_D1COD := Alltrim(_D1COD)+"-"+_cEmp
+
+						(_cAliasSB1)->(dbOrderNickName("INDSB1"))						
+						If !(_cAliasSB1)->(MsSeek(xFilial("SB1") + _D1COD))
+							GeraProd(_cFil,_D1COD,_cAliasSB1,_cAliasSBM)
+
+							(_cAliasZF6)->(RecLock(_cAliasZF6,.T.))
+							(_cAliasZF6)->ZF6_FILIAL := _cFil
+							(_cAliasZF6)->ZF6_TABELA := "SB1"
+							(_cAliasZF6)->ZF6_CAMPO  := "B1_COD"
+							(_cAliasZF6)->ZF6_CODRM  := TPROD->CODIGOPRD
+							(_cAliasZF6)->ZF6_IDRM   := TPROD->IDPRD
+							(_cAliasZF6)->ZF6_TOTVS  := _D1COD
+							(_cAliasZF6)->ZF6_DESC   := _cDesc
+							(_cAliasZF6)->(MsUnLock())
+						Endif
+					Endif
+				Endif
 			ElseIf _lGeraZF6
 
 				(_cAliasZF6)->(RecLock(_cAliasZF6,.T.))
@@ -964,7 +1001,7 @@ Static Function GeraFOR(_cFil,_cCNPJ,_cCod,_cLoja,_cAliasSA2)
 
 RETURN(NIL)
 
-
+/*
 Static Function GetNxtProd()
 
 	Local _cNxtProd := ''
@@ -994,7 +1031,7 @@ Static Function GetNxtProd()
 	TNEXT->(dbCloseArea())
 
 Return(_cNxtProd)
-
+*/
 
 
 Static Function GetNxtA2(_cCod,_cLoja)
@@ -1004,7 +1041,7 @@ Static Function GetNxtA2(_cCod,_cLoja)
 	If Empty(_cCod)
 
 		_cQrySA2 := " SELECT MAX(A2_COD) AS COD FROM "+RetSqlName("SA2")+" A2 " +CRLF
-		_cQrySA2 += " WHERE A2.D_E_L_E_T_ = '' AND A2_FILIAL = '"+xFilial("SA2")+"' " +CRLF
+		_cQrySA2 += " WHERE A2.D_E_L_E_T_ = '' AND A2_FILIAL = '"+xFilial("SA2")+"' AND LEFT(A2_COD,1) = 'F' " +CRLF
 
 		TcQuery _cQrySA2 New Alias "TNEXT"
 
@@ -1034,11 +1071,15 @@ Return(Nil)
 
 
 
-Static Function GeraProd(_cFil,_cProd,_cAliasSB1)
+Static Function GeraProd(_cFil,_cProd,_cAliasSB1,_cAliasSBM)
+
+	_cGrProd := ""
+	(_cAliasSBM)->(dbOrderNickName("INDSBM1"))
+	If (_cAliasSBM)->(MsSeek(xFilial("SBM")+ Left(_cProd,5) ))
+		_cGrProd := SBM->BM_GRUPO
+	Endif
 
 	(_cAliasSB1)->(RecLock(_cAliasSB1,.T.))
-	// (_cAliasSB1)->B1_YID    := TPROD->IDPRD
-	// (_cAliasSB1)->B1_FILIAL    := _cFil
 	(_cAliasSB1)->B1_COD       := _cProd
 	(_cAliasSB1)->B1_DESC      := U_RM_NoAcento(UPPER(Alltrim(TPROD->DESCRICAO)))
 	(_cAliasSB1)->B1_MSBLQL    := (TPROD->INATIVO=1,"1","2")
@@ -1052,10 +1093,12 @@ Static Function GeraProd(_cFil,_cProd,_cAliasSB1)
 	(_cAliasSB1)->B1_POSIPI    := TPROD->NUMEROCCF
 	(_cAliasSB1)->B1_UM        := TPROD->CODUNDCONTROLE
 	(_cAliasSB1)->B1_LOCPAD    := "01"
-	// (_cAliasSB1)->B1_GRUPO
 	(_cAliasSB1)->B1_TIPO      := If(TPROD->TIPO = "S","SV","PA")
 	(_cAliasSB1)->B1_EMIN      := TPROD->PONTODEPEDIDO1
 	(_cAliasSB1)->B1_EMAX      := TPROD->ESTOQUEMAXIMO1
+	(_cAliasSB1)->B1_YCODRM    := _cProd
+	(_cAliasSB1)->B1_GRUPO     := _cGrProd
+
 	(_cAliasSB1)->(MsUnLock())
 
 Return(Nil)
@@ -1136,7 +1179,7 @@ Static Function GetSF4(_cKeyF4,_cAliasSF4,_D1CF,_cNomeF4,_cSTICMS,_cSTIPI,_cSTCO
 Return(_cRetSF4)
 
 
-
+/*
 Static Function GeraSE2(_cAliasSE2,_cKey1,_cIDMov,_cCodFor,_cLojFor,_cNomFor,_F1DOC,_F1SERIE)
 
 	Local _nReg := 0
@@ -1226,7 +1269,7 @@ Static Function GeraSE2(_cAliasSE2,_cKey1,_cIDMov,_cCodFor,_cLojFor,_cNomFor,_F1
 	TPAG->(dbCloseArea())
 
 Return(Nil)
-
+*/
 
 
 
