@@ -882,7 +882,7 @@ Static Function ECO15_04(_cEmp,_cFil,_cFilRM) //SE5
 		TRB->(dbCloseArea())
 	Endif
 
-	_cQry := " SELECT  RIGHT('00'+RTRIM(CAST(A.CODCOLIGADA AS CHAR(02))),2) AS COLIGADA,,A.CODFILIAL AS FILIAL,B.CODCFO,C.CODCXA,C.DESCRICAO,C.NUMBANCO,C.NUMAGENCIA,C.NROCONTA, " + CRLF
+	_cQry := " SELECT  RIGHT('00'+RTRIM(CAST(A.CODCOLIGADA AS CHAR(02))),2) AS COLIGADA,A.CODFILIAL AS FILIAL,B.CODCFO,C.CODCXA,C.DESCRICAO,C.NUMBANCO,C.NUMAGENCIA,C.NROCONTA, " + CRLF
 	_cQry += " A.DATABAIXA,A.VALORBAIXA,A.VALORORIGINAL,A.VALORDESCONTO,A.VALORMULTA,A.VALORJUROS,A.IDLAN " + CRLF
 	_cQry += " FROM [10.140.1.5].[CorporeRM].dbo.FLANBAIXA A " + CRLF
 	_cQry += " INNER JOIN [10.140.1.5].[CorporeRM].dbo.FLAN B ON A.IDLAN = B.IDLAN AND A.CODCOLIGADA = B.CODCOLIGADA " + CRLF
@@ -895,7 +895,7 @@ Static Function ECO15_04(_cEmp,_cFil,_cFilRM) //SE5
 	_cQry += " SUBSTRING(CONVERT(char(15), A.DATABAIXA, 23),6,2) + " + CRLF
 	_cQry += " SUBSTRING(CONVERT(char(15), A.DATABAIXA, 23),9,2) " + CRLF
 	_cQry += " BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"' " + CRLF
-	_cQry += " ORDER BY COLIGADA,A.FILIAL " + CRLF
+	_cQry += " ORDER BY COLIGADA,FILIAL " + CRLF
 
 	Memowrite("D:\_Temp\ECO015C.txt",_cQry)
 
@@ -989,6 +989,24 @@ Static Function ECO15_04(_cEmp,_cFil,_cFilRM) //SE5
 					Return(Nil)
 				Endif
 
+				_A6COD     := Padr(TRB->NUMBANCO  ,TamSx3('A6_COD')[1])
+				_A6AGENCIA := Padr(TRB->NUMAGENCIA,TamSx3('A6_AGENCIA')[1])
+				_A6NUMCON  := Padr(TRB->NROCONTA  ,TamSx3('A6_NUMCON')[1])
+				_A6NOME    := Padr(TRB->DESCRICAO ,TamSx3('A6_NOME')[1])
+
+				(_cAliasSA6)->(dbSetOrder(1))
+				If !(_cAliasSA6)->(MsSeek(xFilial(_cAliasSA6)+_A6COD+_A6AGENCIA+_A6NUMCON))
+					(_cAliasSA6)->(RecLock(_cAliasSA6,.T.))
+					(_cAliasSA6)->A6_FILIAL  := xFilial(_cAliasSA6)
+					(_cAliasSA6)->A6_COD     := _A6COD
+					(_cAliasSA6)->A6_AGENCIA := _A6AGENCIA
+					(_cAliasSA6)->A6_NUMCON  := _A6NUMCON
+					(_cAliasSA6)->A6_NOME    := _A6NOME
+					(_cAliasSA6)->A6_NREDUZ  := _A6NOME
+					(_cAliasSA6)->A6_MOEDA   := 1
+					(_cAliasSA6)->(MsUnLock())
+				Endif
+
 				_cNomE5   := ''
 				_cCodE5   := Left((_cAliasZF6)->ZF6_TOTVS,6)
 				_cLojE5   := Substr((_cAliasZF6)->ZF6_TOTVS,7,2)
@@ -1000,7 +1018,7 @@ Static Function ECO15_04(_cEmp,_cFil,_cFilRM) //SE5
 				// 	_cTpFor  := (_cAliasSA2)->A2_TIPO
 				// Endif
 
-				If 
+				// If 
 
 				(_cAliasSE5)->(RecLock(_cAliasSE5,.T.))
 				(_cAliasSE5)->E5_FILIAL  := _cFil
