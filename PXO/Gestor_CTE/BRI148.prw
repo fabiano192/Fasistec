@@ -10,12 +10,12 @@
 #Define Mizu "#E8782F"
 
 /*
-Função		: BRI137
+Função		: BRI148
 Data		: 22/01/2020
 Descrição	: Gerar CT-e
 */
 
-User Function BRI137()
+User Function BRI148()
 
 	Local _oDlg			:= NIL
 	Local _nOpc			:= 0
@@ -28,19 +28,18 @@ User Function BRI137()
 
 	Private _oProcess	:= Nil
 
-	Public  _cUsrBRI37  := CUSERNAME 
-	
+	Public  _cUsrBRI37  := CUSERNAME
+
 	AtuSX1()
 
-	DEFINE MSDIALOG _oDlg FROM 264,182 TO 435,500 TITLE 'Geração de CT-e' OF _oDlg PIXEL
+	DEFINE MSDIALOG _oDlg FROM 264,182 TO 435,500 TITLE 'Geração de CT-e CLIC' OF _oDlg PIXEL
 
 	_oGrupo	:= TGroup():New(005,005,045,155,"",_oDlg,CLR_HRED,CLR_WHITE,.T.,.F. )
 
 	@ 010,010 SAY _oTSayA VAR "Esta rotina tem por objetivo gerar CT-e conforme "	OF _oGrupo PIXEL Size 150,010 FONT _oFont11N
 	@ 020,010 SAY "os parâmetros informados pelo usuário."			OF _oGrupo PIXEL Size 150,010 FONT _oFont11N
-	// @ 030,015 SAY "" 							OF _oGrupo PIXEL Size 150,010 FONT _oFont11N
 
-	_oTBut1	:= TButton():New( 60,010, "Parâmetros" ,_oDlg,{||Pergunte("BRI137")},035,012,,,.F.,.T.,.F.,,.F.,,,.F. )
+	_oTBut1	:= TButton():New( 60,010, "Parâmetros" ,_oDlg,{||Pergunte("BRI148")},035,012,,,.F.,.T.,.F.,,.F.,,,.F. )
 	_cStyle := GetStyle(Amarelo,Branco,Cinza,Preto,1)
 	_oTBut1:SetCss(_cStyle)
 
@@ -55,8 +54,7 @@ User Function BRI137()
 	ACTIVATE MSDIALOG _oDlg CENTERED
 
 	If _nOpc = 1
-		// LjMsgRun(_cMsgTit,_cProc,{||BRI137A()})
-		_oProcess := MsNewProcess():New( { || BRI137A() } , "CT-e" , "Aguarde..." , .T. )
+		_oProcess := MsNewProcess():New( { || BRI148A() } , "CT-e" , "Aguarde..." , .T. )
 		_oProcess:Activate()
 	Endif
 
@@ -83,7 +81,7 @@ Return(_cMod)
 
 
 
-Static Function BRI137A()
+Static Function BRI148A()
 
 	Local aVetDoc	:= {}
 	Local aVetVlr	:= {}
@@ -107,9 +105,11 @@ Static Function BRI137A()
 
 	Local _nSM0		:= 0
 	Local _aSM0		:= {}
-	Local _aEmp		:= {{"500129067113009495","CTEMBA"},{"500229067113009495","CTEMRO"},{"500629067113033280","CTEIGU"},{"500729067113027809","CTEICC"}}
-	// Local _aEmp		:= {"500129067113009495","500229067113009495","500629067113033280","500729067113027809"}
-	Local _n		:= 0
+	//Local _aEmp		:= {{"500129067113009495","CTEMBA"},{"500229067113009495","CTEMRO"},{"500629067113033280","CTEIGU"},{"500729067113027809","CTEICC"}}
+
+	Local _aEmp			:= {"04","05","06","13","50"}
+	//Local _aEmp			:= {{"04"},{"05"},{"06"},{"13"},{"50"}}
+	Local _n			:= 0
 
 	Private cVersaoCTE	:= ""
 	Private lUsaColab	:= .F.
@@ -117,12 +117,12 @@ Static Function BRI137A()
 	Private lMsErroAuto := .F.
 	Private lMsHelpAuto := .T.
 
-// Verifica se o usuário tem acesso à rotina, conforme cada emnpresa.
-	For _n := 1 to Len(_aEmp)
-		AAdd(_aEmp[_n],u_ChkAcesso(_aEmp[_n][2],6,.F.) )
-	Next _n
+	// Verifica se o usuário tem acesso à rotina, conforme cada emnpresa.
+	//For _n := 1 to Len(_aEmp)
+	//	AAdd(_aEmp[_n],u_ChkAcesso(_aEmp[_n][2],6,.F.) )
+	//Next _n
 
-	Pergunte("BRI137",.F.)
+	Pergunte("BRI148",.F.)
 
 	_dDtIni := MV_PAR01
 	_dDtFim := MV_PAR02
@@ -137,7 +137,9 @@ Static Function BRI137A()
 	While SM0->(!Eof())
 
 		If SM0->M0_CODIGO >= MV_PAR03 .And. SM0->M0_CODIGO <= MV_PAR04
-			AAdd(_aSM0,{Alltrim(SM0->M0_CGC),SM0->M0_CODIGO,SM0->M0_CODFIL,Alltrim(SM0->M0_NOME)})
+			If SM0->M0_CODIGO <> "50"
+				AAdd(_aSM0,{Alltrim(SM0->M0_CGC),SM0->M0_CODIGO,SM0->M0_CODFIL,Alltrim(SM0->M0_NOME)})
+			Endif
 		Endif
 
 		SM0->(dbSkip())
@@ -164,7 +166,6 @@ Static Function BRI137A()
 
 		RpcSetType(3)
 		RpcSetEnv(_cSM0Cod, _cSM0Fil,'cte','cte2020','TMS' ,,  {"DTC","DTP","DT6","DT8","SD1","SD2","SD3","SF2","SA1"})
-		//RpcSetEnv(_cSM0Cod, _cSM0Fil,,,'TMS' ,,  {"DTC","DTP","DT6","DT8","SD1","SD2","SD3","SF2","SA1"})
 
 		TCConType("TCPIP")
 
@@ -179,194 +180,202 @@ Static Function BRI137A()
 		TCSETCONN(_nDADOS)
 
 		dDataBase := _dDtBack
-		
+
 		GeraTRB()
 
-		_lTRB := .F.
-		_nTRB := 0
+		_lTRB 	  := .F.
+		_nTRB 	  := 0
+		_cCNPJCLI := "07526355000168"
+
 		For F := 1 to Len(_aEmp)
 
-			If _aEmp[F][3] // Verifica se o usuário tem acesso à rotina, conforme cada emnpresa.
-			// If u_ChkAcesso(_aEmp[F][2],6,.F.) // Verifica se o usuário tem acesso à rotina, conforme cada emnpresa.
+			//If _aEmp[F][3] // Verifica se o usuário tem acesso à rotina, conforme cada emnpresa.
 
-				_oProcess:IncRegua2('Processando a empresa '+Left(_aEmp[F][1],4)+'.')
+			_oProcess:IncRegua2('Processando a empresa '+_aEmp[F]+'.')
 
-				_cEmp    := Left(_aEmp[F][1],2)
-				_cFilEmp := Substr(_aEmp[F][1],3,2)
-				_cCNPJRem:= Right(_aEmp[F][1],14)
+			_cEmp    := Left(_aEmp[F],2)
+			_cFilEmp := Substr(_aEmp[F],3,2)
+			_cCNPJRem:= Right(_aEmp[F],14)
 
-				If Select("TSF2") > 0
-					TSF2->(dbCloseArea())
-				Endif
+			//_cCNPJRem := _aSM0[_nSM0][1]
+			//_cEmp     := _aSM0[_nSM0][2]
+			//_cFilEmp  := _aSM0[_nSM0][3]
 
+			If Select("TSF2") > 0
+				TSF2->(dbCloseArea())
+			Endif
+
+			IF _cEmp $ "04/05/06/13"
 				_cQuery := " SELECT A1.*,A4_CGC,A4_NREDUZ,F2_FILIAL,F2_CLIENTE,F2_LOJA,F2_DOC,F2_SERIE,F2_VOLUME1,F2_PLIQUI,F2_VALBRUT,F2_PDLITTO,F2_EMISSAO,F2_HORA,D2_PDFRETT, " + CRLF
-				_cQuery += " F2_PLACA,F2_PDLITQT,F2_PDLITUN FROM SF2"+_cEmp+"0 F2 " + CRLF
+				_cQuery += " F2_PLACA,F2_PDLITQT,F2_PDLITUN,F2_FRETE FROM SF2"+_cEmp+"0 F2 " + CRLF
+				_cQuery += " INNER JOIN SD2"+_cEmp+"0 D2 ON F2_CLIENTE = D2_CLIENTE AND F2_LOJA = D2_LOJA AND F2_DOC = D2_DOC AND F2_SERIE = D2_SERIE AND F2_FILIAL = D2_FILIAL" + CRLF
+				_cQuery += " INNER JOIN SA1500 A1 ON F2_CLIENTE = A1_COD AND F2_LOJA = A1_LOJA " + CRLF
+				_cQuery += " INNER JOIN SA4"+_cEmp+"0 A4 ON F2_TRANSP = A4_COD " + CRLF
+				_cQuery += " WHERE F2.D_E_L_E_T_ = '' AND D2.D_E_L_E_T_ = '' AND A1.D_E_L_E_T_ = ''   AND A4.D_E_L_E_T_ = '' " + CRLF
+				//	_cQuery += " AND F2_FILIAL = '"+_cFilEmp+"' "
+				_cQuery += " AND F2_EMISSAO BETWEEN '"+DTOS(_dDtIni)+"' AND '"+DTOS(_dDtFim)+"' " + CRLF
+				_cQuery += " AND F2_DOC		BETWEEN '"+_cNFINI+"'       AND '"+_cNFFIM+"' " + CRLF
+				_cQuery += " AND A1_GRPVEN <> '000001' " + CRLF
+				_cQuery += " AND A4_CGC = '"+_cCNPJCLI+"'  " + CRLF
+				_cQuery += " ORDER BY F2_FILIAL,F2_SERIE,F2_DOC " + CRLF
+			ELSE
+				_cQuery := " SELECT A1.*,A4_CGC,A4_NREDUZ,F2_FILIAL,F2_CLIENTE,F2_LOJA,F2_DOC,F2_SERIE,F2_VOLUME1,F2_PLIQUI,F2_VALBRUT,F2_PDLITTO,F2_EMISSAO,F2_HORA,D2_PDFRETT, " + CRLF
+				_cQuery += " F2_PLACA,F2_PDLITQT,F2_PDLITUN,F2_FRETE FROM SF2"+_cEmp+"0 F2 " + CRLF
 				_cQuery += " INNER JOIN SD2"+_cEmp+"0 D2 ON F2_CLIENTE = D2_CLIENTE AND F2_LOJA = D2_LOJA AND F2_DOC = D2_DOC AND F2_SERIE = D2_SERIE AND F2_FILIAL = D2_FILIAL" + CRLF
 				_cQuery += " INNER JOIN SA1500 A1 ON F2_CLIENTE = A1_COD AND F2_LOJA = A1_LOJA " + CRLF
 				_cQuery += " INNER JOIN SA4"+_cEmp+"0 A4 ON F2_TRANSP = A4_COD AND F2_FILIAL = A4_FILIAL" + CRLF
 				_cQuery += " WHERE F2.D_E_L_E_T_ = '' AND D2.D_E_L_E_T_ = '' AND A1.D_E_L_E_T_ = ''   AND A4.D_E_L_E_T_ = '' " + CRLF
-				_cQuery += " AND F2_FILIAL = '"+_cFilEmp+"' "// AND D2_FILIAL = '"+_cFilEmp+"' AND A4_FILIAL = '"+_cFilEmp+"' " + CRLF
+				//	_cQuery += " AND F2_FILIAL = '"+_cFilEmp+"' "
 				_cQuery += " AND F2_EMISSAO BETWEEN '"+DTOS(_dDtIni)+"' AND '"+DTOS(_dDtFim)+"' " + CRLF
 				_cQuery += " AND F2_DOC		BETWEEN '"+_cNFINI+"'       AND '"+_cNFFIM+"' " + CRLF
-				_cQuery += " AND A1_GRPVEN = '000001' " + CRLF
-				_cQuery += " AND A4_CGC <> '' " + CRLF
-				_cQuery += " AND A4_CGC = '"+_cSM0Cnpj+"'  " + CRLF
-				// _cQuery += " AND A4_CGC = '15409884000100' " + CRLF
+				_cQuery += " AND A1_GRPVEN <> '000001' " + CRLF
+				_cQuery += " AND A4_CGC = '"+_cCNPJCLI+"'  " + CRLF
 				_cQuery += " ORDER BY F2_FILIAL,F2_SERIE,F2_DOC " + CRLF
+			ENDIF
 
-				TcQuery _cQuery New Alias "TSF2"
+			TcQuery _cQuery New Alias "TSF2"
 
-				Count to _nTSF2
+			Count to _nTSF2
 
-				If _nTSF2 = 0
+			If _nTSF2 = 0
+				Loop
+			Endif
+
+			TcSetField("TSF2","F2_EMISSAO","D")
+
+			TSF2->(dbGotop())
+
+			While TSF2->(!EOF())
+
+				If TSF2->A1_COD_MUN   = "47304"   // SANTANA DE PARNAIBA
+					TSF2->(dbSkip()) // DENTRO DO MUNICIPIO NAO PRECISA DE CTE
 					Loop
 				Endif
 
-				TcSetField("TSF2","F2_EMISSAO","D")
-
-				TSF2->(dbGotop())
-
-				While TSF2->(!EOF())
-
-					If TSF2->F2_FILIAL $ "01/02" .And. TSF2->A1_COD_MUN   = "47304"   // SANTANA DE PARNAIBA
-						TSF2->(dbSkip()) // DENTRO DO MUNICIPIO NAO PRECISA DE CTE
-						Loop
-					ElseIf TSF2->F2_FILIAL == "06" .And. TSF2->A1_COD_MUN = "18800" // GUARULHOS
-						TSF2->(dbSkip()) // DENTRO DO MUNICIPIO NAO PRECISA DE CTE
-						Loop
-					ElseIf TSF2->F2_FILIAL == "07" .And. TSF2->A1_COD_MUN = "05708" // BARUERI
-						TSF2->(dbSkip()) // DENTRO DO MUNICIPIO NAO PRECISA DE CTE
-						Loop
-					Endif
-
-					//Grava o Cliente na tabela temporária TSA1
-					If !TSA1->(MsSeek(TSF2->A1_CGC))
-						TSA1->(RecLock("TSA1",.T.))
-						_nCount := TSA1->(FCount())
-						For B := 1 to _nCount
-							_cCampo := TSA1->(Field(B))
-							If TSF2->(FieldPos(_cCampo)) > 0
-								_xVal := &("TSF2->"+_cCampo)
-								_xSA1 := &("SA1->"+_cCampo)
-								If ValType(_xSA1) = 'D'
-									_xVal := stod(_xVal)
-								Endif
-								&("TSA1->"+_cCampo) :=_xVal
+				//Grava o Cliente na tabela temporária TSA1
+				If !TSA1->(MsSeek(TSF2->A1_CGC))
+					TSA1->(RecLock("TSA1",.T.))
+					_nCount := TSA1->(FCount())
+					For B := 1 to _nCount
+						_cCampo := TSA1->(Field(B))
+						If TSF2->(FieldPos(_cCampo)) > 0
+							_xVal := &("TSF2->"+_cCampo)
+							_xSA1 := &("SA1->"+_cCampo)
+							If ValType(_xSA1) = 'D'
+								_xVal := stod(_xVal)
 							Endif
-						Next B
-						TSA1->(MsUnLock())
-					Endif
-
-					_cCNPJ   := TSF2->A4_CGC
-					_cCNPJDe := TSF2->A1_CGC
-					_cCliDes := TSF2->F2_CLIENTE
-					_cLojDes := TSF2->F2_LOJA
-					_cDoc	 := TSF2->F2_DOC
-					_cSerie  := TSF2->F2_SERIE
-					//_nVolume := TSF2->F2_VOLUME1
-					_nVolume := 1
-					_nPeso   := TSF2->F2_PLIQUI
-					_nValor  := TSF2->F2_VALBRUT
-					_nVlFret := TSF2->F2_PDLITTO * -1
-					_nValBru := TSF2->F2_VALBRUT
-					_dEmissa := TSF2->F2_EMISSAO
-					_cHora   := TSF2->F2_HORA
-					_cNomTr  := TSF2->A4_NREDUZ
-
-					_cPLACA  := TSF2->F2_PLACA
-					_nQTLIT  := TSF2->F2_PDLITQT
-					_nVLUNIT := TSF2->F2_PDLITUN
-					_nVLTOT  := TSF2->F2_PDLITTO
-					_nFREBRU := TSF2->D2_PDFRETT
-
-					_cKey 	 := TSF2->F2_FILIAL+TSF2->F2_SERIE+TSF2->F2_DOC
-
-					While TSF2->(!EOF()) .And. _cKey = TSF2->F2_FILIAL+TSF2->F2_SERIE+TSF2->F2_DOC
-
-						_nVlFret += TSF2->D2_PDFRETT
-
-						TSF2->(dbSkip())
-					EndDo
-
-					If _nVlFret > 0
-
-						TRB->(RecLock("TRB",.T.))
-						TRB->CNPJTR := _cCNPJ
-						TRB->CNPJRE := _cCNPJRem
-						TRB->CNPJDE := _cCNPJDe
-						TRB->CLIDES := _cCliDes
-						TRB->LOJDES := _cLojDes
-						TRB->DOC	:= _cDoc
-						TRB->SERIE	:= _cSerie
-						TRB->VOLUME := _nVolume
-						TRB->PLIQUI := _nPeso
-						TRB->VALBRUT:= _nValor
-						TRB->VALFRET:= _nVlFret
-						TRB->VALOR	:= _nValBru
-						TRB->EMISSAO:= _dEmissa
-						TRB->HORA	:= _cHora
-						TRB->NOMETR	:= _cNomTr
-
-						TRB->PLACA  := _cPLACA
-						TRB->QTLITRO:= _nQTLIT
-						TRB->VLUNI	:= _nVLUNIT
-						TRB->VLTOT	:= _nVLTOT
-						TRB->VLFRET	:= _nFREBRU
-						TRB->(MsUnLock())
-
-						_lTRB := .T.
-						_nTRB ++
-
-					Endif
-				EndDo
-
-				TSF2->(dbCloseArea())
-
-				//Grava o Cliente de remessa na tabela temporária TSA1
-				If !TSA1->(MsSeek( Alltrim(_cCNPJRem)))
-
-					If Select("TSA1A")
-						TSA1A->(dbCloseArea())
-					Endif
-
-					_cQry := " SELECT * FROM SA1010 A1 WHERE A1.D_E_L_E_T_ = '' AND A1_CGC = '"+Alltrim(_cCNPJRem)+"' "
-
-					TcQuery _cQry New Alias "TSA1A"
-
-					Count to _nTSA1A
-
-					If _nTSA1A > 0
-
-						TSA1A->(dbGoTop())
-
-						TSA1->(RecLock("TSA1",.T.))
-						_nCount := TSA1->(FCount())
-						For i := 1 to _nCount
-							_cCampo := TSA1->(Field(i))
-							If TSA1A->(FieldPos(_cCampo)) > 0
-								// &("TSA1->"+_cCampo) := &("TSA->"+_cCampo)
-								_xVal := &("TSA1A->"+_cCampo)
-								_xSA1 := &("SA1->"+_cCampo)
-								If ValType(_xSA1) = 'D'
-									_xVal := stod(_xVal)
-								Endif
-								&("TSA1->"+_cCampo) :=_xVal
-
-							Endif
-						Next i
-
-						TSA1->(MsUnLock())
-
-						TSA1A->(dbCloseArea())
-					Endif
+							&("TSA1->"+_cCampo) :=_xVal
+						Endif
+					Next B
+					TSA1->(MsUnLock())
 				Endif
 
-				_oProcess:IncRegua1()
+				_cCNPJ   := TSF2->A4_CGC
+				_cCNPJDe := TSF2->A1_CGC
+				_cCliDes := TSF2->F2_CLIENTE
+				_cLojDes := TSF2->F2_LOJA
+				_cDoc	 := TSF2->F2_DOC
+				_cSerie  := TSF2->F2_SERIE
+				_nVolume := 1
+				_nPeso   := TSF2->F2_PLIQUI
+				_nValor  := TSF2->F2_VALBRUT
+				_nValBru := TSF2->F2_VALBRUT
+				_dEmissa := TSF2->F2_EMISSAO
+				_cHora   := TSF2->F2_HORA
+				_cNomTr  := TSF2->A4_NREDUZ
+
+				_cPLACA  := TSF2->F2_PLACA
+				_nQTLIT  := TSF2->F2_PDLITQT
+				_nVLUNIT := TSF2->F2_PDLITUN
+				_nVLTOT  := TSF2->F2_PDLITTO
+				_nFREBRU := TSF2->D2_PDFRETT
+				_nVlFret := TSF2->F2_FRETE
+
+				//_cKey 	 := TSF2->F2_FILIAL+TSF2->F2_SERIE+TSF2->F2_DOC
+
+				//While TSF2->(!EOF()) .And. _cKey = TSF2->F2_FILIAL+TSF2->F2_SERIE+TSF2->F2_DOC
+				//		_nVlFret += TSF2->D2_PDFRETT
+				//		TSF2->(dbSkip())
+				//EndDo
+
+				If _nVlFret > 0
+
+					TRB->(RecLock("TRB",.T.))
+					TRB->CNPJTR := _cCNPJ
+					//TRB->CNPJRE := _cCNPJRem
+					TRB->CNPJRE :=_cCNPJCLI
+					TRB->CNPJDE := _cCNPJDe
+					TRB->CLIDES := _cCliDes
+					TRB->LOJDES := _cLojDes
+					TRB->DOC	:= _cDoc
+					TRB->SERIE	:= _cSerie
+					TRB->VOLUME := _nVolume
+					TRB->PLIQUI := _nPeso
+					TRB->VALBRUT:= _nValor
+					TRB->VALFRET:= _nVlFret
+					TRB->VALOR	:= _nValBru
+					TRB->EMISSAO:= _dEmissa
+					TRB->HORA	:= _cHora
+					TRB->NOMETR	:= _cNomTr
+					TRB->PLACA  := _cPLACA
+					TRB->QTLITRO:= _nQTLIT
+					TRB->VLUNI	:= _nVLUNIT
+					TRB->VLTOT	:= _nVLTOT
+					TRB->VLFRET	:= _nFREBRU
+					TRB->(MsUnLock())
+
+					_lTRB := .T.
+					_nTRB ++
+
+				Endif
+			EndDo
+
+			TSF2->(dbCloseArea())
+
+			//Grava o Cliente de remessa na tabela temporária TSA1
+			If !TSA1->(MsSeek( Alltrim(_cCNPJRem)))
+
+				If Select("TSA1A")
+					TSA1A->(dbCloseArea())
+				Endif
+
+				_cQry := " SELECT * FROM SA1010 A1 WHERE A1.D_E_L_E_T_ = '' AND A1_CGC = '"+Alltrim(_cCNPJRem)+"' "
+
+				TcQuery _cQry New Alias "TSA1A"
+
+				Count to _nTSA1A
+
+				If _nTSA1A > 0
+
+					TSA1A->(dbGoTop())
+
+					TSA1->(RecLock("TSA1",.T.))
+					_nCount := TSA1->(FCount())
+					For i := 1 to _nCount
+						_cCampo := TSA1->(Field(i))
+						If TSA1A->(FieldPos(_cCampo)) > 0
+							// &("TSA1->"+_cCampo) := &("TSA->"+_cCampo)
+							_xVal := &("TSA1A->"+_cCampo)
+							_xSA1 := &("SA1->"+_cCampo)
+							If ValType(_xSA1) = 'D'
+								_xVal := stod(_xVal)
+							Endif
+							&("TSA1->"+_cCampo) :=_xVal
+						Endif
+					Next i
+
+					TSA1->(MsUnLock())
+
+					TSA1A->(dbCloseArea())
+				Endif
 			Endif
+
+			_oProcess:IncRegua1()
+			//Endif
 		Next F
 
 		TCUNLINK(_nDADOS)
-		// TCSetConn(advConnection())	//-TCSetConn eh igual ao dbSelectArea
+// TCSetConn(advConnection())	//-TCSetConn eh igual ao dbSelectArea
 
 		If _lTRB
 
@@ -379,7 +388,6 @@ Static Function BRI137A()
 
 				_cCnpj  := TRB->CNPJTR
 				_cNomTr := TRB->NOMETR
-
 				aVetDoc := {}
 				aVetVlr := {}
 				aVetNFc := {}
@@ -391,9 +399,7 @@ Static Function BRI137A()
 					//Verifica se o Cliente Destino está cadastrado
 					SA1->(dbSetOrder(1))
 					If !SA1->(MsSeek(xFilial("SA1")+TRB->CLIDES+TRB->LOJDES))
-
 						If TSA1->(MsSeek(TRB->CNPJDE))
-
 							SA1->(RecLock("SA1",.T.))
 							_nCount := SA1->(FCount())
 							For N := 1 to _nCount
@@ -412,9 +418,7 @@ Static Function BRI137A()
 					//Verifica se o Cliente Remessa está cadastrado
 					SA1->(dbSetOrder(3))
 					If !SA1->(MsSeek(xFilial("SA1")+TRB->CNPJRE))
-
 						If TSA1->(MsSeek(TRB->CNPJRE))
-
 							SA1->(RecLock("SA1",.T.))
 							_nCount := SA1->(FCount())
 							For O := 1 to _nCount
@@ -424,7 +428,7 @@ Static Function BRI137A()
 							SA1->A1_CDRDES := TSA1->A1_EST
 							SA1->(MsUnLock())
 						ELSE
-							ShowHelpDlg("BRI137_1", {'Cliente Remessa não cadastrado.'},1,{'Cadastre o Cliente ('+TRB->CNPJRE+').'},1)
+							ShowHelpDlg("BRI148_1", {'Cliente Remessa não cadastrado.'},1,{'Cadastre o Cliente ('+TRB->CNPJRE+').'},1)
 							TRB->(dbSkip())
 							Loop
 						endif
@@ -445,19 +449,18 @@ Static Function BRI137A()
 
 					DUI->(dbSetOrder(1))
 					If DUI->(MsSeek(xFilial("DUI")+"2"))
-
 						SX5->(dbSetOrder(1))
 						If SX5->(MsSeek(xFilial("SX5")+"01"+DUI->DUI_SERIE))
 							_cCTe := PadL(Alltrim(SX5->X5_DESCRI),9,"0")
 							_cSerCTe := DUI->DUI_SERIE
 						Else
-							ShowHelpDlg("BRI137_2", {'Não encontrado a série '+DUI->DUI_SERIE+' cadastrada.'},1,{'Solicite o cadastro pelo Administrador do sistema na tabelka SX5.'},1)
+							ShowHelpDlg("BRI148_2", {'Não encontrado a série '+DUI->DUI_SERIE+' cadastrada.'},1,{'Solicite o cadastro pelo Administrador do sistema na tabelka SX5.'},1)
 							Return(Nil)
 						EndIF
 
 						_cProdCte := DUI->DUI_CODPRO
 					Else
-						ShowHelpDlg("BRI137_3", {'Não encontrado o cadastro de Configuração de Documentos.'},1,{'Realize o cadastro de Configuração de Documentos.'},1)
+						ShowHelpDlg("BRI138_3", {'Não encontrado o cadastro de Configuração de Documentos.'},1,{'Realize o cadastro de Configuração de Documentos.'},1)
 						Return(Nil)
 					Endif
 
@@ -494,10 +497,10 @@ Static Function BRI137A()
 							{"DTC_CLIDEV" 	,_cCliDes	, Nil},; //{"DTC_CLIDEV" 	,_cCliRem	, Nil},;
 							{"DTC_LOJDEV" 	,_cLojDes	, Nil},; //{"DTC_LOJDEV" 	,_cLojRem	, Nil},;
 							{"DTC_CLICAL" 	,_cCliDes	, Nil},; //{"DTC_CLICAL" 	,_cCliRem	, Nil}
-							{"DTC_LOJCAL" 	,_cLojDes	, Nil},; //{"DTC_LOJCAL" 	,_cLojRem	, Nil},;
+						{"DTC_LOJCAL" 	,_cLojDes	, Nil},; //{"DTC_LOJCAL" 	,_cLojRem	, Nil},;
 							{"DTC_DEVFRE" 	,"2" 		, Nil},; //{"DTC_DEVFRE" 	,"1" 		, Nil},;
 							{"DTC_SERTMS" 	,"3" 		, Nil},; //{"DTC_SERTMS" 	,"3" 		, Nil},;
-							{"DTC_TIPTRA" 	,"1" 		, Nil},; 
+							{"DTC_TIPTRA" 	,"1" 		, Nil},;
 							{"DTC_SERVIC" 	,"SNE" 		, Nil},;
 							{"DTC_TIPNFC" 	,"0" 		, Nil},;
 							{"DTC_TIPFRE" 	,"2" 		, Nil},; //{"DTC_TIPFRE" 	,"1" 		, Nil},;
@@ -512,7 +515,7 @@ Static Function BRI137A()
 							{"DTC_YVLUNI" 	, TRB->VLUNI   , Nil},;
 							{"DTC_YVLTOT" 	, TRB->VLTOT   , Nil},;
 							{"DTC_YFRCHE" 	, TRB->VLFRET  , Nil}}
-							
+
 						// {"DTC_VLRINF" ,TRB->VALFRET, Nil},;
 
 						aItem := {}
@@ -533,7 +536,7 @@ Static Function BRI137A()
 							{"DTC_QTDUNI" ,0 			 , Nil},;
 							{"DTC_EDI" 	  ,"2" 			 , Nil},;
 							{"DTC_CF" 	  ,'5932'		 , Nil}}
-							
+
 
 						AAdd(aItemDTC,aClone(aItem))
 
@@ -731,8 +734,8 @@ Static Function BRI137A()
 			CONOUT("Fechando Ambiente")
 			RpcClearEnv()
 		Endif
-		
-		//RpcClearEnv()   //Libera o Ambiente
+
+//RpcClearEnv()   //Libera o Ambiente
 
 	Next _nSM0
 
@@ -743,7 +746,7 @@ Return(Nil)
 
 Static Function AtuSX1()
 
-	_cPerg := "BRI137"
+	_cPerg := "BRI148"
 	_aRegs := {}
 
 	//    	   Grupo/Ordem/Pergunta         /perg_spa /perg_eng/Variavel/Tipo/Tamanho/Decimal/Presel/GSC/Valid     /Var01     /Def01         /defspa1/defeng1/Cnt01/Var02/Def02  /Defspa2/defeng2/Cnt02/Var03/Def03/defspa3/defeng3/Cnt03/Var04/Def04/defspa4/defeng4/Cnt04/Var05/Def05/deefspa5/defeng5/Cnt05/F3   /cPyme/cGrpSxg/cHelp)

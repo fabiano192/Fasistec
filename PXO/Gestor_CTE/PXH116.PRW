@@ -11,13 +11,13 @@
 #Define Mizu "#E8782F"
 
 	/*
-	Programa	:	BRI140
+	Programa	:	PXH116
 	Autor		:	Fabiano da Silva
 	Data		:	19/02/20
 	Descrição	:	Cancelamento de CTe
 	TDN			:	https://tdn.totvs.com/display/public/PROT/TUMGXW_DT_MsExecAuto_Manutencao_de_Documentos_de_Transporte_TMSA500
 	*/
-User Function BRI140()
+User Function PXH116()
 
 	Local _oDlg			:= NIL
 	Local _nOpc			:= 0
@@ -26,7 +26,7 @@ User Function BRI140()
 
 	AtuSX1()
 
-	DEFINE MSDIALOG _oDlg FROM 264,182 TO 435,500 TITLE "Cancelamento de CT-e's (BRI140)" OF _oDlg PIXEL
+	DEFINE MSDIALOG _oDlg FROM 264,182 TO 435,500 TITLE "Cancelamento de CT-e's (PXH116)" OF _oDlg PIXEL
 
 	_oGrupo	:= TGroup():New(005,005,045,155,"",_oDlg,CLR_HRED,CLR_WHITE,.T.,.F. )
 
@@ -34,7 +34,7 @@ User Function BRI140()
 	@ 020,010 SAY "CT-e's conforme os parâmetros informados"		OF _oGrupo PIXEL Size 150,010 FONT _oFont11N
 	@ 030,010 SAY "pelo usuário."		OF _oGrupo PIXEL Size 150,010 FONT _oFont11N
 
-	_oTBut1	:= TButton():New( 60,009, "Parâmetros" ,_oDlg,{||Pergunte("BRI140")},035,012,,,.F.,.T.,.F.,,.F.,,,.F. )
+	_oTBut1	:= TButton():New( 60,009, "Parâmetros" ,_oDlg,{||Pergunte("PXH116")},035,012,,,.F.,.T.,.F.,,.F.,,,.F. )
 	_cStyle := GetStyle(Amarelo,Branco,Cinza,Preto,1)
 	_oTBut1:SetCss(_cStyle)
 
@@ -49,8 +49,8 @@ User Function BRI140()
 	ACTIVATE MSDIALOG _oDlg CENTERED
 
 	If _nOpc = 1
-		Pergunte('BRI140',.F.)
-		LjMsgRun('Cancelamento de CT-e...','CT-e',{|| BRI140A(1)})
+		Pergunte('PXH116',.F.)
+		LjMsgRun('Cancelamento de CT-e...','CT-e',{|| PXH116A(1)})
 	Endif
 
 Return(Nil)
@@ -75,7 +75,7 @@ Return(_cMod)
 
 
 
-Static Function BRI140A(_nOpc)
+Static Function PXH116A(_nOpc)
 
 	Local _cQuery	:= ''
 	Local _nTDTP	:= 0
@@ -110,7 +110,7 @@ Static Function BRI140A(_nOpc)
 	Count to _nTDTP
 
 	If _nTDTP = 0
-		ShowHelpDlg('BRI140_1',{'Nenhum registro encontrado com os parâmetros informados.'},1,{'Verifique os parâmetros.'},2)
+		ShowHelpDlg('PXH116_1',{'Nenhum registro encontrado com os parâmetros informados.'},1,{'Verifique os parâmetros.'},2)
 		Return(nil)
 	Endif
 
@@ -357,7 +357,7 @@ Static Function MenuDef()
 	Local lRTMSR01    := ExistBlock("RTMSR01")
 	Local lRTMSR31    := ExistBlock("RTMSR31",,.T.)
 	Local aOpcMenu    := {}
-	Local lTMSCTe     := SuperGetMv( "MV_TMSCTE", .F., .F. )
+	// Local lTMSCTe     := SuperGetMv( "MV_TMSCTE", .F., .F. )
 
 	Private aRotina   := {}
 
@@ -433,7 +433,7 @@ Static Function BR_CteMnt(cSerie, cDocMin, cDocMax, lCTE)
 	Local lTAFVldAmb:= ExistFunc( 'TAFVldAmb' ) .And. TAFVldAmb( '1' ) .And. ExistFunc( 'DocFisxTAF' ) //Valida se o cliente habilitou a integração nativa Protheus x TAF
 	Local cTMSERP   := SuperGetMV("MV_TMSERP",," ")	//-- Condição de integração com ERP (0 - Protheus, 1 - Datasul)
 	Local lcanAuto  := SuperGetMV("MV_CANAUTO",.T.,.T.)	//-- Controla a transmissão automatica
-	Local lRtCTeId	:= SuperGetMv( "MV_RTCTEID", .F., .F. ) //-- Habilita o botão Retorno de Status
+	// Local lRtCTeId	:= SuperGetMv( "MV_RTCTEID", .F., .F. ) //-- Habilita o botão Retorno de Status
 	Local lretUpdCte:= ExistFunc( "retUpdCte" )
 	Local lretCte   := .T.
 	Default lCTE    := .T.
@@ -666,7 +666,7 @@ Return Nil
 
 Static Function AtuSX1()
 
-	Local _cPerg := "BRI140"
+	Local _cPerg := "PXH116"
 	Local _nTDoc := TAMSX3("DT6_DOC")[1]
 
 	//    	      Grupo/Ordem/Pergunta    				/perg_spa /perg_eng/Variavel/Tipo/Tamanho/Decimal/Presel/GSC/Valid     /Var01     /Def01    	/defspa1/defeng1/Cnt01  /Var02/Def02/Defspa2/defeng2/Cnt02/Var03/Def03/defspa3/defeng3/Cnt03/Var04/Def04/defspa4/defeng4/Cnt04/Var05/Def05/deefspa5/defeng5/Cnt05/F3
@@ -1453,7 +1453,7 @@ Local aAreaDT6   := DT6->(GetArea())
 Local cFilDT5    := xFilial('DT5')
 Local cFilDF1    := xFilial("DF1")
 Local cFilDF0    := xFilial("DF0")
-Local lPlanejada := .F.
+// Local lPlanejada := .F.
 Local nCnt       := 0
 Local cOcorCan   := PadR(GetMV("MV_OCORCAN",   ,""),Len(DT2->DT2_CODOCO))  //-- Ocorrencia de Cancelamento p/ Viagem de Coleta Planejada em aberto
 Local cCodOco    := PadR(GetMV("MV_OCORENT",.F.,""),Len(DT2->DT2_CODOCO))

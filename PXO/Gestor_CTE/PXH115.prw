@@ -9,12 +9,12 @@
 #Define Mizu "#E8782F"
 
 /*
-Programa	:	BRI139
+Programa	:	PXH115
 Autor		:	Fabiano da Silva
 Data		:	03/02/20
 Descrição	:	Relação de CT-es
 */
-User Function BRI139()
+User Function PXH115()
 
 	Local _oDlg			:= NIL
 	Local _nOpc			:= 0
@@ -23,7 +23,7 @@ User Function BRI139()
 
 	AtuSX1()
 
-	DEFINE MSDIALOG _oDlg FROM 264,182 TO 435,500 TITLE "Relatório de CT-e's (BRI139)" OF _oDlg PIXEL
+	DEFINE MSDIALOG _oDlg FROM 264,182 TO 435,500 TITLE "Relatório de CT-e's (PXH115)" OF _oDlg PIXEL
 
 	_oGrupo	:= TGroup():New(005,005,045,155,"",_oDlg,CLR_HRED,CLR_WHITE,.T.,.F. )
 
@@ -31,7 +31,7 @@ User Function BRI139()
 	@ 020,010 SAY "CT-e's conforme os parâmetros informados"		OF _oGrupo PIXEL Size 150,010 FONT _oFont11N
 	@ 030,010 SAY "pelo usuário."		OF _oGrupo PIXEL Size 150,010 FONT _oFont11N
 
-	_oTBut1	:= TButton():New( 60,010, "Parâmetros" ,_oDlg,{||Pergunte("BRI139")},035,012,,,.F.,.T.,.F.,,.F.,,,.F. )
+	_oTBut1	:= TButton():New( 60,010, "Parâmetros" ,_oDlg,{||Pergunte("PXH115")},035,012,,,.F.,.T.,.F.,,.F.,,,.F. )
 	_cStyle := GetStyle(Amarelo,Branco,Cinza,Preto,1)
 	_oTBut1:SetCss(_cStyle)
 
@@ -46,8 +46,8 @@ User Function BRI139()
 	ACTIVATE MSDIALOG _oDlg CENTERED
 
 	If _nOpc = 1
-		Pergunte('BRI139',.F.)
-		LjMsgRun('Gerando relatório de CT-e...','CT-e',{|| BRI139A()})
+		Pergunte('PXH115',.F.)
+		LjMsgRun('Gerando relatório de CT-e...','CT-e',{|| PXH115A()})
 	Endif
 
 Return(Nil)
@@ -72,7 +72,7 @@ Return(_cMod)
 
 
 
-Static Function BRI139A()
+Static Function PXH115A()
 
 	Local _oFwMsEx 		:= NIL
 	Local _cArq 		:= ""
@@ -240,7 +240,7 @@ Return
 
 Static Function AtuSX1()
 
-	_cPerg := "BRI139"
+	_cPerg := "PXH115"
 
 //    	      Grupo/Ordem/Pergunta    				/perg_spa /perg_eng/Variavel/Tipo/Tamanho/Decimal/Presel/GSC/Valid     /Var01     /Def01    	/defspa1/defeng1/Cnt01  /Var02/Def02/Defspa2/defeng2/Cnt02/Var03/Def03/defspa3/defeng3/Cnt03/Var04/Def04/defspa4/defeng4/Cnt04/Var05/Def05/deefspa5/defeng5/Cnt05/F3
 	U_CRIASX1(_cPerg,"01" ,"Emissao De  ?"			,""       ,""      ,"mv_ch1","D" ,08     ,0      ,0     ,"G",""        ,"MV_PAR01",""        	,""     ,""     ,""     ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""   ,"")
