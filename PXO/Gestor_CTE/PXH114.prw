@@ -185,6 +185,10 @@ Static Function PXH114A()
 		_cQuery += " INNER JOIN SA1500 A1 (NOLOCK) ON F2_CLIENTE = A1_COD AND F2_LOJA = A1_LOJA " + CRLF
 		_cQuery += " INNER JOIN SA4"+_cSM0Cod+"0 A4 (NOLOCK) ON F2_TRANSP = A4_COD AND F2_FILIAL = A4_FILIAL" + CRLF
 		_cQuery += " WHERE F2.D_E_L_E_T_ = '' AND D2.D_E_L_E_T_ = '' AND A1.D_E_L_E_T_ = ''   AND A4.D_E_L_E_T_ = '' " + CRLF
+		_cQuery += " AND F2.F2_FILIAL = '"+_cSM0Fil+"' AND D2.D2_FILIAL = '"+_cSM0Fil+"' " + CRLF
+		If _cSM0Cod = '50' // Somente no Grupo 50, o cadastro de Transportadora é excluivo.
+			_cQuery += " AND A4.A4_FILIAL = '"+_cSM0Fil+"' " + CRLF
+		Endif
 		_cQuery += " AND F2_EMISSAO BETWEEN '"+DTOS(_dDtIni)+"' AND '"+DTOS(_dDtFim)+"' " + CRLF
 		_cQuery += " AND F2_DOC		BETWEEN '"+_cNFINI+"'       AND '"+_cNFFIM+"' " + CRLF
 		_cQuery += " AND A4_CGC = '"+_cCNPJCLI+"'  " + CRLF
@@ -564,7 +568,8 @@ Static Function PXH114A()
 					aVetVlr := {}
 					aVetNFc := {}
 
-					AAdd(aVetDoc, {"DT6_FILORI"	, xFilial("DT6")})
+					// AAdd(aVetDoc, {"DT6_FILORI"	, xFilial("DT6")})
+					AAdd(aVetDoc, {"DT6_FILORI"	, "07701"		})
 					AAdd(aVetDoc, {"DT6_LOTNFC"	, _cLote		})
 					AAdd(aVetDoc, {"DT6_FILDOC"	, "07701"		})
 					AAdd(aVetDoc, {"DT6_DOC" 	, _cCTe			})

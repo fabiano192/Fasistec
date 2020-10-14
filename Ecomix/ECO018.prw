@@ -71,7 +71,6 @@ INNER JOIN	PPESSOA	B (NOLOCK) ON A.CODPESSOA = B.CODIGO
 --ORDER BY CODCOLIGADA,CHAPA
 
 
-
     _cArq := CriaTrab(NIL,.F.)
     Copy To &_cArq
 

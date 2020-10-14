@@ -332,7 +332,8 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)
 					_D2UM      := TRB->CODUNDBASE
 					_D2QUANT   := TRB->QUANTIDADE
 					_D2PRCVEN  := TRB->PRECOUNITARIO
-					_D2TOTAL   := TRB->VALITEM
+					_D2TOTAL   := _D2QUANT * _D2PRCVEN
+					// _D2TOTAL   := TRB->VALITEM
 					_D2CF      := Left(StrTran(TRB->CODNAT,".",""),4)
 					 _D2COD    := Alltrim(TRB->CODIGOPRD)
 					//_D2COD     := ''
@@ -555,7 +556,7 @@ Static Function ECO05_01C(_cEmp,_cFil,_cFilRM)
 					(_cAliasSD2)->D2_BASEISS := _D2BASEISS
 					(_cAliasSD2)->D2_VALISS  := _D2VALISS
 					(_cAliasSD2)->D2_VALFRE  := _D2VALFRE
-					(_cAliasSD2)->D2_VALBRUT := _D2TOTAL + _D2VALFRE + _D2ICMSRET + _D2IPI
+					(_cAliasSD2)->D2_VALBRUT := _D2TOTAL + _D2VALFRE + _D2ICMSRET + _D2VALIPI
 					(_cAliasSD2)->D2_ALIQSOL := _D2ALIQSOL
 					(_cAliasSD2)->D2_YEMPFIL := _F2YEMPFIL
 					(_cAliasSD2)->(MsUnLock())
@@ -1050,6 +1051,11 @@ Static Function GeraProd(_cFil,_cProd,_cAliasSB1)
 	SBM->(dbOrderNickName("INDSBM1"))
 	If SBM->(MsSeek(xFilial("SBM")+ TRB->GRPFATURAMENTO ))
 		_cGrProd := SBM->BM_GRUPO
+	Else
+		SBM->(dbOrderNickName("INDSBM1"))
+		If SBM->(MsSeek(xFilial("SBM")+ LEFT( _cProd,5) ))
+			_cGrProd := SBM->BM_GRUPO
+		Endif
 	Endif
 
 	(_cAliasSB1)->(RecLock(_cAliasSB1,.T.))
@@ -1059,6 +1065,7 @@ Static Function GeraProd(_cFil,_cProd,_cAliasSB1)
 	(_cAliasSB1)->B1_DESC      := U_RM_NoAcento(UPPER(Alltrim(TPROD->DESCRICAO)))
 	(_cAliasSB1)->B1_MSBLQL    := (TPROD->INATIVO=1,"1","2")
 	(_cAliasSB1)->B1_PESO      := TPROD->PESOLIQUIDO
+	(_cAliasSB1)->B1_CONV      := TPROD->PESOLIQUIDO
 	(_cAliasSB1)->B1_PESBRU    := TPROD->PESOBRUTO
 	(_cAliasSB1)->B1_ORIGEM    := Alltrim(cValToChar(TPROD->REFERENCIACP))
 	(_cAliasSB1)->B1_UPRC      := TPROD->PRECO1
