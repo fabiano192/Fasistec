@@ -6,7 +6,7 @@
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 ±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
 ±±ºPrograma  ³ ECO013   º Autor ³ Alexandro          º Data ³  18/04/05   º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍ	ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
 ±±ºUso       ³ Geracao do arquivo ZZD - Planilha Vendas                   º±±
 ±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
@@ -14,424 +14,425 @@
 */
 User Function ECO013(_cfilial,cDoc,cSERIE,cCliente,cLoja,_cProduto)
 
-    _aAliOri := GetArea()
-    _aAliSA1 := SA1->(GetArea())
-    _aAliSA2 := SA2->(GetArea())
-    _aAliSF4 := SF4->(GetArea())
+	_aAliOri := GetArea()
+	_aAliSA1 := SA1->(GetArea())
+	_aAliSA2 := SA2->(GetArea())
+	_aAliSF4 := SF4->(GetArea())
 
-    If cTipo == "SF2"
+	If cTipo == "SF2"
 
-        GERAMOVS()
-    ElseIf cTipo == "SC5"
-        GERAMOVR()
-    Else
-        GERAMOVE()
-    Endif
+		GERAMOVS()
+	ElseIf cTipo == "SC5"
+		GERAMOVR()
+	Else
+		GERAMOVE()
+	Endif
 
 Return
 
 
 Static Function GERAMOVS()
 
-    DbSelectArea("SC6")
-    DbSetOrder(1)
-    SC6->(MsSeek(QRYSF2->D2_FILIAL + QRYSF2->D2_PEDIDO + QRYSF2->D2_ITEMPV))
+	DbSelectArea("SC6")
+	DbSetOrder(1)
+	SC6->(MsSeek(QRYSF2->D2_FILIAL + QRYSF2->D2_PEDIDO + QRYSF2->D2_ITEMPV))
 
-    SC5->(dbSetOrder(1))
-    SC5->(MsSeek(QRYSF2->D2_FILIAL + QRYSF2->D2_PEDIDO ))
+	SC5->(dbSetOrder(1))
+	SC5->(MsSeek(QRYSF2->D2_FILIAL + QRYSF2->D2_PEDIDO ))
 
-    SA1->(dbSetOrder(1))
-    SA1->(MsSeek(xFilial("SA1")+ QRYSF2->F2_CLIENTE + QRYSF2->F2_LOJA))
+	SA1->(dbSetOrder(1))
+	SA1->(MsSeek(xFilial("SA1")+ QRYSF2->F2_CLIENTE + QRYSF2->F2_LOJA))
 
-    SB1->(MsSeek(xFilial("SB1")+ QRYSF2->D2_COD))
+	SB1->(MsSeek(xFilial("SB1")+ QRYSF2->D2_COD))
 
-    _lMargem := .F.
-    If !Empty(SB1->B1_GRUPO)
-        SBM->(dbSetOrder(1))
-        If SBM->(MsSeek(xFilial("SBM")+SB1->B1_GRUPO))
-            If SBM->BM_TIPGRU == "11"
-                _lMargem := .T.
-            Endif
-        Endif
-    Endif
+	_lMargem := .F.
+	If !Empty(SB1->B1_GRUPO)
+		SBM->(dbSetOrder(1))
+		If SBM->(MsSeek(xFilial("SBM")+SB1->B1_GRUPO))
+			If SBM->BM_TIPGRU == "11"
+				_lMargem := .T.
+			Endif
+		Endif
+	Endif
 
-    Private nPrecoUn	 := 0
-    Private nTotNF		 := 0
-    Private nTotNFG		 := 0
-    Private nIpiG		 := 0
-    Private nFrbUn		 := 0
-    Private nIcmsG		 := 0
-    Private nPisco		 := 0
-    Private nPiscoG		 := 0
-    Private nFrtUni		 := 0
-    Private nFrtTot		 := 0
-    Private nPoG		 := 0
-    Private nPo 		 := 0
-    Private wOrdSZ1		 := 0
-    Private wRecSZ1		 := 0
-    Private aOrdem		 := fPesqSZ8()
-    Private cTempo		 := "  :  "
-    Private aCliente	 := fPesqSA1(cTipo)
-    Private naliqext     := 0
-    Private _esticm	     := alltrim(getmv("MV_ESTICM"))
-    Private _estado      := GetMV("MV_ESTADO")
-    Private _picmest     := Val(Subs(_esticm,at(_estado,_esticm)+2,2))
-    Private naliqext     := 0
-    Private ndifaliq     := 0
-    Private wPIRCSL      := 0
-    Private nBaseIcmsG   := 0
-    Private _lGerenc     := .T.
-    Private aNota		 := fPesqSD2()
+	Private nPrecoUn	 := 0
+	Private nTotNF		 := 0
+	Private nTotNFG		 := 0
+	Private nIpiG		 := 0
+	Private nFrbUn		 := 0
+	Private nIcmsG		 := 0
+	Private nPisco		 := 0
+	Private nPiscoG		 := 0
+	Private nFrtUni		 := 0
+	Private nFrtTot		 := 0
+	Private nPoG		 := 0
+	Private nPo 		 := 0
+	Private wOrdSZ1		 := 0
+	Private wRecSZ1		 := 0
+	Private aOrdem		 := fPesqSZ8()
+	Private cTempo		 := "  :  "
+	Private aCliente	 := fPesqSA1(cTipo)
+	Private naliqext     := 0
+	Private _esticm	     := alltrim(getmv("MV_ESTICM"))
+	Private _estado      := GetMV("MV_ESTADO")
+	Private _picmest     := Val(Subs(_esticm,at(_estado,_esticm)+2,2))
+	Private naliqext     := 0
+	Private ndifaliq     := 0
+	Private wPIRCSL      := 0
+	Private nBaseIcmsG   := 0
+	Private _lGerenc     := .T.
+	Private aNota		 := fPesqSD2()
 
-    Private nCusTran	 := aNota[7]
-    Private nCustSac	 := aNota[10]
-    Private aProduto	 := fPesqSB1()
-    Private nQtdTB		 := aNota[3]
-    Private cTipCar		 := aProduto[4]
-    Private cDescCarga	 := fPesqDB0()
+	Private nCusTran	 := aNota[7]
+	Private nCustSac	 := aNota[10]
+	Private aProduto	 := fPesqSB1()
+	Private nQtdTB		 := aNota[3]
+	Private cTipCar		 := aProduto[4]
+	Private cDescCarga	 := fPesqDB0()
 
-    nQtdeGra		:= aNota[3]
+	nQtdeGra		:= aNota[3]
 
-    Private cPrefixo	:= "FAT"
-    Private aPedido		:= fPesqSC6()
-    Private cGrupo		:= aNota[15] //GRUPO
-    Private cCampo2		:= fPesqZZA(xFilial('ZZA') + "02             ")
-    Private cCampo3		:= fPesqZZA(xFilial('ZZA') + "03             ")
-    Private cCampo4		:= fPesqZZA(xFilial('ZZA') + "04             ")
-    Private cCampo5		:= fPesqZZA(xFilial('ZZA') + "05             ")
+	Private cPrefixo	:= "FAT"
+	Private aPedido		:= fPesqSC6()
+	Private cGrupo		:= aNota[15] //GRUPO
+	Private cCampo2		:= fPesqZZA(xFilial('ZZA') + "02             ")
+	Private cCampo3		:= fPesqZZA(xFilial('ZZA') + "03             ")
+	Private cCampo4		:= fPesqZZA(xFilial('ZZA') + "04             ")
+	Private cCampo5		:= fPesqZZA(xFilial('ZZA') + "05             ")
 
-    If Empty(Filial('SE1') )
-        _cFilSE1 := Space(02)
-    Else
-        _cFilSE1 := QRYSF2->F2_FILIAL
-    Endif
+	If Empty(Filial('SE1') )
+		_cFilSE1 := Space(02)
+	Else
+		_cFilSE1 := QRYSF2->F2_FILIAL
+	Endif
 
-    Private aCReceb 	:= fPesqSE1(_cFilSE1 + QRYSF2->F2_CLIENTE + QRYSF2->F2_LOJA + QRYSF2->F2_SERIE + QRYSF2->F2_DOC)
-    Private nValor14	:= fPesqSE4()
-    Private nValor16	:= aPedido[8]  // Peso real
-    Private nValor17	:= aPedido[10] // Peso NF
-    Private cTes		:= aNota[5]
-    Private cAtividade	:= ""//fPesqSX5() // Busca a partir da Atividade Gerencial SX5('YI') Se Ativ.Real nao preenchida, entao retornara Atividade
-    Private cRegiao		:= fPesqSZ4()
-    Private cDescRegiao	:= fPesqSZO() // Cadastro de Regioes ZO_DESC
-    Private wTES		:= ""
-    Private nICMSRetG	:= 0
-    Private nProdG		:= 0
-    Private	cPrefixo    := QRYSF2->F2_PREFIXO
+	Private aCReceb 	:= fPesqSE1(_cFilSE1 + QRYSF2->F2_CLIENTE + QRYSF2->F2_LOJA + QRYSF2->F2_SERIE + QRYSF2->F2_DOC)
+	Private nValor14	:= fPesqSE4()
+	Private nValor16	:= aPedido[8]  // Peso real
+	Private nValor17	:= aPedido[10] // Peso NF
+	Private cTes		:= aNota[5]
+	Private cAtividade	:= ""//fPesqSX5() // Busca a partir da Atividade Gerencial SX5('YI') Se Ativ.Real nao preenchida, entao retornara Atividade
+	Private cRegiao		:= fPesqSZ4()
+	Private cDescRegiao	:= fPesqSZO() // Cadastro de Regioes ZO_DESC
+	Private wTES		:= ""
+	Private nICMSRetG	:= 0
+	Private nProdG		:= 0
+	Private	cPrefixo    := QRYSF2->F2_PREFIXO
 
-    Private nMedia		:=  fPesqSE4()
-    Private nAliqICM	:= aNota[6]
-    Private nFRE3Tot	:= 0 // Frete NF + Custo Transporte Total
-    Private nFRE3Un		:= 0 // Frete NF + Custo Transporte Unitário
-    Private	nPisNF      := 0 // PIS na NFS
-    Private nCOFNF      := 0 // COFINS na NFS
-    Private nPISGER     := 0 // PIS gerencial
-    Private nCOFGER     := 0 // COFINS gerencial
-    Private cDESTES		:= fPesqSF4() // Descrição da TES
+	Private nMedia		:=  fPesqSE4()
+	Private nAliqICM	:= aNota[6]
+	Private nFRE3Tot	:= 0 // Frete NF + Custo Transporte Total
+	Private nFRE3Un		:= 0 // Frete NF + Custo Transporte Unitário
+	Private	nPisNF      := 0 // PIS na NFS
+	Private nCOFNF      := 0 // COFINS na NFS
+	Private nPISGER     := 0 // PIS gerencial
+	Private nCOFGER     := 0 // COFINS gerencial
+	Private cDESTES		:= fPesqSF4() // Descrição da TES
 
-    nTotNF	:= QRYSF2->D2_VALBRUT
-    nTotNFG	:= QRYSF2->D2_VALBRUT
+	nTotNF	:= QRYSF2->D2_VALBRUT
+	nTotNFG	:= QRYSF2->D2_VALBRUT
 
-    nPrecoUn := Round(nTotNF / nQtdeGra,2)
+	nPrecoUn := Round(nTotNF / nQtdeGra,2)
 
-    If _lGerenc
-        nTotNFG := aNota[8] * nQtdTB			    // Preco gerencial * quantidade em tons
-    EndIf
+	If _lGerenc
+		nTotNFG := aNota[8] * nQtdTB			    // Preco gerencial * quantidade em tons
+	EndIf
 
-    naliqext := 12
-    nD2Aliq  := 1+ ( ( _picmest - naliqext ) / 100 )
+	naliqext := 12
+	nD2Aliq  := 1+ ( ( _picmest - naliqext ) / 100 )
 
-    If QRYSF2->F2_ICMSRET > 0 .And. _lGerenc //aNota[8] <> 0 //Preco Gerencial
+	If QRYSF2->F2_ICMSRET > 0 .And. _lGerenc //aNota[8] <> 0 //Preco Gerencial
 
-        nProdG := ROUND(      ((nTotnfg  /  nDifAliq )    -   (QRYSF2->D2_VALFRE * 1.04) ) / 1.04 , 2 )
+		nProdG := ROUND(      ((nTotnfg  /  nDifAliq )    -   (QRYSF2->D2_VALFRE * 1.04) ) / 1.04 , 2 )
 
-        nIcmsRetG :=  ( ( nProdG + QRYSF2->F2_FRETE )  * 1.04) * ( ndifaliq  - 1 )
+		nIcmsRetG :=  ( ( nProdG + QRYSF2->F2_FRETE )  * 1.04) * ( ndifaliq  - 1 )
 
-    Else // produto gerencial sem ICMS RETIDO
-        nProdG := ROUND(  (nTotNFG  /  1.04 ) -  QRYSF2->D2_VALFRE,2 )
-    EndIf
+	Else // produto gerencial sem ICMS RETIDO
+		nProdG := ROUND(  (nTotNFG  /  1.04 ) -  QRYSF2->D2_VALFRE,2 )
+	EndIf
 
-    if QRYSF2->F2_VALIPI = 0
-        nIpiG:= 0
-    Else
-        nIpiG	:= Round((((nTotNFG - QRYSF2->D2_VALFRE*1.04)-nICMSRETG)/1.04+QRYSF2->D2_VALFRE)*0.04,2)
-    EndIf
+	if QRYSF2->F2_VALIPI = 0
+		nIpiG:= 0
+	Else
+		nIpiG	:= Round((((nTotNFG - QRYSF2->D2_VALFRE*1.04)-nICMSRETG)/1.04+QRYSF2->D2_VALFRE)*0.04,2)
+	EndIf
 
-    nFrbUn	:= QRYSF2->D2_VALFRE / nQtdTB
+	nFrbUn	:= QRYSF2->D2_VALFRE / nQtdTB
 
 //If QRYSF2->F2_ICMSRET > 0 .And. aNota[8] <> 0 //Preco Gerencial
-    If QRYSF2->F2_ICMSRET > 0 .And. _lGerenc //aNota[8] <> 0 //Preco Gerencial
-        naliqext := 12
-        nProduto := nTotNFG - ( 1.05 * QRYSF2->D2_VALFRE ) - ( 1.05 * nIpiG )
+	If QRYSF2->F2_ICMSRET > 0 .And. _lGerenc //aNota[8] <> 0 //Preco Gerencial
+		naliqext := 12
+		nProduto := nTotNFG - ( 1.05 * QRYSF2->D2_VALFRE ) - ( 1.05 * nIpiG )
 
-        nProduto  := Round(nProduto / 1.05,2)
-        ndifaliq  := ( _picmest - naliqext ) / 100
-        nIcmsRetG := ( nProduto + QRYSF2->F2_FRETE + nIpiG ) * ndifaliq
-    EndIf
+		nProduto  := Round(nProduto / 1.05,2)
+		ndifaliq  := ( _picmest - naliqext ) / 100
+		nIcmsRetG := ( nProduto + QRYSF2->F2_FRETE + nIpiG ) * ndifaliq
+	EndIf
 
-    If cEmpAnt + cFilAnt $ "0209/5010"
-        nBaseIcmsG := 0
-        nIcmsG	   := 0
-        nICMSRetG  := 0
-    Else
-        If !_lGerenc
-            nIcmsG	  := QRYSF2->D2_VALICM
-            nICMSRetG := QRYSF2->D2_ICMSRET
-            nIPIG     := QRYSF2->D2_VALIPI
-        Else
-            _nAliq := aNota[6]
-            If Empty(aNota[6])
-                _nAliq := GETMV("MV_ICMPAD")
-            Endif
+	If cEmpAnt + cFilAnt $ "0209/5010"
+		nBaseIcmsG := 0
+		nIcmsG	   := 0
+		nICMSRetG  := 0
+	Else
+		If !_lGerenc
+			nIcmsG	  := QRYSF2->D2_VALICM
+			nICMSRetG := QRYSF2->D2_ICMSRET
+			nIPIG     := QRYSF2->D2_VALIPI
+		Else
+			_nAliq := aNota[6]
+			If Empty(aNota[6])
+				_nAliq := GETMV("MV_ICMPAD")
+			Endif
 
-            nBaseIcmsG := nTotNFG
-            nIcmsG	   := Round(nBaseIcmsG  * (_nAliq / 100) ,2)
-        EndIf
-    Endif
+			nBaseIcmsG := nTotNFG
+			nIcmsG	   := Round(nBaseIcmsG  * (_nAliq / 100) ,2)
+		EndIf
+	Endif
 
-    nPisco	:= 0
-    nPiscoG	:= 0
+	nPisco	:= 0
+	nPiscoG	:= 0
 
-    nPisco  := aNota[11] + aNota[12]
-    nPisNF  := aNota[11]
-    nCOFNF  := aNota[12]
-    _nISSNF := aNota[17]
+	nPisco  := aNota[11] + aNota[12]
+	nPisNF  := aNota[11]
+	nCOFNF  := aNota[12]
+	_nISSNF := aNota[17]
 
-    _nTxPIS	:= SuperGetMV("MV_TXPIS")
-    _nTxCOF	:= SuperGetMV("MV_TXCOFIN")
-    _nPerc  := (_nTxPIS + _nTxCOF ) / 100
-    _nTxISS := SB1->B1_ALIQISS / 100
+	_nTxPIS	:= SuperGetMV("MV_TXPIS")
+	_nTxCOF	:= SuperGetMV("MV_TXCOFIN")
+	_nPerc  := (_nTxPIS + _nTxCOF ) / 100
+	_nTxISS := SB1->B1_ALIQISS / 100
 
-    nPiscoG	:= Round(nTotNFG  * _nPerc,2)
+	nPiscoG	:= Round(nTotNFG  * _nPerc,2)
 
-    If !_lGerenc
-        nPiscoG  := nPisco
-        nPISGER  := nPisNF
-        nCOFGER  := nCOFNF
+	If !_lGerenc
+		nPiscoG  := nPisco
+		nPISGER  := nPisNF
+		nCOFGER  := nCOFNF
 
-        If cEmpAnt == "04"
-            _nISSGER := _nISSNF
-        Endif
-    Else
-        nPISGER := Round(nTotNFG * (_nTxPIS / 100) ,2)
-        nCOFGER := Round(nTotNFG * (_nTxCOF / 100) ,2)
+		If cEmpAnt == "04"
+			_nISSGER := _nISSNF
+		Endif
+	Else
+		nPISGER := Round(nTotNFG * (_nTxPIS / 100) ,2)
+		nCOFGER := Round(nTotNFG * (_nTxCOF / 100) ,2)
 
-        If cEmpAnt == "04"
-            _nISSGER := Round(nTotNFG * _nTxISS,2)
-        Endif
+		If cEmpAnt == "04"
+			_nISSGER := Round(nTotNFG * _nTxISS,2)
+		Endif
 
-    EndIf
+	EndIf
 
-    nFrtUni  := nFrbUn
-    nFrtUni  := nFrtUni
+	nFrtUni  := nFrbUn
+	nFrtUni  := nFrtUni
 
 // ALTERADO EM 30/03/20
 
-    //If cEmpAnt + cFilAnt $ "5001/5002/5004/5005/5006/5007/5008/5013/5016" .AND. SA1->A1_YTPCLI = "2"
-    If cEmpAnt + cFilAnt $ "5001/5002/5004/5005/5006/5007/5008/5009/5013/5016" .AND. SA1->A1_YTPCLI = "2"
-        nFrtTot	 := Round(QRYSF2->D2_QUANT * QRYSF2->D2_YFREGER,2)
-        nFrtUni  := QRYSF2->D2_YFREGER
-    Else
-        //nFrtTot	 := 0 // QRYSF2->D2_VALFRE  alterado em 16/04/20
-        nFrtTot	 := QRYSF2->D2_VALFRE
-    ENDIF
+	//If cEmpAnt + cFilAnt $ "5001/5002/5004/5005/5006/5007/5008/5013/5016" .AND. SA1->A1_YTPCLI = "2"
+	If cEmpAnt + cFilAnt $ "5001/5002/5004/5005/5006/5007/5008/5009/5013/5016" .AND. SA1->A1_YTPCLI = "2"
+		nFrtTot	 := Round(QRYSF2->D2_QUANT * QRYSF2->D2_YFREGER,2)
+		nFrtUni  := QRYSF2->D2_YFREGER
+	Else
+		//nFrtTot	 := 0 // QRYSF2->D2_VALFRE  alterado em 16/04/20
+		nFrtTot	 := QRYSF2->D2_VALFRE
+	ENDIF
 
-    nFRE3Tot := aPedido[15]
-    nMARGEG  := Round((nTotNFG - nIpiG - nIcmsG - nIcmsRetG - nPiscoG - QRYSF2->D2_VALFRE - 0) / nQtdeGra,2)   -  aNota[9]	   // Margem de Lucro
-    nIRCSLG  := IF(nMARGEG > 0 ,(nQtdeGra * nMARGEG * wPIRCSL),0)
-    wwTotNFG := 0
-    wwTotNFG := nTotNFG
+	nFRE3Tot := aPedido[15]
+	nMARGEG  := Round((nTotNFG - nIpiG - nIcmsG - nIcmsRetG - nPiscoG - QRYSF2->D2_VALFRE - 0) / nQtdeGra,2)   -  aNota[9]	   // Margem de Lucro
+	nIRCSLG  := IF(nMARGEG > 0 ,(nQtdeGra * nMARGEG * wPIRCSL),0)
+	wwTotNFG := 0
+	wwTotNFG := nTotNFG
 
-    DbSelectArea("ZZD")
-    DbSetOrder(10)
+	DbSelectArea("ZZD")
+	DbSetOrder(10)
 
-    SF4->(dbSetOrder(1))
-    SF4->(MsSeek(xFilial("SF4") + QRYSF2->D2_TES))
+	SF4->(dbSetOrder(1))
+	SF4->(MsSeek(xFilial("SF4") + QRYSF2->D2_TES))
 
-    SE4->(dbSetOrder(1))
-    SE4->(MsSeek(xFilial("SE4") + QRYSF2->F2_COND))
+	SE4->(dbSetOrder(1))
+	SE4->(MsSeek(xFilial("SE4") + QRYSF2->F2_COND))
 
-    aZZD	:= GetArea("ZZD")
+	aZZD	:= GetArea("ZZD")
 
-    _nCusto := 0
-    Z05->(dbSetOrder(1))
-    If Z05->(MsSeek(xFilial("Z05") + cEmpAnt + cFilAnt + DTOS(FIRSTDAY(QRYSF2->F2_EMISSAO))))
-        _nCusto := Z05->Z05_CUSTO
-    Endif
+	_nCusto := 0
+	Z05->(dbSetOrder(1))
+	If Z05->(MsSeek(xFilial("Z05") + cEmpAnt + cFilAnt + DTOS(FIRSTDAY(QRYSF2->F2_EMISSAO))))
+		_nCusto := Z05->Z05_CUSTO
+	Endif
 
-    If MsSeek(xFilial("ZZD")+cEmpAnt+cFilAnt+QRYSF2->(D2_DOC+D2_SERIE+D2_CLIENTE+D2_LOJA+D2_ITEM))
-        RecLock("ZZD",.F.)
-    Else
-        RecLock("ZZD",.T.)
-    EndIf
+	If MsSeek(xFilial("ZZD")+cEmpAnt+cFilAnt+QRYSF2->(D2_DOC+D2_SERIE+D2_CLIENTE+D2_LOJA+D2_ITEM))
+		RecLock("ZZD",.F.)
+	Else
+		RecLock("ZZD",.T.)
+	EndIf
 
-    If Empty(xFilial("ZZD"))
-        ZZD->ZZD_FILIAL	:= xFilial("ZZD")
-    Else
-        ZZD->ZZD_FILIAL	:= QRYSF2->F2_FILIAL
-    Endif
+	If Empty(xFilial("ZZD"))
+		ZZD->ZZD_FILIAL	:= xFilial("ZZD")
+	Else
+		ZZD->ZZD_FILIAL	:= QRYSF2->F2_FILIAL
+	Endif
 
-    _aSA1Box := RetSx3Box( Posicione("SX3", 2, "A1_YTPCLI", "X3CBox()" ),,, 1 )
-    nAscan   := Ascan( _aSA1Box, { |e| e[2] = SA1->A1_YTPCLI } )
+	_aSA1Box := RetSx3Box( Posicione("SX3", 2, "A1_YTPCLI", "X3CBox()" ),,, 1 )
+	nAscan   := Ascan( _aSA1Box, { |e| e[2] = SA1->A1_YTPCLI } )
 
-    If nAscan > 0
-        If ZZD->(FieldPos("ZZD_TPCLI")) > 0
-            ZZD->ZZD_TPCLI := AllTrim( _aSA1Box[nAscan][3] )
-        Endif
-    Endif
+	If nAscan > 0
+		If ZZD->(FieldPos("ZZD_TPCLI")) > 0
+			ZZD->ZZD_TPCLI := AllTrim( _aSA1Box[nAscan][3] )
+		Endif
+	Endif
 
-    _aSF4Box := RetSx3Box( Posicione("SX3", 2, "F4_YTPVEND", "X3CBox()" ),,, 1 )
-    nAscan   := Ascan( _aSF4Box, { |e| e[2] = SF4->F4_YTPVEND } )
+	_aSF4Box := RetSx3Box( Posicione("SX3", 2, "F4_YTPVEND", "X3CBox()" ),,, 1 )
+	nAscan   := Ascan( _aSF4Box, { |e| e[2] = SF4->F4_YTPVEND } )
 
-    If nAscan > 0
-        If ZZD->(FieldPos("ZZD_TPVEND")) > 0
-            ZZD->ZZD_TPVEND  := AllTrim( _aSF4Box[nAscan][3] )
-        Endif
-    Endif
+	If nAscan > 0
+		If ZZD->(FieldPos("ZZD_TPVEND")) > 0
+			ZZD->ZZD_TPVEND  := AllTrim( _aSF4Box[nAscan][3] )
+		Endif
+	Endif
 
-    ZZD->ZZD_EMIS		:= QRYSF2->F2_EMISSAO
-    ZZD->ZZD_ANOMES	    := Left(DtoS(QRYSF2->F2_EMISSAO),6)	 //Ano Mes
-    ZZD->ZZD_HRSAID	    := QRYSF2->F2_HORA             // HORA DE SAIDA DA NF
-    ZZD->ZZD_PROD		:= aNota[1]					// Cod. produto
-    ZZD->ZZD_DESCPR	    := aProduto[8]				// Descricao do Produto
-    ZZD->ZZD_DESCRE	    := aProduto[9]				// Descricao Resumida do Produto
-    ZZD->ZZD_DESGR 	    := aProduto[10]				// Descricao do Produto
-    ZZD->ZZD_DESSGR	    := aProduto[11]				// Descricao Resumida do Produto
-    ZZD->ZZD_CLIE		:= QRYSF2->F2_CLIENTE			// Cod. cliente
-    ZZD->ZZD_LOJA		:= QRYSF2->F2_LOJA				// Loja
-    ZZD->ZZD_NOME		:= aCliente[1]				// Nome cliente
-    ZZD->ZZD_SERIE		:= QRYSF2->F2_SERIE			// Serie documento
-    ZZD->ZZD_DOC		:= QRYSF2->F2_DOC				// Num. documento
-    ZZD->ZZD_ITEM       := QRYSF2->D2_ITEM
+	ZZD->ZZD_EMPFIL     := QRYSF2->D2_YEMPFIL
+	ZZD->ZZD_EMIS		:= QRYSF2->F2_EMISSAO
+	ZZD->ZZD_ANOMES	    := Left(DtoS(QRYSF2->F2_EMISSAO),6)	 //Ano Mes
+	ZZD->ZZD_HRSAID	    := QRYSF2->F2_HORA             // HORA DE SAIDA DA NF
+	ZZD->ZZD_PROD		:= aNota[1]					// Cod. produto
+	ZZD->ZZD_DESCPR	    := aProduto[8]				// Descricao do Produto
+	ZZD->ZZD_DESCRE	    := aProduto[9]				// Descricao Resumida do Produto
+	ZZD->ZZD_DESGR 	    := aProduto[10]				// Descricao do Produto
+	ZZD->ZZD_DESSGR	    := aProduto[11]				// Descricao Resumida do Produto
+	ZZD->ZZD_CLIE		:= QRYSF2->F2_CLIENTE			// Cod. cliente
+	ZZD->ZZD_LOJA		:= QRYSF2->F2_LOJA				// Loja
+	ZZD->ZZD_NOME		:= aCliente[1]				// Nome cliente
+	ZZD->ZZD_SERIE		:= QRYSF2->F2_SERIE			// Serie documento
+	ZZD->ZZD_DOC		:= QRYSF2->F2_DOC				// Num. documento
+	ZZD->ZZD_ITEM       := QRYSF2->D2_ITEM
 //ZZD->ZZD_QTBRUT     := QRYSF2->D2_QUANT
 //ZZD->ZZD_QTLIQ	  := QRYSF2->D2_QUANT
-    ZZD->ZZD_QTBRUT     := aNota[3]
-    ZZD->ZZD_QTLIQ		:= aNota[3]
-    ZZD->ZZD_PRECO		:= nPrecoUn					// Buscar no SD2
-    ZZD->ZZD_PRECOG	    := nTotNFG / ZZD->ZZD_QTLIQ
-    If QRYSF2->F2_TIPO = "D"
-        ZZD->ZZD_TOTNF	:= nTotNF * -1		// Valor total da NF
-    Else
-        ZZD->ZZD_TOTNF	:= nTotNF		// Valor total da NF
-    Endif
+	ZZD->ZZD_QTBRUT     := aNota[3]
+	ZZD->ZZD_QTLIQ		:= aNota[3]
+	ZZD->ZZD_PRECO		:= nPrecoUn					// Buscar no SD2
+	ZZD->ZZD_PRECOG	    := nTotNFG / ZZD->ZZD_QTLIQ
+	If QRYSF2->F2_TIPO = "D"
+		ZZD->ZZD_TOTNF	:= nTotNF * -1		// Valor total da NF
+	Else
+		ZZD->ZZD_TOTNF	:= nTotNF		// Valor total da NF
+	Endif
 
-    If QRYSF2->F2_TIPO = "D"
-        ZZD->ZZD_IPI	:= QRYSF2->D2_VALIPI	* -1		// IPI
-        ZZD->ZZD_TOTLIQ := (ZZD->ZZD_TOTNF - ZZD->ZZD_IPI) * -1
-        ZZD->ZZD_ICMS	:= IF (QRYSF2->D2_VALISS > 0, 0, QRYSF2->D2_VALICM	* -1)
-        If ZZD->(FieldPos("ZZD_VALISS")) > 0
-            ZZD->ZZD_VALISS := QRYSF2->D2_VALISS	* -1
-        Endif
-    Else
-        ZZD->ZZD_IPI	:= QRYSF2->D2_VALIPI			                    // IPI
-        ZZD->ZZD_TOTLIQ := ZZD->ZZD_TOTNF - ZZD->ZZD_IPI
-        ZZD->ZZD_ICMS	:= IIF(QRYSF2->D2_VALISS > 0, 0, QRYSF2->D2_VALICM)	// ICMS
-        If ZZD->(FieldPos("ZZD_VALISS")) > 0
-            ZZD->ZZD_VALISS := QRYSF2->D2_VALISS	                            // ISS
-        Endif
-    Endif
+	If QRYSF2->F2_TIPO = "D"
+		ZZD->ZZD_IPI	:= QRYSF2->D2_VALIPI	* -1		// IPI
+		ZZD->ZZD_TOTLIQ := (ZZD->ZZD_TOTNF - ZZD->ZZD_IPI) * -1
+		ZZD->ZZD_ICMS	:= IF (QRYSF2->D2_VALISS > 0, 0, QRYSF2->D2_VALICM	* -1)
+		If ZZD->(FieldPos("ZZD_VALISS")) > 0
+			ZZD->ZZD_VALISS := QRYSF2->D2_VALISS	* -1
+		Endif
+	Else
+		ZZD->ZZD_IPI	:= QRYSF2->D2_VALIPI			                    // IPI
+		ZZD->ZZD_TOTLIQ := ZZD->ZZD_TOTNF - ZZD->ZZD_IPI
+		ZZD->ZZD_ICMS	:= IIF(QRYSF2->D2_VALISS > 0, 0, QRYSF2->D2_VALICM)	// ICMS
+		If ZZD->(FieldPos("ZZD_VALISS")) > 0
+			ZZD->ZZD_VALISS := QRYSF2->D2_VALISS	                            // ISS
+		Endif
+	Endif
 
-    //If QRYSF2->F2_TIPO = "I"
-    ZZD->ZZD_ALQICM     := QRYSF2->D2_PICM
-    //Else
-    //	ZZD->ZZD_ALQICM     := (ZZD->ZZD_ICMS / ZZD->ZZD_TOTNF ) * 100
-    //Endif
+	//If QRYSF2->F2_TIPO = "I"
+	ZZD->ZZD_ALQICM     := QRYSF2->D2_PICM
+	//Else
+	//	ZZD->ZZD_ALQICM     := (ZZD->ZZD_ICMS / ZZD->ZZD_TOTNF ) * 100
+	//Endif
 
-    ZZD->ZZD_PRCLIQ     := ZZD->ZZD_TOTLIQ / ZZD->ZZD_QTLIQ
+	ZZD->ZZD_PRCLIQ     := ZZD->ZZD_TOTLIQ / ZZD->ZZD_QTLIQ
 
-    If QRYSF2->F2_TIPO = "D"
-        If _lGerenc
-            ZZD->ZZD_TOTNFG	:= (ZZD->ZZD_QTLIQ * ZZD->ZZD_PRECOG) *-1
-        Else
-            ZZD->ZZD_TOTNFG	:= ZZD->ZZD_TOTLIQ
-        Endif
-    Else
-        If _lGerenc
-            ZZD->ZZD_TOTLIG   := nTotNFG
-            ZZD->ZZD_IPIG	  := ZZD->ZZD_TOTLIG * (QRYSF2->D2_IPI /100)	   // IPI Gerencial
-            ZZD->ZZD_TOTNFG	  := nTotNFG
-            ZZD->ZZD_ICMSG	  := nIcmsG
-            ZZD->ZZD_PISGER   := nPISGER
-            ZZD->ZZD_COFGER   := nCOFGER
-            ZZD->ZZD_RETG	  := nICMSRetg
-            ZZD->ZZD_PISCOG	  := nPiscoG					// Pis/Cofins (gerencial)
-            ZZD->ZZD_DEICDC   := ((ZZD->ZZD_IPIG - ZZD->ZZD_IPI + ZZD->ZZD_ICMSG - ZZD->ZZD_ICMS)/2)
-        Else
-            ZZD->ZZD_TOTLIG   := ZZD->ZZD_TOTLIQ
-            ZZD->ZZD_IPIG	  := ZZD->ZZD_TOTLIG * (QRYSF2->D2_IPI /100)	   // IPI Gerencial
-            ZZD->ZZD_TOTNFG	  := ZZD->ZZD_TOTLIG + 	ZZD->ZZD_IPIG
-            ZZD->ZZD_ICMSG	  := IF (QRYSF2->D2_VALISS > 0, 0, QRYSF2->D2_VALICM)	// ICMS
-            ZZD->ZZD_PISGER   := aNota[11]
-            ZZD->ZZD_COFGER   := aNota[12]
-            ZZD->ZZD_RETG	  := nICMSRetg
-            ZZD->ZZD_PISCOG	  := nPisco					// Pis/Cofins (gerencial
-        Endif
-    Endif
+	If QRYSF2->F2_TIPO = "D"
+		If _lGerenc
+			ZZD->ZZD_TOTNFG	:= (ZZD->ZZD_QTLIQ * ZZD->ZZD_PRECOG) *-1
+		Else
+			ZZD->ZZD_TOTNFG	:= ZZD->ZZD_TOTLIQ
+		Endif
+	Else
+		If _lGerenc
+			ZZD->ZZD_TOTLIG   := nTotNFG
+			ZZD->ZZD_IPIG	  := ZZD->ZZD_TOTLIG * (QRYSF2->D2_IPI /100)	   // IPI Gerencial
+			ZZD->ZZD_TOTNFG	  := nTotNFG
+			ZZD->ZZD_ICMSG	  := nIcmsG
+			ZZD->ZZD_PISGER   := nPISGER
+			ZZD->ZZD_COFGER   := nCOFGER
+			ZZD->ZZD_RETG	  := nICMSRetg
+			ZZD->ZZD_PISCOG	  := nPiscoG					// Pis/Cofins (gerencial)
+			ZZD->ZZD_DEICDC   := ((ZZD->ZZD_IPIG - ZZD->ZZD_IPI + ZZD->ZZD_ICMSG - ZZD->ZZD_ICMS)/2)
+		Else
+			ZZD->ZZD_TOTLIG   := ZZD->ZZD_TOTLIQ
+			ZZD->ZZD_IPIG	  := ZZD->ZZD_TOTLIG * (QRYSF2->D2_IPI /100)	   // IPI Gerencial
+			ZZD->ZZD_TOTNFG	  := ZZD->ZZD_TOTLIG + 	ZZD->ZZD_IPIG
+			ZZD->ZZD_ICMSG	  := IF (QRYSF2->D2_VALISS > 0, 0, QRYSF2->D2_VALICM)	// ICMS
+			ZZD->ZZD_PISGER   := aNota[11]
+			ZZD->ZZD_COFGER   := aNota[12]
+			ZZD->ZZD_RETG	  := nICMSRetg
+			ZZD->ZZD_PISCOG	  := nPisco					// Pis/Cofins (gerencial
+		Endif
+	Endif
 
-    If cEmpAnt + QRYSF2->F2_FILIAL $  "5001/5002/5005/5006/5007" .And. SA1->A1_YTPCLI == "2"
-        ZZD->ZZD_ICMSG  := 0
-        ZZD->ZZD_PISGER := 0
-        ZZD->ZZD_COFGER := 0
-    Endif
+	If cEmpAnt + QRYSF2->F2_FILIAL $  "5001/5002/5005/5006/5007" .And. SA1->A1_YTPCLI == "2"
+		ZZD->ZZD_ICMSG  := 0
+		ZZD->ZZD_PISGER := 0
+		ZZD->ZZD_COFGER := 0
+	Endif
 
-    ZZD->ZZD_RET		:= QRYSF2->D2_ICMSRET		// ICMS Retido
-    ZZD->ZZD_PISCO		:= nPisco					// Pis/Cofins
-    ZZD->ZZD_PIS		:= aNota[11] 				//SF2->F2_VALIMP6
-    ZZD->ZZD_COFINS	    := aNota[12]				//SF2->F2_VALIMP5
-    ZZD->ZZD_FRETOT	    := nFrtTot					// Frete total
-    ZZD->ZZD_FREUNI	    := nFrtUni					// Frete liquido unitario (gerencial)
-    ZZD->ZZD_MUNEND	    := acliente[9]
-    ZZD->ZZD_UF			:= acliente[5]				// Estado destino
-    ZZD->ZZD_COND		:= QRYSF2->F2_COND				// Condicao de pagamento
-    If SE4->(FieldPos("E4_YMEDIA")) > 0
-        ZZD->ZZD_PM			:= SE4->E4_YMEDIA			// Prazo medio
-    Endif
-    ZZD->ZZD_VEND		:= QRYSF2->F2_VEND1 			// Vendedor
-    ZZD->ZZD_NMVEND	    := POSICIONE("SA3",1,XFILIAL("SA3")+QRYSF2->F2_VEND1,"A3_NOME")
-    ZZD->ZZD_ATIVI		:= aCliente[2]				// Atividade do cliente
-    ZZD->ZZD_ATIVG		:= aCliente[3]				// Atividade 'real' do cliente
-    ZZD->ZZD_FRBR		:= QRYSF2->D2_VALFRE    	// Frete bruto
-    ZZD->ZZD_FRBRUN	    := nFrbUn					// Frete bruto unitario (Gerencial)
-    ZZD->ZZD_KM			:= 0						// Distancia da Matriz ao cliente em Km
-    ZZD->ZZD_KMR		:= 0						// Raio em Km -- ??
-    ZZD->ZZD_TRANS		:= QRYSF2->F2_TRANSP			// Transportadora
-    ZZD->ZZD_NOMTRA	    := POSICIONE("SA4",1,XFILIAL("SA4")+QRYSF2->F2_TRANSP,"A4_NOME")			// Transportadora
-    ZZD->ZZD_CARRE		:= QRYSF2->F2_PLACA
-    ZZD->ZZD_CARRO		:= ""
-    ZZD->ZZD_MOTOR      := ""
-    ZZD->ZZD_PREF		:= cPrefixo					// Prefixo padrao do parametro conforme a filial atual
-    ZZD->ZZD_YTPCAR	    := cTipCar					// Tipo de Carga
-    ZZD->ZZD_YDEV		:= ""
-    ZZD->ZZD_YNFSUB	    := ""
-    ZZD->ZZD_TES		:= aNota[5]					// TES em SD2
-    ZZD->ZZD_UM		    := aNota[14]				// UM
+	ZZD->ZZD_RET		:= QRYSF2->D2_ICMSRET		// ICMS Retido
+	ZZD->ZZD_PISCO		:= nPisco					// Pis/Cofins
+	ZZD->ZZD_PIS		:= aNota[11] 				//SF2->F2_VALIMP6
+	ZZD->ZZD_COFINS	    := aNota[12]				//SF2->F2_VALIMP5
+	ZZD->ZZD_FRETOT	    := nFrtTot					// Frete total
+	ZZD->ZZD_FREUNI	    := nFrtUni					// Frete liquido unitario (gerencial)
+	ZZD->ZZD_MUNEND	    := acliente[9]
+	ZZD->ZZD_UF			:= acliente[5]				// Estado destino
+	ZZD->ZZD_COND		:= QRYSF2->F2_COND				// Condicao de pagamento
+	If SE4->(FieldPos("E4_YMEDIA")) > 0
+		ZZD->ZZD_PM			:= SE4->E4_YMEDIA			// Prazo medio
+	Endif
+	ZZD->ZZD_VEND		:= QRYSF2->F2_VEND1 			// Vendedor
+	ZZD->ZZD_NMVEND	    := POSICIONE("SA3",1,XFILIAL("SA3")+QRYSF2->F2_VEND1,"A3_NOME")
+	ZZD->ZZD_ATIVI		:= aCliente[2]				// Atividade do cliente
+	ZZD->ZZD_ATIVG		:= aCliente[3]				// Atividade 'real' do cliente
+	ZZD->ZZD_FRBR		:= QRYSF2->D2_VALFRE    	// Frete bruto
+	ZZD->ZZD_FRBRUN	    := nFrbUn					// Frete bruto unitario (Gerencial)
+	ZZD->ZZD_KM			:= 0						// Distancia da Matriz ao cliente em Km
+	ZZD->ZZD_KMR		:= 0						// Raio em Km -- ??
+	ZZD->ZZD_TRANS		:= QRYSF2->F2_TRANSP			// Transportadora
+	ZZD->ZZD_NOMTRA	    := POSICIONE("SA4",1,XFILIAL("SA4")+QRYSF2->F2_TRANSP,"A4_NOME")			// Transportadora
+	ZZD->ZZD_CARRE		:= QRYSF2->F2_PLACA
+	ZZD->ZZD_CARRO		:= ""
+	ZZD->ZZD_MOTOR      := ""
+	ZZD->ZZD_PREF		:= cPrefixo					// Prefixo padrao do parametro conforme a filial atual
+	ZZD->ZZD_YTPCAR	    := cTipCar					// Tipo de Carga
+	ZZD->ZZD_YDEV		:= ""
+	ZZD->ZZD_YNFSUB	    := ""
+	ZZD->ZZD_TES		:= aNota[5]					// TES em SD2
+	ZZD->ZZD_UM		    := aNota[14]				// UM
 
-    If QRYSF2->F2_DOC = '000041892'
-        _lPare := .T.
-    Endif
+	If QRYSF2->F2_DOC = '000041892'
+		_lPare := .T.
+	Endif
 
-    _AreaSZA := SZA->(GetArea())
-    SZA->(dbsetorder(4))
-    If SZA->(msSeek(QRYSF2->F2_FILIAL+QRYSF2->F2_DOC+QRYSF2->F2_SERIE))
-        If SZA->(FieldPos("ZA_HORA04")) > 0
-            If !Empty(SZA->ZA_HORA01)
+	_AreaSZA := SZA->(GetArea())
+	SZA->(dbsetorder(4))
+	If SZA->(msSeek(QRYSF2->F2_FILIAL+QRYSF2->F2_DOC+QRYSF2->F2_SERIE))
+		If SZA->(FieldPos("ZA_HORA04")) > 0
+			If !Empty(SZA->ZA_HORA01)
 			/*If Empty(SZA->ZA_HORA04)
-                If !Empty(SZA->ZA_HORA03)
+				If !Empty(SZA->ZA_HORA03)
 					cTempo := SetHora(SubHoras(SZA->ZA_HORA03,SZA->ZA_HORA01),'S')
-                Endif
-            Else
+				Endif
+			Else
 				cTempo := SetHora(SubHoras(SZA->ZA_HORA04,SZA->ZA_HORA01),'S')
-            Endif*/
+			Endif*/
 			
-            If Empty(SZA->ZA_HORA03) //.OR. SZA->ZA_HORA03 < '0'
-                If !Empty(SZA->ZA_HORA04)
+			If Empty(SZA->ZA_HORA03) //.OR. SZA->ZA_HORA03 < '0'
+				If !Empty(SZA->ZA_HORA04)
 					cTempo := SetHora(SubHoras(SZA->ZA_HORA04,SZA->ZA_HORA01),'S')
-                Endif
-            Else
+				Endif
+			Else
 				cTempo := SetHora(SubHoras(SZA->ZA_HORA03,SZA->ZA_HORA01),'S')
-            Endif
-        Endif
-    Endif
+			Endif
+		Endif
+	Endif
 Endif
 RestArea(_AreaSZA)
 
@@ -469,7 +470,7 @@ ZZD->ZZD_TPROD      := QRYSF2->F2_VALMERC
 ZZD->ZZD_TPRODG     := IIf( ZZD->ZZD_TOTNFG > 0, nProdG, 0 )
 
 If aProduto[6]$("BB/TB/UN")
-	ZZD->ZZD_YPESTB	:= aProduto[7]
+	//ZZD->ZZD_YPESTB	:= aProduto[7]
 EndIf
 
 ZZD->ZZD_CODEMP	:= cEmpAnt
@@ -478,41 +479,41 @@ ZZD->ZZD_NOMFIL := POSICIONE("SM0",1,cEmpAnt + QRYSF2->F2_FILIAL,"M0_FILIAL")
 
 _cSigl := ""
 If ZZD->(FieldPos("ZZD_SIGLA2")) > 0
-    If cEmpAnt == "02"
-        If QRYSF2->F2_FILIAL == "01"
+	If cEmpAnt == "02"
+		If QRYSF2->F2_FILIAL == "01"
 			_cSigl := "PX-IBA"
-        ElseIf QRYSF2->F2_FILIAL == "02"
+		ElseIf QRYSF2->F2_FILIAL == "02"
 			_cSigl := "PX-IDC"
-        ElseIf QRYSF2->F2_FILIAL $ "03/04"
+		ElseIf QRYSF2->F2_FILIAL $ "03/04"
 			_cSigl := "  "
-        ElseIf QRYSF2->F2_FILIAL == "05"
+		ElseIf QRYSF2->F2_FILIAL == "05"
 			_cSigl := "PX-IJB"
-        ElseIf QRYSF2->F2_FILIAL == "06"
+		ElseIf QRYSF2->F2_FILIAL == "06"
 			_cSigl := "PX-IFT"
-        ElseIf QRYSF2->F2_FILIAL == "07"
+		ElseIf QRYSF2->F2_FILIAL == "07"
 			_cSigl := "PX-IMC"
-        ElseIf QRYSF2->F2_FILIAL == "08"
+		ElseIf QRYSF2->F2_FILIAL == "08"
 			_cSigl := "PX-INT"
-        ElseIf QRYSF2->F2_FILIAL == "09"
+		ElseIf QRYSF2->F2_FILIAL == "09"
 			_cSigl := "PX-ISV"
-        ElseIf QRYSF2->F2_FILIAL == "10"
+		ElseIf QRYSF2->F2_FILIAL == "10"
 			_cSigl := "PX-IBA"
-        ElseIf QRYSF2->F2_FILIAL == "11"
+		ElseIf QRYSF2->F2_FILIAL == "11"
 			_cSigl := "PX-IPT"
-        ElseIf QRYSF2->F2_FILIAL == "12"
+		ElseIf QRYSF2->F2_FILIAL == "12"
 			_cSigl := "PX-IGU"
-        ElseIf QRYSF2->F2_FILIAL == "13"
+		ElseIf QRYSF2->F2_FILIAL == "13"
 			_cSigl := "PX-ICC"
-        ElseIf QRYSF2->F2_FILIAL == "14"
+		ElseIf QRYSF2->F2_FILIAL == "14"
 			_cSigl := "PX-ISL"
-        Endif
-    ElseIf cEmpAnt == "04"
-        If QRYSF2->F2_FILIAL $ "01"
-            If ZZD->ZZD_PRECO > SUPERGETMV("ECO_VALCAP",.F.,180)
+		Endif
+	ElseIf cEmpAnt == "04"
+		If QRYSF2->F2_FILIAL $ "01"
+			If ZZD->ZZD_PRECO > SUPERGETMV("ECO_VALCAP",.F.,180)
 				_cSigl := "MSP C/CAP"
-            Else
+			Else
 				_cSigl := "MSP S/CAP"
-            Endif
+			Endif
 			
 			//SZ2->(dbSetOrder(4))
 			//If SZ2->(MsSeek(QRYSF2->F2_FILIAL + QRYSF2->F2_CLIENTE + QRYSF2->F2_LOJA + QRYSF2->D2_COD ))
@@ -525,60 +526,60 @@ If ZZD->(FieldPos("ZZD_SIGLA2")) > 0
 			//	_cSigl := "MSP C/CAP"
 			//Endif
 			
-        ElseIf QRYSF2->F2_FILIAL == "02"
+		ElseIf QRYSF2->F2_FILIAL == "02"
 			_cSigl := "MRE"
-        Endif
-    ElseIf cEmpAnt == "05"
+		Endif
+	ElseIf cEmpAnt == "05"
 		_cSigl := "MRE"
-    ElseIf cEmpAnt == "09"
+	ElseIf cEmpAnt == "09"
 		_cSigl := "PX-IMC"
-    ElseIf cEmpAnt == "13"
-        If QRYSF2->F2_FILIAL     $ "01"
+	ElseIf cEmpAnt == "13"
+		If QRYSF2->F2_FILIAL     $ "01"
 			_cSigl := "PX-IRO"
-        ElseIf QRYSF2->F2_FILIAL $ "04"
+		ElseIf QRYSF2->F2_FILIAL $ "04"
 			_cSigl := "PX-IBA"
-        ElseIf QRYSF2->F2_FILIAL == "06"
+		ElseIf QRYSF2->F2_FILIAL == "06"
 			_cSigl := "PX-IRO"
-        ElseIf QRYSF2->F2_FILIAL == "07"
+		ElseIf QRYSF2->F2_FILIAL == "07"
 			_cSigl := "PX-IBA"
-        Endif
-    ElseIf cEmpAnt == "16"
+		Endif
+	ElseIf cEmpAnt == "16"
 		_cSigl := "PX-IPT"
-    ElseIf cEmpAnt == "50"
-        If QRYSF2->F2_FILIAL == "01"
+	ElseIf cEmpAnt == "50"
+		If QRYSF2->F2_FILIAL == "01"
 			_cSigl := "PX-IBA"
-        ElseIf QRYSF2->F2_FILIAL == "02"
+		ElseIf QRYSF2->F2_FILIAL == "02"
 			_cSigl := "PX-IRO"
-        ElseIf QRYSF2->F2_FILIAL == "03"
+		ElseIf QRYSF2->F2_FILIAL == "03"
 			_cSigl := "PX-IFT"
-        ElseIf QRYSF2->F2_FILIAL == "04"
+		ElseIf QRYSF2->F2_FILIAL == "04"
 			_cSigl := "PX-INT"
-        ElseIf QRYSF2->F2_FILIAL == "05"
+		ElseIf QRYSF2->F2_FILIAL == "05"
 			_cSigl := "PX-IDC"
-        ElseIf QRYSF2->F2_FILIAL == "06"
+		ElseIf QRYSF2->F2_FILIAL == "06"
 			_cSigl := "PX-IGU"
-        ElseIf QRYSF2->F2_FILIAL == "07"
+		ElseIf QRYSF2->F2_FILIAL == "07"
 			_cSigl := "PX-ICC"
-        ElseIf QRYSF2->F2_FILIAL == "08"
+		ElseIf QRYSF2->F2_FILIAL == "08"
 			_cSigl := "PX-ISL"
-        ElseIf QRYSF2->F2_FILIAL == "09"
+		ElseIf QRYSF2->F2_FILIAL == "09"
 			_cSigl := "PX-IJB"
-        ElseIf QRYSF2->F2_FILIAL == "10"
+		ElseIf QRYSF2->F2_FILIAL == "10"
 			_cSigl := "PX-ISV"
-        ElseIf QRYSF2->F2_FILIAL == "11"
+		ElseIf QRYSF2->F2_FILIAL == "11"
 			_cSigl := "PX-IRB"
-        ElseIf QRYSF2->F2_FILIAL == "12"
+		ElseIf QRYSF2->F2_FILIAL == "12"
 			_cSigl := "PX-AE "
-        ElseIf QRYSF2->F2_FILIAL == "13"
+		ElseIf QRYSF2->F2_FILIAL == "13"
 			_cSigl := "PX-IPT"
-        ElseIf QRYSF2->F2_FILIAL == "14"
+		ElseIf QRYSF2->F2_FILIAL == "14"
 			_cSigl := "PX-MT"
-        ElseIf QRYSF2->F2_FILIAL == "15"
+		ElseIf QRYSF2->F2_FILIAL == "15"
 			_cSigl := "PX-IMC"
-        ElseIf QRYSF2->F2_FILIAL == "16"
+		ElseIf QRYSF2->F2_FILIAL == "16"
 			_cSigl := "PX-INH"
-        Endif
-    Endif
+		Endif
+	Endif
 	
 	ZZD->ZZD_SIGLA2 := _cSigl
 Endif
@@ -651,6 +652,7 @@ ZZD->ZZD_CFOP   := aNota[13]
 ZZD->ZZD_TIPONF := QRYSF2->F2_TIPO
 ZZD->ZZD_TIPOMT := aProduto[12]
 ZZD->ZZD_DESTES := cDESTES[2]
+ZZD->ZZD_FATCON := aProduto[7]
 
 //If QRYSF2->D2_VALFRE > 0
 //	ZZD->ZZD_QTCIF  := ZZD->ZZD_QTLIQ
@@ -688,17 +690,17 @@ zzd->zzd_itemct  := posicione('SB1',1,xfilial('SB1')+aNota[1],'B1_ITEMCC')
 
 do case
 case anota[14] $ 'BB/TB' //unidade de medida
-    if aCliente[8] =='S' // a1_yfilpol - filial polimix
+	if aCliente[8] =='S' // a1_yfilpol - filial polimix
 			zzd->zzd_itemct := '010104'
-    else
+	else
 			zzd->zzd_itemct := '010102'
-    endif
+	endif
 case anota[14] == 'KG'
-    if aCliente[8] =='S'
+	if aCliente[8] =='S'
 			zzd->zzd_itemct := '010103'
-    else
+	else
 			zzd->zzd_itemct := '010101'
-    endif
+	endif
 endcase
 
 ZZD->ZZD_DESITE:= posicione('CTD',1,xfilial('CTD')+zzd->zzd_itemct,'CTD_DESC01')
@@ -718,9 +720,9 @@ ZZD->ZZD_SERORI := QRYSF2->D2_SERIORI
 
 If !Empty(QRYSF2->D2_NFORI)
 	SD1->(dbSetOrder(1))
-    If SD1->(MsSeek(QRYSF2->D2_FILIAL+ QRYSF2->D2_NFORI + QRYSF2->D2_SERIORI + QRYSF2->D2_CLIENTE + QRYSF2->D2_LOJA + QRYSF2->D2_COD + QRYSF2->D2_ITEMORI))
+	If SD1->(MsSeek(QRYSF2->D2_FILIAL+ QRYSF2->D2_NFORI + QRYSF2->D2_SERIORI + QRYSF2->D2_CLIENTE + QRYSF2->D2_LOJA + QRYSF2->D2_COD + QRYSF2->D2_ITEMORI))
 		ZZD->ZZD_TESORI := SD1->D1_TES
-    Endif
+	Endif
 Endif
 
 If QRYSF2->F2_FRETE > 0
@@ -748,24 +750,24 @@ Return 'fim'
 
 Static Function fPesqSA1(cTipo)
 
-    If cTipo $ "SF2|SC5"
+	If cTipo $ "SF2|SC5"
 	// If cTipo == "SF2"
-        If cTipo == "SF2"
+		If cTipo == "SF2"
 			_cType		:= QRYSF2->F2_TIPO
 			_cCustomer	:= QRYSF2->F2_CLIENTE
 			_cBranch	:= QRYSF2->F2_LOJA
-        ElseIf cTipo == "SC5"
+		ElseIf cTipo == "SC5"
 			_cType		:= QRYSC5->C5_TIPO
 			_cCustomer	:= QRYSC5->C5_CLIENTE
 			_cBranch	:= QRYSC5->C5_LOJACLI
-        Endif
+		Endif
 		
-        If !_cType $ "B/D"
+		If !_cType $ "B/D"
 		
 			DbSelectArea("SA1")
 			aArea := GetArea()
 			DbSetOrder(1)
-            If MsSeek(xFilial("SA1") + _cCustomer + _cBranch)
+			If MsSeek(xFilial("SA1") + _cCustomer + _cBranch)
 			
 				Private aCliente:= {}
 				Private cPriCom:= Substr(DTOS(SA1->A1_PRICOM),5,2)+"/"+Substr(DTOS(SA1->A1_PRICOM),1,4)
@@ -778,13 +780,13 @@ Static Function fPesqSA1(cTipo)
 				aAdd(aCliente, SA1->A1_GRPVEN)	    // 7 Frete base ICM
 				aAdd(aCliente, "" )                 // 8 filial plimix
 				aAdd(aCliente, SA1->A1_MUN)	        // 9 municipio
-            Endif
+			Endif
 			RestArea(aArea)
-        Else
+		Else
 			dbSelectArea("SA2")
 			aArea := GetArea()
 			dbSetOrder(1)
-            If MsSeek(xFilial("SA2") + _cCustomer + _cBranch)
+			If MsSeek(xFilial("SA2") + _cCustomer + _cBranch)
 				Private aCliente:= {}
 				Private cPriCom:= ""//Substr(DTOS(SA1->A1_PRICOM),5,2)+"/"+Substr(DTOS(SA1->A1_PRICOM),1,4)
 				aAdd(aCliente, SA2->A2_NOME) 		// 1 Nome
@@ -796,14 +798,14 @@ Static Function fPesqSA1(cTipo)
 				aAdd(aCliente, "" )           	    // 7 Frete base ICM
 				aAdd(aCliente, "" )                 // 8 filial plimix
 				aAdd(aCliente, SA2->A2_MUN)	        // 9 municipio
-            Endif
+			Endif
 			RestArea(aArea)
-        Endif
-    Else
+		Endif
+	Else
 		DbSelectArea("SA1")
 		aArea := GetArea()
 		DbSetOrder(1)
-        If MsSeek(xFilial("SA1") + ZZ->D1_FORNECE + ZZ->D1_LOJA)
+		If MsSeek(xFilial("SA1") + ZZ->D1_FORNECE + ZZ->D1_LOJA)
 			Private aCliente:= {}
 			Private cPriCom:= Substr(DTOS(SA1->A1_PRICOM),5,2)+"/"+Substr(DTOS(SA1->A1_PRICOM),1,4)
 			aAdd(aCliente, SA1->A1_NOME) 		// 1 Nome
@@ -815,9 +817,9 @@ Static Function fPesqSA1(cTipo)
 			aAdd(aCliente, SA1->A1_GRPVEN)	    // 7 Frete base ICM
 			aAdd(aCliente, "" )                 // 8 filial plimix
 			aAdd(aCliente, SA1->A1_MUN)	        // 9 municipio
-        Endif
+		Endif
 		RestArea(aArea)
-    EndIf
+	EndIf
 
 Return aCliente
 
@@ -902,7 +904,7 @@ aAdd(aPedido, 0  )    	// 15 frete real
 DbSelectArea("SC6")
 aArea := GetArea()
 DbSetOrder(1)
-    If MsSeek(QRYSF2->F2_FILIAL + QRYSF2->D2_PEDIDO + QRYSF2->D2_ITEMPV)
+	If MsSeek(QRYSF2->F2_FILIAL + QRYSF2->D2_PEDIDO + QRYSF2->D2_ITEMPV)
 	aPedido:={}
 	
 	aAdd(aPedido, SC6->C6_PRODUTO)		// 1  Codigo produto
@@ -940,42 +942,42 @@ DbSetOrder(1)
 	
 	cTpFrete := ''
 	cModFrete := ''
-        If QRYSF2->F2_TPFRETE=="C"
+		If QRYSF2->F2_TPFRETE=="C"
 		cModFrete := "CIF"
-        ElseIf QRYSF2->F2_TPFRETE=="F"
+		ElseIf QRYSF2->F2_TPFRETE=="F"
 		cModFrete := "FOB"
-        ElseIf QRYSF2->F2_TPFRETE=="T"
+		ElseIf QRYSF2->F2_TPFRETE=="T"
 		cModFrete := "TER"
-        ElseIf QRYSF2->F2_TPFRETE=="S"
+		ElseIf QRYSF2->F2_TPFRETE=="S"
 		//cModFrete := "SEM"
 		cModFrete := "CIF"
-        endif
+		endif
 	
 	ctpFrete:= QRYSF2->F2_TPFRETE
 	
 	sc5->(MsSeek(QRYSF2->F2_FILIAL + QRYSF2->D2_PEDIDO))
-        If Empty(cModFrete)
-            If SC5->C5_TPFRETE=="C"
+		If Empty(cModFrete)
+			If SC5->C5_TPFRETE=="C"
 			cModFrete := "CIF"
-            ElseIf SC5->C5_TPFRETE=="F"
+			ElseIf SC5->C5_TPFRETE=="F"
 			cModFrete := "FOB"
-            ElseIf SC5->C5_TPFRETE=="T"
+			ElseIf SC5->C5_TPFRETE=="T"
 			cModFrete := "TER"
-            ElseIf SC5->C5_TPFRETE=="S"
+			ElseIf SC5->C5_TPFRETE=="S"
 			//cModFrete := "SEM"
 			cModFrete := "CIF"
-            EndIf
-        EndIf
+			EndIf
+		EndIf
 	
-        If Empty(cTpFrete)
+		If Empty(cTpFrete)
 		ctpFrete:= SC5->C5_TPFRETE
-        endif
+		endif
 	
 	aAdd(aPedido, cModFrete )    	// 13 modalidade do frete
 	aAdd(aPedido, ctpFrete )    	// 14 Data da Liberacao
 	aAdd(aPedido, ""       )    	// 15 frete real - cif que nao sai na nota fiscal
 	
-    Endif
+	Endif
 RestArea(aArea)
 Return aPedido
 
@@ -992,17 +994,17 @@ aAdd(aNota, QRYSF2->D2_TES)		    	// 5 TES
 aAdd(aNota, QRYSF2->D2_PICM)			// 6 Aliquota ICMS
 aAdd(aNota, 0)	                	    // 7 Custo de transferencia (unitario)
 
-    If QRYSF2->D2_YPRG > 0
-        If cEmpant == "02" .And. cFilAnt == "11" .And. QRYSF2->F2_EMISSAO < CTOD("01/08/2017")
+	If QRYSF2->D2_YPRG > 0
+		If cEmpant == "02" .And. cFilAnt == "11" .And. QRYSF2->F2_EMISSAO < CTOD("01/08/2017")
 		_nPrc := QRYSF2->D2_YPRG / SuperGetMV("ECO_FATCON")
 		aAdd(aNota, _nPrc)			    	// 8 Preco Gerencial
-        Else
+		Else
 		aAdd(aNota, QRYSF2->D2_YPRG)    	// 8 Preco Gerencial
-        Endif
-    Else
+		Endif
+	Else
 	_lGerenc := .F.
 	aAdd(aNota, QRYSF2->D2_PRCVEN)      	// 8 Preco Gerencial -->ALTERADO EM 14/02/17
-    Endif
+	Endif
 
 aAdd(aNota, 0)						// 9 Custo (R$/T)
 aAdd(aNota, 0)						// 10 Custo Sacaria
@@ -1025,9 +1027,9 @@ DbSelectArea("SE4")
 aArea := GetArea()
 DbSetOrder(1)
 MsSeek(xFilial("SE4") + QRYSF2->F2_COND)
-    If SE4->(FieldPos("E4_YMEDIA")) > 0
+	If SE4->(FieldPos("E4_YMEDIA")) > 0
 	Private nResposta:= SE4->E4_YMEDIA
-    Endif
+	Endif
 
 RestArea(aArea)
 
@@ -1120,16 +1122,16 @@ Local _cHora		:= ""
 Local _cMinutos		:= ""
 Local _cSepar		:= ":"
 
-    If ValType( _cHex ) == 'U'
+	If ValType( _cHex ) == 'U'
 	_cHex := "N"
-    Endif
+	Endif
 
 _cHora := StrZero(_nValor,5,2)
 
 _cMinutos := SubStr(_cHora, At('.', _cHora)+1, 2)
-    If _cHex = 'N'
+	If _cHex = 'N'
 	_cMinutos := StrZero((Val(_cMinutos)*60)/100, 2)
-    Endif
+	Endif
 
 _cHora := SubStr(_cHora, 1, At('.', _cHora))+_cMinutos
 _cHora := StrTran(_cHora, '.', _cSepar)
@@ -1142,542 +1144,544 @@ Return(_cHora)
 
 Static Function GERAMOVE()
 
-    SA1->(dbSetOrder(1))
-    SA1->(MsSeek(xFilial("SA1")+ ZZ->D1_FORNECE + ZZ->D1_LOJA))
+SA1->(dbSetOrder(1))
+SA1->(MsSeek(xFilial("SA1")+ ZZ->D1_FORNECE + ZZ->D1_LOJA))
 
-    SB1->(MsSeek(xFilial("SB1")+ ZZ->D1_COD))
+SB1->(MsSeek(xFilial("SB1")+ ZZ->D1_COD))
 
-    _lMargem := .F.
-    If !Empty(SB1->B1_GRUPO)
-        SBM->(dbSetOrder(1))
-        If SBM->(MsSeek(xFilial("SBM")+SB1->B1_GRUPO))
-            If SBM->BM_TIPGRU == "11"
-                _lMargem := .T.
-            Endif
-        Endif
-    Endif
+_lMargem := .F.
+	If !Empty(SB1->B1_GRUPO)
+	SBM->(dbSetOrder(1))
+		If SBM->(MsSeek(xFilial("SBM")+SB1->B1_GRUPO))
+			If SBM->BM_TIPGRU == "11"
+			_lMargem := .T.
+			Endif
+		Endif
+	Endif
 
-    SF1->(dbSetOrder(1))
-    SF1->(MsSeek(ZZ->D1_FILIAL + ZZ->D1_DOC + ZZ->D1_SERIE + ZZ->D1_FORNECE + ZZ->D1_LOJA + ZZ->D1_TIPO))
+SF1->(dbSetOrder(1))
+SF1->(MsSeek(ZZ->D1_FILIAL + ZZ->D1_DOC + ZZ->D1_SERIE + ZZ->D1_FORNECE + ZZ->D1_LOJA + ZZ->D1_TIPO))
 
-    Private nPrecoUn	 := 0
-    Private nTotNF		 := 0
-    Private nTotNFG		 := 0
-    Private nIpiG		 := 0
-    Private nFrbUn		 := 0
-    Private nIcmsG		 := 0
-    Private nPisco		 := 0
-    Private nPiscoG		 := 0
-    Private nFrtUni		 := 0
-    Private nFrtTot		 := 0
-    Private nPoG		 := 0
-    Private nPo 		 := 0
-    Private wOrdSZ1		 := 0
-    Private wRecSZ1		 := 0
-    Private cTempo		 := "  :  "
-    Private aCliente	 := fPesqSA1(cTipo)
-    Private naliqext     := 0
-    Private _esticm	     := alltrim(getmv("MV_ESTICM"))
-    Private _estado      := GetMV("MV_ESTADO")
-    Private _picmest     := Val(Subs(_esticm,at(_estado,_esticm)+2,2))
-    Private naliqext     := 0
-    Private ndifaliq     := 0
-    Private wPIRCSL      := 0
-    Private nBaseIcmsG   := 0
-    Private _lGerenc     := .T.
-    Private aNota		 := fPesqSD1()
-    Private nCusTran	 := aNota[7]
-    Private nCustSac	 := aNota[10]
-    Private aProduto	 := fPesqSB1()
-    Private nQtdTB		 := aNota[3]
-    Private cTipCar		 := aProduto[4]
+Private nPrecoUn	 := 0
+Private nTotNF		 := 0
+Private nTotNFG		 := 0
+Private nIpiG		 := 0
+Private nFrbUn		 := 0
+Private nIcmsG		 := 0
+Private nPisco		 := 0
+Private nPiscoG		 := 0
+Private nFrtUni		 := 0
+Private nFrtTot		 := 0
+Private nPoG		 := 0
+Private nPo 		 := 0
+Private wOrdSZ1		 := 0
+Private wRecSZ1		 := 0
+Private cTempo		 := "  :  "
+Private aCliente	 := fPesqSA1(cTipo)
+Private naliqext     := 0
+Private _esticm	     := alltrim(getmv("MV_ESTICM"))
+Private _estado      := GetMV("MV_ESTADO")
+Private _picmest     := Val(Subs(_esticm,at(_estado,_esticm)+2,2))
+Private naliqext     := 0
+Private ndifaliq     := 0
+Private wPIRCSL      := 0
+Private nBaseIcmsG   := 0
+Private _lGerenc     := .T.
+Private aNota		 := fPesqSD1()
+Private nCusTran	 := aNota[7]
+Private nCustSac	 := aNota[10]
+Private aProduto	 := fPesqSB1()
+Private nQtdTB		 := aNota[3]
+Private cTipCar		 := aProduto[4]
 
-    nQtdeGra		     := aNota[3]
+nQtdeGra		     := aNota[3]
 
-    Private cPrefixo	 := "FAT"
-    Private cGrupo		 := aNota[15]
-    Private cTes		 := aNota[5]
-    Private wTES		 := ""
-    Private nICMSRetG	 := 0
-    Private nProdG		 := 0
-    Private	cPrefixo     := ZZ->D1_SERIE
-    Private nAliqICM	 := aNota[6]
-    Private nFRE3Tot	 := 0 // Frete NF + Custo Transporte Total
-    Private nFRE3Un		 := 0 // Frete NF + Custo Transporte Unitário
-    Private	nPisNF       := 0 // PIS na NFS
-    Private nCOFNF       := 0 // COFINS na NFS
-    Private nPISGER      := 0 // PIS gerencial
-    Private nCOFGER      := 0 // COFINS gerencial
-    Private cDESTES		 := fPesqSF4() // Descrição da TES
+Private cPrefixo	 := "FAT"
+Private cGrupo		 := aNota[15]
+Private cTes		 := aNota[5]
+Private wTES		 := ""
+Private nICMSRetG	 := 0
+Private nProdG		 := 0
+Private	cPrefixo     := ZZ->D1_SERIE
+Private nAliqICM	 := aNota[6]
+Private nFRE3Tot	 := 0 // Frete NF + Custo Transporte Total
+Private nFRE3Un		 := 0 // Frete NF + Custo Transporte Unitário
+Private	nPisNF       := 0 // PIS na NFS
+Private nCOFNF       := 0 // COFINS na NFS
+Private nPISGER      := 0 // PIS gerencial
+Private nCOFGER      := 0 // COFINS gerencial
+Private cDESTES		 := fPesqSF4() // Descrição da TES
 
-    nTotNF	 := (ZZ->D1_TOTAL + ZZ->D1_VALFRE) * -1
-    nTotNFG	 := (ZZ->D1_TOTAL + ZZ->D1_VALFRE) * -1
-    nPrecoUn := Round(nTotNF / nQtdeGra,2)
+nTotNF	 := (ZZ->D1_TOTAL + ZZ->D1_VALFRE + ZZ->D1_ICMSRET) * -1
+nTotNFG	 := (ZZ->D1_TOTAL + ZZ->D1_VALFRE + ZZ->D1_ICMSRET) * -1
+nPrecoUn := Round(nTotNF / nQtdeGra,2)
 
-    If _lGerenc
-    	nTotNFG := (aNota[8] * nQtdTB) * -1		    // Preco gerencial * quantidade em tons
-    EndIf
+	If _lGerenc
+	nTotNFG := (aNota[8] * nQtdTB) * -1		    // Preco gerencial * quantidade em tons
+	EndIf
 
-    naliqext := 12
-    nD2Aliq  := 1+ ( ( _picmest - naliqext ) / 100 )
+naliqext := 12
+nD2Aliq  := 1+ ( ( _picmest - naliqext ) / 100 )
 
-    If ZZ->D1_ICMSRET > 0 .And. _lGerenc
+	If ZZ->D1_ICMSRET > 0 .And. _lGerenc
 	
-	    nProdG := ROUND(      ((nTotnfg  /  nDifAliq )    -   (ZZ->D1_VALFRE * 1.04) ) / 1.04 , 2 )
+	nProdG := ROUND(      ((nTotnfg  /  nDifAliq )    -   (ZZ->D1_VALFRE * 1.04) ) / 1.04 , 2 )
 	
-    	nIcmsRetG :=  ( ( nProdG + ZZ->D1_FRETE )  * 1.04) * ( ndifaliq  - 1 )
+	nIcmsRetG :=  ( ( nProdG + ZZ->D1_FRETE )  * 1.04) * ( ndifaliq  - 1 )
 	
-    Else // produto gerencial sem ICMS RETIDO
-	    nProdG := ROUND(  (nTotNFG  /  1.04 ) -  ZZ->D1_VALFRE,2 )
-    EndIf
+	Else // produto gerencial sem ICMS RETIDO
+	nProdG := ROUND(  (nTotNFG  /  1.04 ) -  ZZ->D1_VALFRE,2 )
+	EndIf
 
-    if ZZ->D1_VALIPI = 0
-	    nIpiG:= 0
-    Else
-	    nIpiG	:= Round((((nTotNFG - ZZ->D1_VALFRE*1.04)-nICMSRETG)/1.04+ZZ->D1_VALFRE)*0.04,2)
-    EndIf
+	if ZZ->D1_VALIPI = 0
+	nIpiG:= 0
+	Else
+	nIpiG	:= Round((((nTotNFG - ZZ->D1_VALFRE*1.04)-nICMSRETG)/1.04+ZZ->D1_VALFRE)*0.04,2)
+	EndIf
 
-    nFrbUn	:= ZZ->D1_VALFRE / nQtdTB
+nFrbUn	:= ZZ->D1_VALFRE / nQtdTB
 
-    If ZZ->D1_ICMSRET > 0 .And. _lGerenc
-        naliqext := 12
-        nProduto := nTotNFG - ( 1.05 * ZZ->D1_VALFRE ) - ( 1.05 * nIpiG )
-        
-        nProduto  := Round(nProduto / 1.05,2)
-        ndifaliq  := ( _picmest - naliqext ) / 100
-        nIcmsRetG := ( nProduto + ZZ->D1_VALFRE + nIpiG ) * ndifaliq
-    EndIf
-
-    If cEmpAnt + cFilAnt $ "0209/5010"
-        nBaseIcmsG := 0
-        nIcmsG	   := 0
-        nICMSRetG  := 0
-    Else
-        If !_lGerenc
-            nIcmsG	  := ZZ->D1_VALICM * -1
-            nICMSRetG := ZZ->D1_ICMSRET  * -1
-            nIPIG     := ZZ->D1_VALIPI   * -1
-            Else
-                _nAliq := aNota[6]
-            If Empty(aNota[6])
-               _nAliq := GETMV("MV_ICMPAD")
-            Endif
-        
-            nBaseIcmsG := nTotNFG
-            nIcmsG	   := (Round(nBaseIcmsG  * (_nAliq / 100) ,2) ) * -1
-        EndIf
-    Endif
-
-    nPisco	:= 0
-    nPiscoG	:= 0
-
-    nPisco  := (aNota[11] + aNota[12] ) * -1
-    nPisNF  := aNota[11] * -1
-    nCOFNF  := aNota[12] * -1
-    _nISSNF := aNota[17] * -1
-
-    _nTxPIS	:= SuperGetMV("MV_TXPIS")
-    _nTxCOF	:= SuperGetMV("MV_TXCOFIN")
-    _nPerc  := (_nTxPIS + _nTxCOF ) / 100
-    _nTxISS := SB1->B1_ALIQISS / 100
-
-    nPiscoG	:= Round(nTotNFG  * _nPerc,2)
-
-    If !_lGerenc
-        nPiscoG  := nPisco
-        nPISGER  := nPisNF
-        nCOFGER  := nCOFNF
+	If ZZ->D1_ICMSRET > 0 .And. _lGerenc
+	naliqext := 12
+	nProduto := nTotNFG - ( 1.05 * ZZ->D1_VALFRE ) - ( 1.05 * nIpiG )
 	
-        If cEmpAnt == "04"
-    		_nISSGER := _nISSNF
-        Endif
-    Else
-        nPISGER := Round(nTotNFG * (_nTxPIS / 100) ,2)
-        nCOFGER := Round(nTotNFG * (_nTxCOF / 100) ,2)
+	nProduto  := Round(nProduto / 1.05,2)
+	ndifaliq  := ( _picmest - naliqext ) / 100
+	nIcmsRetG := ( nProduto + ZZ->D1_VALFRE + nIpiG ) * ndifaliq
+	EndIf
+
+	If cEmpAnt + cFilAnt $ "0209/5010"
+	nBaseIcmsG := 0
+	nIcmsG	   := 0
+	nICMSRetG  := 0
+	Else
+		If !_lGerenc
+		nIcmsG	  := ZZ->D1_VALICM * -1
+		nICMSRetG := ZZ->D1_ICMSRET  * -1
+		nIPIG     := ZZ->D1_VALIPI   * -1
+		Else
+		_nAliq := aNota[6]
+			If Empty(aNota[6])
+			_nAliq := GETMV("MV_ICMPAD")
+			Endif
+		
+		nBaseIcmsG := nTotNFG
+		nIcmsG	   := (Round(nBaseIcmsG  * (_nAliq / 100) ,2) ) * -1
+		EndIf
+	Endif
+
+nPisco	:= 0
+nPiscoG	:= 0
+
+nPisco  := (aNota[11] + aNota[12] ) * -1
+nPisNF  := aNota[11] * -1
+nCOFNF  := aNota[12] * -1
+_nISSNF := aNota[17] * -1
+
+_nTxPIS	:= SuperGetMV("MV_TXPIS")
+_nTxCOF	:= SuperGetMV("MV_TXCOFIN")
+_nPerc  := (_nTxPIS + _nTxCOF ) / 100
+_nTxISS := SB1->B1_ALIQISS / 100
+
+nPiscoG	:= Round(nTotNFG  * _nPerc,2)
+
+	If !_lGerenc
+	nPiscoG  := nPisco
+	nPISGER  := nPisNF
+	nCOFGER  := nCOFNF
 	
-        If cEmpAnt == "04"
-    		_nISSGER := Round(nTotNFG * _nTxISS,2)
-        Endif
+		If cEmpAnt == "04"
+		_nISSGER := _nISSNF
+		Endif
+	Else
+	nPISGER := Round(nTotNFG * (_nTxPIS / 100) ,2)
+	nCOFGER := Round(nTotNFG * (_nTxCOF / 100) ,2)
 	
-    EndIf
-
-    nFrtUni  := nFrbUn
-    nFrtUni  := nFrtUni * - 1
-    nFrtTot	 := ZZ->D1_VALFRE * - 1
-
-    If cEmpAnt + cFilAnt $ "5001/5002/5004/5005/5006/5007/5008/5009/5013/5016" .AND. SA1->A1_YTPCLI = "2"
+		If cEmpAnt == "04"
+		_nISSGER := Round(nTotNFG * _nTxISS,2)
+		Endif
 	
-	    SZ2-   >(dbSetOrder(4))
-        If SZ2->(dbSeek(ZZ->D1_FILIAL + ZZ->D1_FORNECE + ZZ->D1_LOJA + ZZ->D1_COD))
-            nFrtTot	 := Round((ZZ->D1_QUANT * SZ2->Z2_FRETGER ),2) * -1
-            nFrtUni  := SZ2->Z2_FRETGER * -1
-        Endif
-    ENDIF
+	EndIf
 
-    nFRE3Tot := 0
-    nMARGEG  := Round((nTotNFG - nIpiG - nIcmsG - nIcmsRetG - nPiscoG - ZZ->D1_VALFRE - 0) / nQtdeGra,2)   -  aNota[9]	   // Margem de Lucro
-    nIRCSLG  := IF(nMARGEG > 0 ,(nQtdeGra * nMARGEG * wPIRCSL),0)
-    wwTotNFG := 0
-    wwTotNFG := nTotNFG
+nFrtUni  := nFrbUn
+nFrtUni  := nFrtUni * - 1
+nFrtTot	 := ZZ->D1_VALFRE * - 1
 
-    DbSelectArea("ZZD")
-    DbSetOrder(10)
-
-    SF4->(dbSetOrder(1))
-    SF4->(MsSeek(xFilial("SF4") + ZZ->D1_TES))
-
-    SE4->(dbSetOrder(1))
-    SE4->(MsSeek(xFilial("SE4") + SF1->F1_COND))   // CONTINUAR
-
-    aZZD	:= GetArea("ZZD")
-
-    _nCusto := 0
-    Z05->(dbSetOrder(1))
-    If Z05->(MsSeek(xFilial("Z05") + cEmpAnt + cFilAnt + DTOS(FIRSTDAY(ZZ->D1_DTDIGIT))))
-	    _nCusto := Z05->Z05_CUSTO
-    Endif
-
-    If MsSeek(xFilial("ZZD")+cEmpAnt+cFilAnt+ZZ->(D1_DOC+D1_SERIE+D1_FORNECE+D1_LOJA+D1_ITEM))
-	    RecLock("ZZD",.F.)
-    Else
-	    RecLock("ZZD",.T.)
-    EndIf
-
-    If Empty(xFilial("ZZD"))
-	    ZZD->ZZD_FILIAL	:= xFilial("ZZD")
-    Else
-	    ZZD->ZZD_FILIAL	:= ZZ->D1_FILIAL
-    Endif
-
-    _aSA1Box := RetSx3Box( Posicione("SX3", 2, "A1_YTPCLI", "X3CBox()" ),,, 1 )
-    nAscan   := Ascan( _aSA1Box, { |e| e[2] = SA1->A1_YTPCLI } )
-
-    If nAscan > 0
-        If ZZD->(FieldPos("ZZD_TPCLI")) > 0
-    		ZZD->ZZD_TPCLI := AllTrim( _aSA1Box[nAscan][3] )
-        Endif
-    Endif
-
-    _aSF4Box := RetSx3Box( Posicione("SX3", 2, "F4_YTPVEND", "X3CBox()" ),,, 1 )
-    nAscan   := Ascan( _aSF4Box, { |e| e[2] = SF4->F4_YTPVEND } )
-
-    If nAscan > 0
-        If ZZD->(FieldPos("ZZD_TPVEND")) > 0
-    		ZZD->ZZD_TPVEND  := AllTrim( _aSF4Box[nAscan][3] )
-        Endif
-    Endif
-
-    ZZD->ZZD_EMIS		:= ZZ->D1_EMISSAO
-    ZZD->ZZD_ANOMES	    := Left(DtoS(ZZ->D1_EMISSAO),6)	 //Ano Mes
-    ZZD->ZZD_HRSAID	    := SF1->F1_HORA             // HORA DE SAIDA DA NF
-    ZZD->ZZD_PROD		:= aNota[1]					// Cod. produto
-    ZZD->ZZD_DESCPR	    := aProduto[8]				// Descricao do Produto
-    ZZD->ZZD_DESCRE	    := aProduto[9]				// Descricao Resumida do Produto
-    ZZD->ZZD_DESGR 	    := aProduto[10]				// Descricao do Produto
-    ZZD->ZZD_DESSGR	    := aProduto[11]				// Descricao Resumida do Produto
-    ZZD->ZZD_CLIE		:= ZZ->D1_FORNECE			// Cod. cliente
-    ZZD->ZZD_LOJA		:= ZZ->D1_LOJA				// Loja
-    ZZD->ZZD_NOME		:= aCliente[1]				// Nome cliente
-    ZZD->ZZD_SERIE		:= ZZ->D1_SERIE		   	    // Serie documento
-    ZZD->ZZD_DOC		:= ZZ->D1_DOC				// Num. documento
-    ZZD->ZZD_ITEM       := ZZ->D1_ITEM
-    ZZD->ZZD_QTBRUT     := aNota[3] * -1
-    ZZD->ZZD_QTLIQ		:= aNota[3] * -1
-    ZZD->ZZD_PRECO		:= nPrecoUn					// Buscar no SD2
-    ZZD->ZZD_PRECOG	    := (nTotNFG / aNota[3] )
-    ZZD->ZZD_TOTNF	    := nTotNF     		// Valor total da NF
-    ZZD->ZZD_IPI	    := ZZ->D1_VALIPI	    		// IPI
-    ZZD->ZZD_TOTLIQ     := (ZZD->ZZD_TOTNF - ZZD->ZZD_IPI)
-    ZZD->ZZD_ICMS	    := IF (ZZ->D1_VALISS > 0, 0, ZZ->D1_VALICM	* -1)
-    ZZD->ZZD_ALQICM     := ZZ->D1_PICM
-    ZZD->ZZD_PRCLIQ     := ZZD->ZZD_TOTLIQ / ZZD->ZZD_QTLIQ
-
-    If _lGerenc
-        ZZD->ZZD_TOTLIG   := nTotNFG
-        ZZD->ZZD_IPIG	  := ZZD->ZZD_TOTLIG * (ZZ->D1_IPI /100)	   // IPI Gerencial
-        ZZD->ZZD_TOTNFG	  := nTotNFG
-        ZZD->ZZD_ICMSG	  := nIcmsG
-        ZZD->ZZD_PISGER   := nPISGER
-        ZZD->ZZD_COFGER   := nCOFGER
-        ZZD->ZZD_RETG	  := nICMSRetg
-        ZZD->ZZD_PISCOG	  := nPiscoG					// Pis/Cofins (gerencial)
-        ZZD->ZZD_DEICDC   := ((ZZD->ZZD_IPIG - ZZD->ZZD_IPI + ZZD->ZZD_ICMSG - ZZD->ZZD_ICMS)/2)
-    Else
-        ZZD->ZZD_TOTLIG   := nTotNFG
-        ZZD->ZZD_IPIG	  := ZZD->ZZD_TOTLIG * (ZZ->D1_IPI /100)	   // IPI Gerencial
-        ZZD->ZZD_TOTNFG	  := ZZD->ZZD_TOTLIG + 	ZZD->ZZD_IPIG
-        ZZD->ZZD_ICMSG	  := IF (ZZ->D1_VALISS > 0, 0, ZZ->D1_VALICM * -1)	// ICMS
-        ZZD->ZZD_PISGER   := aNota[11] * -1
-        ZZD->ZZD_COFGER   := aNota[12] * -1
-        ZZD->ZZD_RETG	  := nICMSRetg
-        ZZD->ZZD_PISCOG	  := nPisco					// Pis/Cofins (gerencial
-    Endif
-
-    If cEmpAnt + ZZ->D1_FILIAL $  "5001/5002/5005/5006/5007" .And. SA1->A1_YTPCLI == "2"
-        ZZD->ZZD_ICMSG  := 0
-        ZZD->ZZD_PISGER := 0
-        ZZD->ZZD_COFGER := 0
-    Endif
-
-    ZZD->ZZD_RET		:= ZZ->D1_ICMSRET * -1 		// ICMS Retido
-    ZZD->ZZD_PISCO		:= nPisco	     			// Pis/Cofins
-    ZZD->ZZD_PIS		:= aNota[11] * -1			//SF2->F2_VALIMP6
-    ZZD->ZZD_COFINS	    := aNota[12] * -1			//SF2->F2_VALIMP5
-    ZZD->ZZD_FRETOT	    := nFrtTot	     			// Frete total
-    ZZD->ZZD_FREUNI	    := nFrtUni					// Frete liquido unitario (gerencial)
-    ZZD->ZZD_MUNEND	    := acliente[9]
-    ZZD->ZZD_UF			:= acliente[5]				// Estado destino
-    ZZD->ZZD_COND		:= SF1->F1_COND				// Condicao de pagamento
-
-    If SE4->(FieldPos("E4_YMEDIA")) > 0
-    	ZZD->ZZD_PM			:= SE4->E4_YMEDIA			// Prazo medio
-    Endif
-    ZZD->ZZD_ATIVI		:= aCliente[2]				// Atividade do cliente
-    ZZD->ZZD_ATIVG		:= aCliente[3]				// Atividade 'real' do cliente
-    ZZD->ZZD_FRBR		:= ZZ->D1_VALFRE * -1       // Frete bruto
-    ZZD->ZZD_FRBRUN	    := nFrbUn					// Frete bruto unitario (Gerencial)
-    ZZD->ZZD_KM			:= 0						// Distancia da Matriz ao cliente em Km
-    ZZD->ZZD_KMR		:= 0						// Raio em Km -- ??
-    ZZD->ZZD_CARRO		:= ""
-    ZZD->ZZD_MOTOR      := ""
-    ZZD->ZZD_PREF		:= ZZ->D1_SERIE				// Prefixo padrao do parametro conforme a filial atual
-    ZZD->ZZD_YTPCAR	    := cTipCar					// Tipo de Carga
-    ZZD->ZZD_YDEV		:= ""
-    ZZD->ZZD_YNFSUB	    := ""
-    ZZD->ZZD_TES		:= aNota[5]					// TES em SD2
-    ZZD->ZZD_UM		    := aNota[14]				// UM
-    ZZD->ZZD_GRUPO		:= cGrupo					// Grupo
-
-    If _lGerenc
-    	ZZD->ZZD_DEVCDC	:= nTotNFG - ZZD->ZZD_TOTLIQ
-    Else
-	    ZZD->ZZD_DEVCDC	:= 0
-    Endif
-    ZZD->ZZD_CPO21		:= If(Empty(cTes),'N/CADASTRADO',cTes)	// Tes
-    ZZD->ZZD_CPO22		:= aCliente[4]				            // Data primeiro faturamento
-    ZZD->ZZD_TPROD      := ZZ->D1_TOTAL  * -1
-    ZZD->ZZD_TPRODG     := nProdG
-
-    If aProduto[6]$("BB/TB/UN")
-    	ZZD->ZZD_YPESTB	:= aProduto[7]
-    EndIf
-
-    ZZD->ZZD_CODEMP	:= cEmpAnt
-    ZZD->ZZD_CODFIL	:= ZZ->D1_FILIAL
-    ZZD->ZZD_NOMFIL := POSICIONE("SM0",1,cEmpAnt + ZZ->D1_FILIAL,"M0_FILIAL")
-
-    _cSigl := ""
-    If ZZD->(FieldPos("ZZD_SIGLA2")) > 0
-        If cEmpAnt == "02"
-            If ZZ->D1_FILIAL == "01"
-			    _cSigl := "PX-IBA"
-            ElseIf ZZ->D1_FILIAL == "02"
-			    _cSigl := "PX-IDC"
-            ElseIf ZZ->D1_FILIAL $ "03/04"
-			    _cSigl := "  "
-            ElseIf ZZ->D1_FILIAL == "05"
-			    _cSigl := "PX-IJB"
-            ElseIf ZZ->D1_FILIAL == "06"
-			    _cSigl := "PX-IFT"
-            ElseIf ZZ->D1_FILIAL == "07"
-			    _cSigl := "PX-IMC"
-            ElseIf ZZ->D1_FILIAL == "08"
-			    _cSigl := "PX-INT"
-            ElseIf ZZ->D1_FILIAL == "09"
-			    _cSigl := "PX-ISV"
-            ElseIf ZZ->D1_FILIAL == "10"
-			    _cSigl := "PX-IBA"
-            ElseIf ZZ->D1_FILIAL == "11"
-			    _cSigl := "PX-IPT"
-            ElseIf ZZ->D1_FILIAL == "12"
-			    _cSigl := "PX-IGU"
-            ElseIf ZZ->D1_FILIAL == "13"
-			    _cSigl := "PX-ICC"
-            ElseIf ZZ->D1_FILIAL == "14"
-			    _cSigl := "PX-ISL"
-            Endif
-        ElseIf cEmpAnt == "04"
-            If ZZ->D1_FILIAL $ "01"
-			    _cSigl := "MSP"
-            ElseIf ZZ->D1_FILIAL == "02"
-			    _cSigl := "MRE"
-            Endif
-        ElseIf cEmpAnt == "05"
-		    _cSigl := "MRE"
-        ElseIf cEmpAnt == "09"
-		    _cSigl := "PX-IMC"
-        ElseIf cEmpAnt == "13"
-            If ZZ->D1_FILIAL     $ "01"
-			    _cSigl := "PX-IRO"
-            ElseIf ZZ->D1_FILIAL $ "04"
-			    _cSigl := "PX-IBA"
-            ElseIf ZZ->D1_FILIAL == "06"
-			    _cSigl := "PX-IRO"
-            ElseIf ZZ->D1_FILIAL == "07"
-			    _cSigl := "PX-IBA"
-            Endif
-        ElseIf cEmpAnt == "16"
-		    _cSigl := "PX-IPT"
-        ElseIf cEmpAnt == "50"
-            If ZZ->D1_FILIAL == "01"
-			    _cSigl := "PX-IBA"
-            ElseIf ZZ->D1_FILIAL == "02"
-			    _cSigl := "PX-IRO"
-            ElseIf ZZ->D1_FILIAL == "03"
-			    _cSigl := "PX-IFT"
-            ElseIf ZZ->D1_FILIAL == "04"
-			    _cSigl := "PX-INT"
-            ElseIf ZZ->D1_FILIAL == "05"
-			    _cSigl := "PX-IDC"
-            ElseIf ZZ->D1_FILIAL == "06"
-			    _cSigl := "PX-IGU"
-            ElseIf ZZ->D1_FILIAL == "07"
-			    _cSigl := "PX-ICC"
-            ElseIf ZZ->D1_FILIAL == "08"
-			    _cSigl := "PX-ISL"
-            ElseIf ZZ->D1_FILIAL == "09"
-			    _cSigl := "PX-IJB"
-            ElseIf ZZ->D1_FILIAL == "10"
-			    _cSigl := "PX-ISV"
-            ElseIf ZZ->D1_FILIAL == "11"
-			    _cSigl := "PX-IRB"
-            ElseIf ZZ->D1_FILIAL == "12"
-			    _cSigl := "PX-AE "
-            ElseIf ZZ->D1_FILIAL == "13"
-			    _cSigl := "PX-IPT"
-            ElseIf ZZ->D1_FILIAL == "14"
-			    _cSigl := "PX-MT"
-            ElseIf ZZ->D1_FILIAL == "15"
-			    _cSigl := "PX-IMC"
-            ElseIf ZZ->D1_FILIAL == "16"
-			    _cSigl := "PX-INH"
-            Endif
-        Endif
+	If cEmpAnt + cFilAnt $ "5001/5002/5004/5005/5006/5007/5008/5009/5013/5016" .AND. SA1->A1_YTPCLI = "2"
 	
-    	ZZD->ZZD_SIGLA2 := _cSigl
-    Endif
+	SZ2->(dbSetOrder(4))
+		If SZ2->(dbSeek(ZZ->D1_FILIAL + ZZ->D1_FORNECE + ZZ->D1_LOJA + ZZ->D1_COD))
+		nFrtTot	 := Round((ZZ->D1_QUANT * SZ2->Z2_FRETGER ),2) * -1
+		nFrtUni  := SZ2->Z2_FRETGER * -1
+		Endif
+	ENDIF
 
-    cSigla:= SuperGetMv( "ECO_SIGLA" , .F. , , ZZ->D1_FILIAL )
+nFRE3Tot := 0
+nMARGEG  := Round((nTotNFG - nIpiG - nIcmsG - nIcmsRetG - nPiscoG - ZZ->D1_VALFRE - 0) / nQtdeGra,2)   -  aNota[9]	   // Margem de Lucro
+nIRCSLG  := IF(nMARGEG > 0 ,(nQtdeGra * nMARGEG * wPIRCSL),0)
+wwTotNFG := 0
+wwTotNFG := nTotNFG
 
-    ZZD->ZZD_SIGLA  := cSigla
+DbSelectArea("ZZD")
+DbSetOrder(10)
 
-    //nCalcPoG:= (ZZD->ZZD_TOTNFG - ZZD->ZZD_IPIG - ZZD->ZZD_ICMSG - ZZD->ZZD_RETG - ZZD->ZZD_PISGER - ZZD->ZZD_COFGER - nFrtTot  ) / nQtdeGra
-    //nCalcPoG:= iif( nCalcPoG <0 , 0 , nCalcPoG )
+SF4->(dbSetOrder(1))
+SF4->(MsSeek(xFilial("SF4") + ZZ->D1_TES))
+
+SE4->(dbSetOrder(1))
+SE4->(MsSeek(xFilial("SE4") + SF1->F1_COND))   // CONTINUAR
+
+aZZD	:= GetArea("ZZD")
+
+_nCusto := 0
+Z05->(dbSetOrder(1))
+	If Z05->(MsSeek(xFilial("Z05") + cEmpAnt + cFilAnt + DTOS(FIRSTDAY(ZZ->D1_DTDIGIT))))
+	_nCusto := Z05->Z05_CUSTO
+	Endif
+
+	If MsSeek(xFilial("ZZD")+cEmpAnt+cFilAnt+ZZ->(D1_DOC+D1_SERIE+D1_FORNECE+D1_LOJA+D1_ITEM))
+	RecLock("ZZD",.F.)
+	Else
+	RecLock("ZZD",.T.)
+	EndIf
+
+	If Empty(xFilial("ZZD"))
+	ZZD->ZZD_FILIAL	:= xFilial("ZZD")
+	Else
+	ZZD->ZZD_FILIAL	:= ZZ->D1_FILIAL
+	Endif
+
+_aSA1Box := RetSx3Box( Posicione("SX3", 2, "A1_YTPCLI", "X3CBox()" ),,, 1 )
+nAscan   := Ascan( _aSA1Box, { |e| e[2] = SA1->A1_YTPCLI } )
+
+	If nAscan > 0
+		If ZZD->(FieldPos("ZZD_TPCLI")) > 0
+		ZZD->ZZD_TPCLI := AllTrim( _aSA1Box[nAscan][3] )
+		Endif
+	Endif
+
+_aSF4Box := RetSx3Box( Posicione("SX3", 2, "F4_YTPVEND", "X3CBox()" ),,, 1 )
+nAscan   := Ascan( _aSF4Box, { |e| e[2] = SF4->F4_YTPVEND } )
+
+	If nAscan > 0
+		If ZZD->(FieldPos("ZZD_TPVEND")) > 0
+		ZZD->ZZD_TPVEND  := AllTrim( _aSF4Box[nAscan][3] )
+		Endif
+	Endif
+
+	ZZD->ZZD_EMPFIL		:= ZZ->D1_YEMPFIL
+	ZZD->ZZD_EMIS		:= ZZ->D1_EMISSAO
+	ZZD->ZZD_ANOMES	    := Left(DtoS(ZZ->D1_EMISSAO),6)	 //Ano Mes
+	ZZD->ZZD_HRSAID	    := SF1->F1_HORA             // HORA DE SAIDA DA NF
+	ZZD->ZZD_PROD		:= aNota[1]					// Cod. produto
+	ZZD->ZZD_DESCPR	    := aProduto[8]				// Descricao do Produto
+	ZZD->ZZD_DESCRE	    := aProduto[9]				// Descricao Resumida do Produto
+	ZZD->ZZD_DESGR 	    := aProduto[10]				// Descricao do Produto
+	ZZD->ZZD_DESSGR	    := aProduto[11]				// Descricao Resumida do Produto
+	ZZD->ZZD_CLIE		:= ZZ->D1_FORNECE			// Cod. cliente
+	ZZD->ZZD_LOJA		:= ZZ->D1_LOJA				// Loja
+	ZZD->ZZD_NOME		:= aCliente[1]				// Nome cliente
+	ZZD->ZZD_SERIE		:= ZZ->D1_SERIE		   	    // Serie documento
+	ZZD->ZZD_DOC		:= ZZ->D1_DOC				// Num. documento
+	ZZD->ZZD_ITEM       := ZZ->D1_ITEM
+	ZZD->ZZD_QTBRUT     := aNota[3] * -1
+	ZZD->ZZD_QTLIQ		:= aNota[3] * -1
+	ZZD->ZZD_PRECO		:= nPrecoUn					// Buscar no SD2
+	ZZD->ZZD_PRECOG	    := (nTotNFG / aNota[3] )
+	ZZD->ZZD_TOTNF	    := nTotNF     		// Valor total da NF
+	ZZD->ZZD_IPI	    := ZZ->D1_VALIPI	    		// IPI
+	ZZD->ZZD_TOTLIQ     := (ZZD->ZZD_TOTNF - ZZD->ZZD_IPI)
+	ZZD->ZZD_ICMS	    := IF (ZZ->D1_VALISS > 0, 0, ZZ->D1_VALICM	* -1)
+	ZZD->ZZD_ALQICM     := ZZ->D1_PICM
+	ZZD->ZZD_PRCLIQ     := ZZD->ZZD_TOTLIQ / ZZD->ZZD_QTLIQ
+
+	If _lGerenc
+		ZZD->ZZD_TOTLIG   := nTotNFG
+		ZZD->ZZD_IPIG	  := ZZD->ZZD_TOTLIG * (ZZ->D1_IPI /100)	   // IPI Gerencial
+		ZZD->ZZD_TOTNFG	  := nTotNFG
+		ZZD->ZZD_ICMSG	  := nIcmsG
+		ZZD->ZZD_PISGER   := nPISGER
+		ZZD->ZZD_COFGER   := nCOFGER
+		ZZD->ZZD_RETG	  := nICMSRetg
+		ZZD->ZZD_PISCOG	  := nPiscoG					// Pis/Cofins (gerencial)
+		ZZD->ZZD_DEICDC   := ((ZZD->ZZD_IPIG - ZZD->ZZD_IPI + ZZD->ZZD_ICMSG - ZZD->ZZD_ICMS)/2)
+	Else
+		ZZD->ZZD_TOTLIG   := nTotNFG
+		ZZD->ZZD_IPIG	  := ZZD->ZZD_TOTLIG * (ZZ->D1_IPI /100)	   // IPI Gerencial
+		ZZD->ZZD_TOTNFG	  := ZZD->ZZD_TOTLIG + 	ZZD->ZZD_IPIG
+		ZZD->ZZD_ICMSG	  := IF (ZZ->D1_VALISS > 0, 0, ZZ->D1_VALICM * -1)	// ICMS
+		ZZD->ZZD_PISGER   := aNota[11] * -1
+		ZZD->ZZD_COFGER   := aNota[12] * -1
+		ZZD->ZZD_RETG	  := nICMSRetg
+		ZZD->ZZD_PISCOG	  := nPisco					// Pis/Cofins (gerencial
+	Endif
+
+	If cEmpAnt + ZZ->D1_FILIAL $  "5001/5002/5005/5006/5007" .And. SA1->A1_YTPCLI == "2"
+	ZZD->ZZD_ICMSG  := 0
+	ZZD->ZZD_PISGER := 0
+	ZZD->ZZD_COFGER := 0
+	Endif
+
+ZZD->ZZD_RET		:= ZZ->D1_ICMSRET * -1 		// ICMS Retido
+ZZD->ZZD_PISCO		:= nPisco	     			// Pis/Cofins
+ZZD->ZZD_PIS		:= aNota[11] * -1			//SF2->F2_VALIMP6
+ZZD->ZZD_COFINS	    := aNota[12] * -1			//SF2->F2_VALIMP5
+ZZD->ZZD_FRETOT	    := nFrtTot	     			// Frete total
+ZZD->ZZD_FREUNI	    := nFrtUni					// Frete liquido unitario (gerencial)
+ZZD->ZZD_MUNEND	    := acliente[9]
+ZZD->ZZD_UF			:= acliente[5]				// Estado destino
+ZZD->ZZD_COND		:= SF1->F1_COND				// Condicao de pagamento
+
+	If SE4->(FieldPos("E4_YMEDIA")) > 0
+	ZZD->ZZD_PM			:= SE4->E4_YMEDIA			// Prazo medio
+	Endif
+ZZD->ZZD_ATIVI		:= aCliente[2]				// Atividade do cliente
+ZZD->ZZD_ATIVG		:= aCliente[3]				// Atividade 'real' do cliente
+ZZD->ZZD_FRBR		:= ZZ->D1_VALFRE * -1       // Frete bruto
+ZZD->ZZD_FRBRUN	    := nFrbUn					// Frete bruto unitario (Gerencial)
+ZZD->ZZD_KM			:= 0						// Distancia da Matriz ao cliente em Km
+ZZD->ZZD_KMR		:= 0						// Raio em Km -- ??
+ZZD->ZZD_CARRO		:= ""
+ZZD->ZZD_MOTOR      := ""
+ZZD->ZZD_PREF		:= ZZ->D1_SERIE				// Prefixo padrao do parametro conforme a filial atual
+ZZD->ZZD_YTPCAR	    := cTipCar					// Tipo de Carga
+ZZD->ZZD_YDEV		:= ""
+ZZD->ZZD_YNFSUB	    := ""
+ZZD->ZZD_TES		:= aNota[5]					// TES em SD2
+ZZD->ZZD_UM		    := aNota[14]				// UM
+ZZD->ZZD_GRUPO		:= cGrupo					// Grupo
+
+	If _lGerenc
+	ZZD->ZZD_DEVCDC	:= nTotNFG - ZZD->ZZD_TOTLIQ
+	Else
+	ZZD->ZZD_DEVCDC	:= 0
+	Endif
+ZZD->ZZD_CPO21		:= If(Empty(cTes),'N/CADASTRADO',cTes)	// Tes
+ZZD->ZZD_CPO22		:= aCliente[4]				            // Data primeiro faturamento
+ZZD->ZZD_TPROD      := ZZ->D1_TOTAL  * -1
+ZZD->ZZD_TPRODG     := nProdG
+ZZD->ZZD_FATCON     := aProduto[7]
+
+	If aProduto[6]$("BB/TB/UN")
+	//ZZD->ZZD_YPESTB	:= aProduto[7]
+	EndIf
+
+ZZD->ZZD_CODEMP	:= cEmpAnt
+ZZD->ZZD_CODFIL	:= ZZ->D1_FILIAL
+ZZD->ZZD_NOMFIL := POSICIONE("SM0",1,cEmpAnt + ZZ->D1_FILIAL,"M0_FILIAL")
+
+_cSigl := ""
+	If ZZD->(FieldPos("ZZD_SIGLA2")) > 0
+		If cEmpAnt == "02"
+			If ZZ->D1_FILIAL == "01"
+			_cSigl := "PX-IBA"
+			ElseIf ZZ->D1_FILIAL == "02"
+			_cSigl := "PX-IDC"
+			ElseIf ZZ->D1_FILIAL $ "03/04"
+			_cSigl := "  "
+			ElseIf ZZ->D1_FILIAL == "05"
+			_cSigl := "PX-IJB"
+			ElseIf ZZ->D1_FILIAL == "06"
+			_cSigl := "PX-IFT"
+			ElseIf ZZ->D1_FILIAL == "07"
+			_cSigl := "PX-IMC"
+			ElseIf ZZ->D1_FILIAL == "08"
+			_cSigl := "PX-INT"
+			ElseIf ZZ->D1_FILIAL == "09"
+			_cSigl := "PX-ISV"
+			ElseIf ZZ->D1_FILIAL == "10"
+			_cSigl := "PX-IBA"
+			ElseIf ZZ->D1_FILIAL == "11"
+			_cSigl := "PX-IPT"
+			ElseIf ZZ->D1_FILIAL == "12"
+			_cSigl := "PX-IGU"
+			ElseIf ZZ->D1_FILIAL == "13"
+			_cSigl := "PX-ICC"
+			ElseIf ZZ->D1_FILIAL == "14"
+			_cSigl := "PX-ISL"
+			Endif
+		ElseIf cEmpAnt == "04"
+			If ZZ->D1_FILIAL $ "01"
+			_cSigl := "MSP"
+			ElseIf ZZ->D1_FILIAL == "02"
+			_cSigl := "MRE"
+			Endif
+		ElseIf cEmpAnt == "05"
+		_cSigl := "MRE"
+		ElseIf cEmpAnt == "09"
+		_cSigl := "PX-IMC"
+		ElseIf cEmpAnt == "13"
+			If ZZ->D1_FILIAL     $ "01"
+			_cSigl := "PX-IRO"
+			ElseIf ZZ->D1_FILIAL $ "04"
+			_cSigl := "PX-IBA"
+			ElseIf ZZ->D1_FILIAL == "06"
+			_cSigl := "PX-IRO"
+			ElseIf ZZ->D1_FILIAL == "07"
+			_cSigl := "PX-IBA"
+			Endif
+		ElseIf cEmpAnt == "16"
+		_cSigl := "PX-IPT"
+		ElseIf cEmpAnt == "50"
+			If ZZ->D1_FILIAL == "01"
+			_cSigl := "PX-IBA"
+			ElseIf ZZ->D1_FILIAL == "02"
+			_cSigl := "PX-IRO"
+			ElseIf ZZ->D1_FILIAL == "03"
+			_cSigl := "PX-IFT"
+			ElseIf ZZ->D1_FILIAL == "04"
+			_cSigl := "PX-INT"
+			ElseIf ZZ->D1_FILIAL == "05"
+			_cSigl := "PX-IDC"
+			ElseIf ZZ->D1_FILIAL == "06"
+			_cSigl := "PX-IGU"
+			ElseIf ZZ->D1_FILIAL == "07"
+			_cSigl := "PX-ICC"
+			ElseIf ZZ->D1_FILIAL == "08"
+			_cSigl := "PX-ISL"
+			ElseIf ZZ->D1_FILIAL == "09"
+			_cSigl := "PX-IJB"
+			ElseIf ZZ->D1_FILIAL == "10"
+			_cSigl := "PX-ISV"
+			ElseIf ZZ->D1_FILIAL == "11"
+			_cSigl := "PX-IRB"
+			ElseIf ZZ->D1_FILIAL == "12"
+			_cSigl := "PX-AE "
+			ElseIf ZZ->D1_FILIAL == "13"
+			_cSigl := "PX-IPT"
+			ElseIf ZZ->D1_FILIAL == "14"
+			_cSigl := "PX-MT"
+			ElseIf ZZ->D1_FILIAL == "15"
+			_cSigl := "PX-IMC"
+			ElseIf ZZ->D1_FILIAL == "16"
+			_cSigl := "PX-INH"
+			Endif
+		Endif
+	
+	ZZD->ZZD_SIGLA2 := _cSigl
+	Endif
+
+cSigla:= SuperGetMv( "ECO_SIGLA" , .F. , , ZZ->D1_FILIAL )
+
+ZZD->ZZD_SIGLA  := cSigla
+
+//nCalcPoG:= (ZZD->ZZD_TOTNFG - ZZD->ZZD_IPIG - ZZD->ZZD_ICMSG - ZZD->ZZD_RETG - ZZD->ZZD_PISGER - ZZD->ZZD_COFGER - nFrtTot  ) / nQtdeGra
+//nCalcPoG:= iif( nCalcPoG <0 , 0 , nCalcPoG )
 
 
-    If ZZ->D1_TIPO $ "C/I"
-        _nFOBL := 0
-        _nCIFL := 0
-        _ 
-    ElseIf SA1->A1_YTPCLI == "2"
-        _nFOBL := (ZZD->ZZD_TOTNFG - ZZD->ZZD_ICMSG - ZZD->ZZD_PISGER - ZZD->ZZD_COFGER ) / ZZD->ZZD_QTLIQ
-        _nCIFL := (ZZD->ZZD_TOTNFG + ZZD->ZZD_FRETOT                                    ) / ZZD->ZZD_QTLIQ
-    Else
-        _nFOBL := (ZZD->ZZD_TOTNFG - ZZD->ZZD_ICMSG - ZZD->ZZD_PISGER - ZZD->ZZD_COFGER - ZZD->ZZD_FRETOT ) / ZZD->ZZD_QTLIQ
-        _nCIFL := ZZD->ZZD_TOTNFG + ZZD->ZZD_FRETOT
-    Endif
+	If ZZ->D1_TIPO $ "C/I"
+	_nFOBL := 0
+	_nCIFL := 0
+	_ 
+	ElseIf SA1->A1_YTPCLI == "2"
+	_nFOBL := (ZZD->ZZD_TOTNFG - ZZD->ZZD_ICMSG - ZZD->ZZD_PISGER - ZZD->ZZD_COFGER ) / ZZD->ZZD_QTLIQ
+	_nCIFL := (ZZD->ZZD_TOTNFG + ZZD->ZZD_FRETOT                                    ) / ZZD->ZZD_QTLIQ
+	Else
+	_nFOBL := (ZZD->ZZD_TOTNFG - ZZD->ZZD_ICMSG - ZZD->ZZD_PISGER - ZZD->ZZD_COFGER - ZZD->ZZD_FRETOT ) / ZZD->ZZD_QTLIQ
+	_nCIFL := ZZD->ZZD_TOTNFG + ZZD->ZZD_FRETOT
+	Endif
 
-    nCalcPoG:= iif( nCalcPoG <0 , 0 , nCalcPoG )
+nCalcPoG:= iif( nCalcPoG <0 , 0 , nCalcPoG )
 
-    nPoG            := nCalcPoG
-    ZZD->ZZD_PO		:= If (_nFOBL < 0,0, _nFOBL)
-    ZZD->ZZD_FOBL	:= (_nFOBL * -1)
-    ZZD->ZZD_CIFL   := (_nCIFL * -1)
+nPoG            := nCalcPoG
+ZZD->ZZD_PO		:= If (_nFOBL < 0,0, _nFOBL)
+ZZD->ZZD_FOBL	:= (_nFOBL * -1)
+ZZD->ZZD_CIFL   := (_nCIFL * -1)
 
-    ZZD->ZZD_MASSAG	:= ( ZZD->ZZD_TOTNF - ZZD->ZZD_IPI - ZZD->ZZD_ICMS - ZZD->ZZD_RET - ZZD->ZZD_PIS - ZZD->ZZD_COFINS - nFrtTot)    // MASSA R$ - Solicitado pelo Sr. Josi
+ZZD->ZZD_MASSAG	:= ( ZZD->ZZD_TOTNF - ZZD->ZZD_IPI - ZZD->ZZD_ICMS - ZZD->ZZD_RET - ZZD->ZZD_PIS - ZZD->ZZD_COFINS - nFrtTot)    // MASSA R$ - Solicitado pelo Sr. Josi
 
-    nPo	            := nPoG
-    ZZD->ZZD_MASSA  := ( ZZD->ZZD_TOTNF - ZZD->ZZD_IPI - ZZD->ZZD_ICMS - ZZD->ZZD_RET - ZZD->ZZD_PIS - ZZD->ZZD_COFINS - nFrtTot)
-    ZZD->ZZD_CUSTO	:= _nCusto // aNota[9] // D2_YCUSTO
+nPo	            := nPoG
+ZZD->ZZD_MASSA  := ( ZZD->ZZD_TOTNF - ZZD->ZZD_IPI - ZZD->ZZD_ICMS - ZZD->ZZD_RET - ZZD->ZZD_PIS - ZZD->ZZD_COFINS - nFrtTot)
+ZZD->ZZD_CUSTO	:= _nCusto // aNota[9] // D2_YCUSTO
 
-    //If _lMargem        
-    //	If ZZD->ZZD_CODEMP + ZZD->ZZD_CODFIL $ "5001/5002/5004/5005/5006/5007/5008/5013/5016" .And. SA1->A1_YTPCLI = "2"
-    //		ZZD->ZZD_MARGEM	:= 0
-    //		ZZD->ZZD_MARGEG	:= 0
-    //    Else
-    //		ZZD->ZZD_MARGEM	:= ZZD->ZZD_PO - _nCusto	   // Margem de Lucro
-    //		ZZD->ZZD_MARGEG	:= ZZD->ZZD_PO - _nCusto	   // Margem de Lucro
-    //	Endif
-    //Endif
+//If _lMargem        
+//	If ZZD->ZZD_CODEMP + ZZD->ZZD_CODFIL $ "5001/5002/5004/5005/5006/5007/5008/5013/5016" .And. SA1->A1_YTPCLI = "2"
+//		ZZD->ZZD_MARGEM	:= 0
+//		ZZD->ZZD_MARGEG	:= 0
+//    Else
+//		ZZD->ZZD_MARGEM	:= ZZD->ZZD_PO - _nCusto	   // Margem de Lucro
+//		ZZD->ZZD_MARGEG	:= ZZD->ZZD_PO - _nCusto	   // Margem de Lucro
+//	Endif
+//Endif
 
-    If _lMargem
-        ZZD->ZZD_MARGEM	:= ZZD->ZZD_FOBL + _nCusto	   // Margem de Lucro
-        ZZD->ZZD_MARGEG	:= ZZD->ZZD_FOBL + _nCusto	   // Margem de Lucro
-    Endif
+	If _lMargem
+	ZZD->ZZD_MARGEM	:= ZZD->ZZD_FOBL + _nCusto	   // Margem de Lucro
+	ZZD->ZZD_MARGEG	:= ZZD->ZZD_FOBL + _nCusto	   // Margem de Lucro
+	Endif
 
-    nPO := Round((nTotNFG - nIpiG - nIcmsG - nIcmsRetG - nPiscoG - nFrtTot - 0) / nQtdeGra,2)
-    nPO -= If(cTipCar = "S",nCustSac,0)
-    ZZD->ZZD_YPEDAG := 0
-    ZZD->ZZD_YCTR  	:= ""
-    ZZD->ZZD_YSERCT := ""
-    ZZD->ZZD_IRCSL  := IF(ZZD->ZZD_MARGEM > 0 ,(nQtdeGra * ZZD->ZZD_MARGEM * wPIRCSL),0)
-    ZZD->ZZD_IRCSLG := IF(ZZD->ZZD_MARGEG > 0 ,(nQtdeGra * ZZD->ZZD_MARGEG * wPIRCSL),0)
-    aZZD			:= GetArea("ZZD")
+nPO := Round((nTotNFG - nIpiG - nIcmsG - nIcmsRetG - nPiscoG - nFrtTot - 0) / nQtdeGra,2)
+nPO -= If(cTipCar = "S",nCustSac,0)
+ZZD->ZZD_YPEDAG := 0
+ZZD->ZZD_YCTR  	:= ""
+ZZD->ZZD_YSERCT := ""
+ZZD->ZZD_IRCSL  := IF(ZZD->ZZD_MARGEM > 0 ,(nQtdeGra * ZZD->ZZD_MARGEM * wPIRCSL),0)
+ZZD->ZZD_IRCSLG := IF(ZZD->ZZD_MARGEG > 0 ,(nQtdeGra * ZZD->ZZD_MARGEG * wPIRCSL),0)
+aZZD			:= GetArea("ZZD")
 
-    If Alltrim(cTipCar) $ "CDC*G"
-	    ZZD->ZZD_PERFIL := "GRANEL"
-    ELSEIF cTipCar = "S"
-	    ZZD->ZZD_PERFIL := "TAMBOR"
-    Endif
+	If Alltrim(cTipCar) $ "CDC*G"
+	ZZD->ZZD_PERFIL := "GRANEL"
+	ELSEIF cTipCar = "S"
+	ZZD->ZZD_PERFIL := "TAMBOR"
+	Endif
 
-    ZZD->ZZD_CFOP   := aNota[13]
-    ZZD->ZZD_TIPONF := ZZ->D1_TIPO
-    ZZD->ZZD_TIPOMT := aProduto[12]
-    ZZD->ZZD_DESTES := cDESTES[2]
+ZZD->ZZD_CFOP   := aNota[13]
+ZZD->ZZD_TIPONF := ZZ->D1_TIPO
+ZZD->ZZD_TIPOMT := aProduto[12]
+ZZD->ZZD_DESTES := cDESTES[2]
 
-    If ZZ->D1_VALFRE > 0
-        ZZD->ZZD_QTCIF  := ZZD->ZZD_QTLIQ
-        ZZD->ZZD_TPFRE	:= "C"
-    Else
-        ZZD->ZZD_TPFRE	:= "F"
-        ZZD->ZZD_QTCIF  := 0
-    Endif
+	If ZZ->D1_VALFRE > 0
+	ZZD->ZZD_QTCIF  := ZZD->ZZD_QTLIQ
+	ZZD->ZZD_TPFRE	:= "C"
+	Else
+	ZZD->ZZD_TPFRE	:= "F"
+	ZZD->ZZD_QTCIF  := 0
+	Endif
 
-    ZZD->ZZD_QTCIF  := iif(  ZZD->ZZD_TPFRE=='C', ZZD->ZZD_QTLIQ , 0 )
-    ZZD->ZZD_MARTOT := (ZZD->ZZD_MARGEG * ZZD->ZZD_QTLIQ)+ ZZD->ZZD_DEICDC
-    ZZD->ZZD_FRE3U  := nFRE3Un
-    ZZD->ZZD_YMUN   := SA1->A1_MUN
-    ZZD->ZZD_YEST   := SA1->A1_EST
+ZZD->ZZD_QTCIF  := iif(  ZZD->ZZD_TPFRE=='C', ZZD->ZZD_QTLIQ , 0 )
+ZZD->ZZD_MARTOT := (ZZD->ZZD_MARGEG * ZZD->ZZD_QTLIQ)+ ZZD->ZZD_DEICDC
+ZZD->ZZD_FRE3U  := nFRE3Un
+ZZD->ZZD_YMUN   := SA1->A1_MUN
+ZZD->ZZD_YEST   := SA1->A1_EST
 
-    If ZZD->(FieldPos("ZZD_NREDUZ")) > 0
-    	ZZD->ZZD_NREDUZ:= SA1->A1_NREDUZ
-    Endif
+	If ZZD->(FieldPos("ZZD_NREDUZ")) > 0
+	ZZD->ZZD_NREDUZ:= SA1->A1_NREDUZ
+	Endif
 
-    If ZZ->D1_TIPO <> 'D'
-	    ZZD->ZZD_GRPVEN  := SA1->A1_GRPVEN
-    Endif
+	If ZZ->D1_TIPO <> 'D'
+	ZZD->ZZD_GRPVEN  := SA1->A1_GRPVEN
+	Endif
 
-    ZZD->ZZD_DESGRU  := POSICIONE("SBM",1,XFILIAL("SBM")+cGrupo,"BM_DESC")
-    zzd->zzd_itemct  := posicione('SB1',1,xfilial('SB1')+aNota[1],'B1_ITEMCC')
+ZZD->ZZD_DESGRU  := POSICIONE("SBM",1,XFILIAL("SBM")+cGrupo,"BM_DESC")
+zzd->zzd_itemct  := posicione('SB1',1,xfilial('SB1')+aNota[1],'B1_ITEMCC')
 
-    do case
-    case anota[14] $ 'BB/TB' //unidade de medida
-        if aCliente[8] =='S' // a1_yfilpol - filial polimix
+	do case
+	case anota[14] $ 'BB/TB' //unidade de medida
+		if aCliente[8] =='S' // a1_yfilpol - filial polimix
 			zzd->zzd_itemct := '010104'
-        else
+		else
 			zzd->zzd_itemct := '010102'
-        endif
-    case anota[14] == 'KG'
-        if aCliente[8] =='S'
+		endif
+	case anota[14] == 'KG'
+		if aCliente[8] =='S'
 			zzd->zzd_itemct := '010103'
-        else
+		else
 			zzd->zzd_itemct := '010101'
-        endif
-    endcase
+		endif
+	endcase
 
-    ZZD->ZZD_DESITE:= posicione('CTD',1,xfilial('CTD')+zzd->zzd_itemct,'CTD_DESC01')
+ZZD->ZZD_DESITE:= posicione('CTD',1,xfilial('CTD')+zzd->zzd_itemct,'CTD_DESC01')
 
-    ZZD->ZZD_PISNF  := nPisNF
-    ZZD->ZZD_COFNF  := nCOFNF
+ZZD->ZZD_PISNF  := nPisNF
+ZZD->ZZD_COFNF  := nCOFNF
 
-    DbSelectArea("ZZD")
-    MsUnlock()
-    RestArea(aZZD)
+DbSelectArea("ZZD")
+MsUnlock()
+RestArea(aZZD)
 
-    RestArea(_aAliSA1)
-    RestArea(_aAliSA2)
-    RestArea(_aAliSF4)
-    RestArea(_aAliOri)
+RestArea(_aAliSA1)
+RestArea(_aAliSA2)
+RestArea(_aAliSF4)
+RestArea(_aAliOri)
 
 Return
 
@@ -1685,41 +1689,41 @@ Return
 
 Static Function fPesqSD1()
 
-    Private aNota    := {}
-    _lGerenc := .T.
+Private aNota    := {}
+_lGerenc := .T.
 
-    SD2->(dbSetOrder(1))
-    SD2->(MsSeek(ZZ->D1_FILIAL + ZZ->D1_NFORI + ZZ->D1_SERIORI + ZZ->D1_FORNECE + ZZ->D1_LOJA + ZZ->D1_COD ))
+SD2->(dbSetOrder(1))
+SD2->(MsSeek(ZZ->D1_FILIAL + ZZ->D1_NFORI + ZZ->D1_SERIORI + ZZ->D1_FORNECE + ZZ->D1_LOJA + ZZ->D1_COD ))
 
-    aAdd(aNota, ZZ->D1_COD)		    // 1 Codigo produto
-    aAdd(aNota, ZZ->D1_VUNIT)		// 2 Preco unitario
-    aAdd(aNota, ZZ->D1_QUANT)		// 3 Quantidade na nota
-    aAdd(aNota, "")					// 4 Placa
-    aAdd(aNota, SD2->D2_TES)		// 5 TES
-    aAdd(aNota, SD2->D2_PICM)		// 6 Aliquota ICMS
-    aAdd(aNota, 0)	                // 7 Custo de transferencia (unitario)
+aAdd(aNota, ZZ->D1_COD)		    // 1 Codigo produto
+aAdd(aNota, ZZ->D1_VUNIT)		// 2 Preco unitario
+aAdd(aNota, ZZ->D1_QUANT)		// 3 Quantidade na nota
+aAdd(aNota, "")					// 4 Placa
+aAdd(aNota, SD2->D2_TES)		// 5 TES
+aAdd(aNota, SD2->D2_PICM)		// 6 Aliquota ICMS
+aAdd(aNota, 0)	                // 7 Custo de transferencia (unitario)
 
-    If SD2->D2_YPRG > 0
-        If cEmpant == "02" .And. cFilAnt == "11" .And. ZZ->D1_DTDIGIT < CTOD("01/08/2017")
-            _nPrc := SD2->D2_YPRG / SuperGetMV("ECO_FATCON")
-            aAdd(aNota, _nPrc)		    	// 8 Preco Gerencial
-        Else
-    		aAdd(aNota, SD2->D2_YPRG)    	// 8 Preco Gerencial
-        Endif
-    Else
-        _lGerenc := .F.
-        aAdd(aNota, SD2->D2_PRCVEN)      	// 8 Preco Gerencial
-    Endif
+	If SD2->D2_YPRG > 0
+		If cEmpant == "02" .And. cFilAnt == "11" .And. ZZ->D1_DTDIGIT < CTOD("01/08/2017")
+		_nPrc := SD2->D2_YPRG / SuperGetMV("ECO_FATCON")
+		aAdd(aNota, _nPrc)		    	// 8 Preco Gerencial
+		Else
+		aAdd(aNota, SD2->D2_YPRG)    	// 8 Preco Gerencial
+		Endif
+	Else
+	_lGerenc := .F.
+	aAdd(aNota, SD2->D2_PRCVEN)      	// 8 Preco Gerencial
+	Endif
 
-    aAdd(aNota, 0)					// 09 Custo (R$/T)
-    aAdd(aNota, 0)					// 10 Custo Sacaria
-    aAdd(aNota, ZZ->D1_VALIMP6)	    // 11 PIS
-    aAdd(aNota, ZZ->D1_VALIMP5)	    // 12 COFINS
-    aAdd(aNota, ZZ->D1_CF)			// 13 CFOP
-    aAdd(aNota, ZZ->D1_UM)			// 14 UM
-    aAdd(aNota, ZZ->D1_GRUPO)		// 15 UM
-    aAdd(aNota, ZZ->D1_VALFRE)		// 16 VALOR DO FRETE - RATEADO PELA QUANTIDADE
-    aAdd(aNota, ZZ->D1_VALISS)		// 17 VALOR DO ISS
+aAdd(aNota, 0)					// 09 Custo (R$/T)
+aAdd(aNota, 0)					// 10 Custo Sacaria
+aAdd(aNota, ZZ->D1_VALIMP6)	    // 11 PIS
+aAdd(aNota, ZZ->D1_VALIMP5)	    // 12 COFINS
+aAdd(aNota, ZZ->D1_CF)			// 13 CFOP
+aAdd(aNota, ZZ->D1_UM)			// 14 UM
+aAdd(aNota, ZZ->D1_GRUPO)		// 15 UM
+aAdd(aNota, ZZ->D1_VALFRE)		// 16 VALOR DO FRETE - RATEADO PELA QUANTIDADE
+aAdd(aNota, ZZ->D1_VALISS)		// 17 VALOR DO ISS
 
 Return aNota
 
@@ -1737,14 +1741,14 @@ Static Function GERAMOVR()
 	SB1->(MsSeek(xFilial("SB1")+ QRYSC5->C6_PRODUTO))
 
 	_lMargem := .F.
-    If !Empty(SB1->B1_GRUPO)
+	If !Empty(SB1->B1_GRUPO)
 		SBM->(dbSetOrder(1))
-        If SBM->(MsSeek(xFilial("SBM")+SB1->B1_GRUPO))
-            If SBM->BM_TIPGRU == "11"
+		If SBM->(MsSeek(xFilial("SBM")+SB1->B1_GRUPO))
+			If SBM->BM_TIPGRU == "11"
 				_lMargem := .T.
-            Endif
-        Endif
-    Endif
+			Endif
+		Endif
+	Endif
 
 	_lGerenc := .T.
 
@@ -1846,35 +1850,35 @@ Static Function GERAMOVR()
 	DbSetOrder(1)
 	MsSeek(xFilial("SE4") + QRYSC5->C5_CONDPAG)
 
-    If MsSeek(xFilial("ZZD")+cEmpAnt+cFilAnt+QRYSC5->(C5_NUM+'ROM'+C5_CLIENTE+C5_LOJACLI+C6_ITEM))
+	If MsSeek(xFilial("ZZD")+cEmpAnt+cFilAnt+QRYSC5->(C5_NUM+'ROM'+C5_CLIENTE+C5_LOJACLI+C6_ITEM))
 		RecLock("ZZD",.F.)
-    Else
+	Else
 		RecLock("ZZD",.T.)
-    EndIf
+	EndIf
 
-    If Empty(xFilial("ZZD"))
+	If Empty(xFilial("ZZD"))
 		ZZD->ZZD_FILIAL	:= xFilial("ZZD")
-    Else
+	Else
 		ZZD->ZZD_FILIAL	:= QRYSC5->C5_FILIAL
-    Endif
+	Endif
 
 	_aSA1Box := RetSx3Box( Posicione("SX3", 2, "A1_YTPCLI", "X3CBox()" ),,, 1 )
 	nAscan   := Ascan( _aSA1Box, { |e| e[2] = SA1->A1_YTPCLI } )
 
-    If nAscan > 0
-        If ZZD->(FieldPos("ZZD_TPCLI")) > 0
+	If nAscan > 0
+		If ZZD->(FieldPos("ZZD_TPCLI")) > 0
 			ZZD->ZZD_TPCLI := AllTrim( _aSA1Box[nAscan][3] )
-        Endif
-    Endif
+		Endif
+	Endif
 
 	_aSF4Box := RetSx3Box( Posicione("SX3", 2, "F4_YTPVEND", "X3CBox()" ),,, 1 )
 	nAscan   := Ascan( _aSF4Box, { |e| e[2] = SF4->F4_YTPVEND } )
 
-    If nAscan > 0
-        If ZZD->(FieldPos("ZZD_TPVEND")) > 0
+	If nAscan > 0
+		If ZZD->(FieldPos("ZZD_TPVEND")) > 0
 			ZZD->ZZD_TPVEND  := AllTrim( _aSF4Box[nAscan][3] )
-        Endif
-    Endif
+		Endif
+	Endif
 
 	ZZD->ZZD_EMIS		:= QRYSC5->C5_EMISSAO
 	ZZD->ZZD_ANOMES	    := Left(DtoS(QRYSC5->C5_EMISSAO),6)	 //Ano Mes
@@ -1897,43 +1901,43 @@ Static Function GERAMOVR()
 	ZZD->ZZD_QTLIQ		:= aNota[3]
 	ZZD->ZZD_PRECO		:= nPrecoUn					// Buscar no SD2
 	ZZD->ZZD_PRECOG	    := nTotNFG / ZZD->ZZD_QTLIQ
-    If QRYSC5->C5_TIPO = "D"
+	If QRYSC5->C5_TIPO = "D"
 		ZZD->ZZD_TOTNF	:= nTotNF * -1		// Valor total da NF
-    Else
+	Else
 		ZZD->ZZD_TOTNF	:= nTotNF		// Valor total da NF
-    Endif
-    If QRYSC5->C5_TIPO = "D"
+	Endif
+	If QRYSC5->C5_TIPO = "D"
 		ZZD->ZZD_IPI	:= 0		// IPI
 		ZZD->ZZD_TOTLIQ := ZZD->ZZD_TOTNF * -1
 		ZZD->ZZD_ICMS	:=  0
-        If ZZD->(FieldPos("ZZD_VALISS")) > 0
+		If ZZD->(FieldPos("ZZD_VALISS")) > 0
 			ZZD->ZZD_VALISS :=0
-        Endif
-    Else
+		Endif
+	Else
 		ZZD->ZZD_IPI	:= 0			                    // IPI
 		ZZD->ZZD_TOTLIQ := ZZD->ZZD_TOTNF - ZZD->ZZD_IPI
 		ZZD->ZZD_ICMS	:= 0	// ICMS
-        If ZZD->(FieldPos("ZZD_VALISS")) > 0
+		If ZZD->(FieldPos("ZZD_VALISS")) > 0
 			ZZD->ZZD_VALISS := 0	                            // ISS
-        Endif
-    Endif
+		Endif
+	Endif
 
-    If QRYSC5->C5_TIPO = "I"
+	If QRYSC5->C5_TIPO = "I"
 		ZZD->ZZD_ALQICM     := 0
-    Else
+	Else
 		ZZD->ZZD_ALQICM     := 0
-    Endif
+	Endif
 
 	ZZD->ZZD_PRCLIQ     := ZZD->ZZD_TOTLIQ / ZZD->ZZD_QTLIQ
 
-    If QRYSC5->C5_TIPO = "D"
-        If _lGerenc
+	If QRYSC5->C5_TIPO = "D"
+		If _lGerenc
 			ZZD->ZZD_TOTNFG	:= (ZZD->ZZD_QTLIQ * ZZD->ZZD_PRECOG) *-1
-        Else
+		Else
 			ZZD->ZZD_TOTNFG	:= ZZD->ZZD_TOTLIQ
-        Endif
-    Else
-        If _lGerenc
+		Endif
+	Else
+		If _lGerenc
 			ZZD->ZZD_TOTLIG   := nTotNFG
 			ZZD->ZZD_IPIG	  := 0	   // IPI Gerencial
 			ZZD->ZZD_TOTNFG	  := nTotNFG
@@ -1943,7 +1947,7 @@ Static Function GERAMOVR()
 			ZZD->ZZD_RETG	  := nICMSRetg
 			ZZD->ZZD_PISCOG	  := nPiscoG					// Pis/Cofins (gerencial)
 			ZZD->ZZD_DEICDC   := ((ZZD->ZZD_IPIG - ZZD->ZZD_IPI + ZZD->ZZD_ICMSG - ZZD->ZZD_ICMS)/2)
-        Else
+		Else
 			ZZD->ZZD_TOTLIG   := ZZD->ZZD_TOTLIQ
 			ZZD->ZZD_IPIG	  := 0	   // IPI Gerencial
 			ZZD->ZZD_TOTNFG	  := ZZD->ZZD_TOTLIG + 	ZZD->ZZD_IPIG
@@ -1952,14 +1956,14 @@ Static Function GERAMOVR()
 			ZZD->ZZD_COFGER   := aNota[12]
 			ZZD->ZZD_RETG	  := nICMSRetg
 			ZZD->ZZD_PISCOG	  := nPisco					// Pis/Cofins (gerencial
-        Endif
-    Endif
+		Endif
+	Endif
 
-    If cEmpAnt + QRYSC5->C5_FILIAL $  "5001/5002/5005/5006/5007" .And. SA1->A1_YTPCLI == "2"
+	If cEmpAnt + QRYSC5->C5_FILIAL $  "5001/5002/5005/5006/5007" .And. SA1->A1_YTPCLI == "2"
 		ZZD->ZZD_ICMSG  := 0
 		ZZD->ZZD_PISGER := 0
 		ZZD->ZZD_COFGER := 0
-    Endif
+	Endif
 
 	ZZD->ZZD_RET		:= 0					// ICMS Retido
 	ZZD->ZZD_PISCO		:= nPisco					// Pis/Cofins
@@ -1970,9 +1974,9 @@ Static Function GERAMOVR()
 	ZZD->ZZD_MUNEND	    := acliente[9]
 	ZZD->ZZD_UF			:= acliente[5]				// Estado destino
 	ZZD->ZZD_COND		:= QRYSC5->C5_CONDPAG			// Condicao de pagamento
-    If SE4->(FieldPos("E4_YMEDIA")) > 0
+	If SE4->(FieldPos("E4_YMEDIA")) > 0
 		ZZD->ZZD_PM			:= SE4->E4_YMEDIA			// Prazo medio
-    Endif
+	Endif
 	ZZD->ZZD_VEND		:= QRYSC5->C5_VEND1 			// Vendedor
 	ZZD->ZZD_NMVEND	    := POSICIONE("SA3",1,XFILIAL("SA3")+QRYSC5->C5_VEND1 ,"A3_NOME")
 	ZZD->ZZD_ATIVI		:= aCliente[2]				// Atividade do cliente
@@ -2002,11 +2006,11 @@ Static Function GERAMOVR()
 	ZZD->ZZD_CPO8		:= cAtividade				// Atividade
 	ZZD->ZZD_CPO12		:= cDescRegiao				// Regiao de Entrega
 //If aNota[8] <> 0 								// Preco Gerencial
-    If _lGerenc
+	If _lGerenc
 		ZZD->ZZD_DEVCDC	:= nTotNFG - ZZD->ZZD_TOTLIQ
-    Else
+	Else
 		ZZD->ZZD_DEVCDC	:= 0
-    Endif
+	Endif
 	ZZD->ZZD_CPO17		:= IIf(Empty(QRYSC5->C5_TRANSP),'N/CADASTRADO',QRYSC5->C5_TRANSP)  // Transportadora
 	ZZD->ZZD_CPO21		:= IIf(Empty(cTes),'N/CADASTRADO',cTes)	// Tes
 	ZZD->ZZD_CPO22		:= aCliente[4]				            // Data primeiro faturamento
@@ -2016,131 +2020,131 @@ Static Function GERAMOVR()
 	ZZD->ZZD_YHORAT     := ElapTime(aOrdem[10]+":00",aOrdem[8]+":00") // Z1_HLIB + Hora da Saida (Z8_HSAIDA)
 	ZZD->ZZD_YOC        := aOrdem[6]
 
-    If Val(Subs(ZZD->ZZD_YHORAT,1,2)) > 0 .or. Val(Subs(ZZD->ZZD_YHORAT,4,2)) > 0
+	If Val(Subs(ZZD->ZZD_YHORAT,1,2)) > 0 .or. Val(Subs(ZZD->ZZD_YHORAT,4,2)) > 0
 		ZZD->ZZD_YTOTDT  := ((ZZD->ZZD_YDIAST*24)+Val(Subs(ZZD->ZZD_YHORAT,1,2)))/24
-    Else
+	Else
 		ZZD->ZZD_YTOTDT  := 0
-    Endif
+	Endif
 
 	ZZD->ZZD_TPROD      := QRYSC5->C6_VALOR
 	ZZD->ZZD_TPRODG     := IIf( ZZD->ZZD_TOTNFG > 0, nProdG, 0 )
 
-    If aProduto[6]$("BB/TB/UN")
-		ZZD->ZZD_YPESTB	:= aProduto[7]
-    EndIf
+	If aProduto[6]$("BB/TB/UN")
+		//ZZD->ZZD_YPESTB	:= aProduto[7]
+	EndIf
 
 	ZZD->ZZD_CODEMP	:= cEmpAnt
 	ZZD->ZZD_CODFIL	:= QRYSC5->C5_FILIAL
 	ZZD->ZZD_NOMFIL := POSICIONE("SM0",1,cEmpAnt + QRYSC5->C5_FILIAL,"M0_FILIAL")
 
 	_cSigl := ""
-    If ZZD->(FieldPos("ZZD_SIGLA2")) > 0
-        If cEmpAnt == "02"
-            If QRYSC5->C5_FILIAL == "01"
+	If ZZD->(FieldPos("ZZD_SIGLA2")) > 0
+		If cEmpAnt == "02"
+			If QRYSC5->C5_FILIAL == "01"
 				_cSigl := "PX-IBA"
-            ElseIf QRYSC5->C5_FILIAL == "02"
+			ElseIf QRYSC5->C5_FILIAL == "02"
 				_cSigl := "PX-IDC"
-            ElseIf QRYSC5->C5_FILIAL $ "03/04"
+			ElseIf QRYSC5->C5_FILIAL $ "03/04"
 				_cSigl := "  "
-            ElseIf QRYSC5->C5_FILIAL == "05"
+			ElseIf QRYSC5->C5_FILIAL == "05"
 				_cSigl := "PX-IJB"
-            ElseIf QRYSC5->C5_FILIAL == "06"
+			ElseIf QRYSC5->C5_FILIAL == "06"
 				_cSigl := "PX-IFT"
-            ElseIf QRYSC5->C5_FILIAL == "07"
+			ElseIf QRYSC5->C5_FILIAL == "07"
 				_cSigl := "PX-IMC"
-            ElseIf QRYSC5->C5_FILIAL == "08"
+			ElseIf QRYSC5->C5_FILIAL == "08"
 				_cSigl := "PX-INT"
-            ElseIf QRYSC5->C5_FILIAL == "09"
+			ElseIf QRYSC5->C5_FILIAL == "09"
 				_cSigl := "PX-ISV"
-            ElseIf QRYSC5->C5_FILIAL == "10"
+			ElseIf QRYSC5->C5_FILIAL == "10"
 				_cSigl := "PX-IBA"
-            ElseIf QRYSC5->C5_FILIAL == "11"
+			ElseIf QRYSC5->C5_FILIAL == "11"
 				_cSigl := "PX-IPT"
-            ElseIf QRYSC5->C5_FILIAL == "12"
+			ElseIf QRYSC5->C5_FILIAL == "12"
 				_cSigl := "PX-IGU"
-            ElseIf QRYSC5->C5_FILIAL == "13"
+			ElseIf QRYSC5->C5_FILIAL == "13"
 				_cSigl := "PX-ICC"
-            ElseIf QRYSC5->C5_FILIAL == "14"
+			ElseIf QRYSC5->C5_FILIAL == "14"
 				_cSigl := "PX-ISL"
-            Endif
-        ElseIf cEmpAnt == "04"
-            If QRYSC5->C5_FILIAL $ "01"
-                If ZZD->ZZD_PRECO > SUPERGETMV("ECO_VALCAP",.F.,180)
+			Endif
+		ElseIf cEmpAnt == "04"
+			If QRYSC5->C5_FILIAL $ "01"
+				If ZZD->ZZD_PRECO > SUPERGETMV("ECO_VALCAP",.F.,180)
 					_cSigl := "MSP C/CAP"
-                Else
+				Else
 					_cSigl := "MSP S/CAP"
-                Endif
-            ElseIf QRYSC5->C5_FILIAL == "02"
+				Endif
+			ElseIf QRYSC5->C5_FILIAL == "02"
 				_cSigl := "MRE"
-            Endif
-        ElseIf cEmpAnt == "05"
+			Endif
+		ElseIf cEmpAnt == "05"
 			_cSigl := "MRE"
-        ElseIf cEmpAnt == "09"
+		ElseIf cEmpAnt == "09"
 			_cSigl := "PX-IMC"
-        ElseIf cEmpAnt == "13"
-            If QRYSC5->C5_FILIAL     $ "01"
+		ElseIf cEmpAnt == "13"
+			If QRYSC5->C5_FILIAL     $ "01"
 				_cSigl := "PX-IRO"
-            ElseIf QRYSC5->C5_FILIAL $ "04"
+			ElseIf QRYSC5->C5_FILIAL $ "04"
 				_cSigl := "PX-IBA"
-            ElseIf QRYSC5->C5_FILIAL == "06"
+			ElseIf QRYSC5->C5_FILIAL == "06"
 				_cSigl := "PX-IRO"
-            ElseIf QRYSC5->C5_FILIAL == "07"
+			ElseIf QRYSC5->C5_FILIAL == "07"
 				_cSigl := "PX-IBA"
-            Endif
-        ElseIf cEmpAnt == "16"
+			Endif
+		ElseIf cEmpAnt == "16"
 			_cSigl := "PX-IPT"
-        ElseIf cEmpAnt == "50"
-            If QRYSC5->C5_FILIAL == "01"
+		ElseIf cEmpAnt == "50"
+			If QRYSC5->C5_FILIAL == "01"
 				_cSigl := "PX-IBA"
-            ElseIf QRYSC5->C5_FILIAL == "02"
+			ElseIf QRYSC5->C5_FILIAL == "02"
 				_cSigl := "PX-IRO"
-            ElseIf QRYSC5->C5_FILIAL == "03"
+			ElseIf QRYSC5->C5_FILIAL == "03"
 				_cSigl := "PX-IFT"
-            ElseIf QRYSC5->C5_FILIAL == "04"
+			ElseIf QRYSC5->C5_FILIAL == "04"
 				_cSigl := "PX-INT"
-            ElseIf QRYSC5->C5_FILIAL == "05"
+			ElseIf QRYSC5->C5_FILIAL == "05"
 				_cSigl := "PX-IDC"
-            ElseIf QRYSC5->C5_FILIAL == "06"
+			ElseIf QRYSC5->C5_FILIAL == "06"
 				_cSigl := "PX-IGU"
-            ElseIf QRYSC5->C5_FILIAL == "07"
+			ElseIf QRYSC5->C5_FILIAL == "07"
 				_cSigl := "PX-ICC"
-            ElseIf QRYSC5->C5_FILIAL == "08"
+			ElseIf QRYSC5->C5_FILIAL == "08"
 				_cSigl := "PX-ISL"
-            ElseIf QRYSC5->C5_FILIAL == "09"
+			ElseIf QRYSC5->C5_FILIAL == "09"
 				_cSigl := "PX-IJB"
-            ElseIf QRYSC5->C5_FILIAL == "10"
+			ElseIf QRYSC5->C5_FILIAL == "10"
 				_cSigl := "PX-ISV"
-            ElseIf QRYSC5->C5_FILIAL == "11"
+			ElseIf QRYSC5->C5_FILIAL == "11"
 				_cSigl := "PX-IRB"
-            ElseIf QRYSC5->C5_FILIAL == "12"
+			ElseIf QRYSC5->C5_FILIAL == "12"
 				_cSigl := "PX-AE "
-            ElseIf QRYSC5->C5_FILIAL == "13"
+			ElseIf QRYSC5->C5_FILIAL == "13"
 				_cSigl := "PX-IPT"
-            ElseIf QRYSC5->C5_FILIAL == "14"
+			ElseIf QRYSC5->C5_FILIAL == "14"
 				_cSigl := "PX-MT"
-            ElseIf QRYSC5->C5_FILIAL == "15"
+			ElseIf QRYSC5->C5_FILIAL == "15"
 				_cSigl := "PX-IMC"
-            ElseIf QRYSC5->C5_FILIAL == "16"
+			ElseIf QRYSC5->C5_FILIAL == "16"
 				_cSigl := "PX-INH"
-            Endif
-        Endif
+			Endif
+		Endif
 		ZZD->ZZD_SIGLA2 := _cSigl
-    Endif
+	Endif
 
 	cSigla:= SuperGetMv( "ECO_SIGLA" , .F. , , QRYSC5->C5_FILIAL ) //  getNewPar('ECO_SIGLA','ECO ')
 
 	ZZD->ZZD_SIGLA  := cSigla
 
-    If QRYSC5->C5_TIPO $ "C/I"
+	If QRYSC5->C5_TIPO $ "C/I"
 		_nFOBL := 0
 		_nCIFL := 0
-    ElseIf SA1->A1_YTPCLI == "2"
+	ElseIf SA1->A1_YTPCLI == "2"
 		_nFOBL := (ZZD->ZZD_TOTNFG - ZZD->ZZD_ICMSG - ZZD->ZZD_PISGER - ZZD->ZZD_COFGER ) / ZZD->ZZD_QTLIQ
 		_nCIFL := (ZZD->ZZD_TOTNFG + ZZD->ZZD_FRETOT                                    ) / ZZD->ZZD_QTLIQ
-    Else
+	Else
 		_nFOBL := (ZZD->ZZD_TOTNFG - ZZD->ZZD_ICMSG - ZZD->ZZD_PISGER - ZZD->ZZD_COFGER - ZZD->ZZD_FRETOT ) / ZZD->ZZD_QTLIQ
 		_nCIFL := ZZD->ZZD_TOTNFG + ZZD->ZZD_FRETOT
-    Endif
+	Endif
 
 	nCalcPoG:= iif( nCalcPoG <0 , 0 , nCalcPoG )
 
@@ -2156,10 +2160,10 @@ Static Function GERAMOVR()
 
 	ZZD->ZZD_CUSTO	:= _nCusto
 
-    If _lMargem
+	If _lMargem
 		ZZD->ZZD_MARGEM	:= ZZD->ZZD_FOBL - ZZD->ZZD_CUSTO
 		ZZD->ZZD_MARGEG	:= ZZD->ZZD_FOBL - ZZD->ZZD_CUSTO
-    Endif
+	Endif
 
 	nPO := Round((nTotNFG - nIpiG - nIcmsG - nIcmsRetG - nPiscoG - nFrtTot - 0) / nQtdeGra,2)
 	nPO -= If(cTipCar = "S",nCustSac,0)
@@ -2170,65 +2174,65 @@ Static Function GERAMOVR()
 	ZZD->ZZD_IRCSLG := IF(ZZD->ZZD_MARGEG > 0 ,(nQtdeGra * ZZD->ZZD_MARGEG * wPIRCSL),0)
 	aZZD			:= GetArea("ZZD")
 
-    If Alltrim(cTipCar) $ "CDC*G"
+	If Alltrim(cTipCar) $ "CDC*G"
 		ZZD->ZZD_PERFIL := "GRANEL"
-    ELSEIF cTipCar = "S"
+	ELSEIF cTipCar = "S"
 		ZZD->ZZD_PERFIL := "TAMBOR"
-    Endif
+	Endif
 
 	ZZD->ZZD_CFOP   := aNota[13]
 	ZZD->ZZD_TIPONF := "R"
 	ZZD->ZZD_TIPOMT := aProduto[12]
 	ZZD->ZZD_DESTES := cDESTES[2]
 
-    If ZZD->ZZD_FRETOT > 0
+	If ZZD->ZZD_FRETOT > 0
 		ZZD->ZZD_QTCIF  := ZZD->ZZD_QTLIQ
 		ZZD->ZZD_TPFRE	:= "C"
-    Else
+	Else
 		ZZD->ZZD_TPFRE	:= "F"
 		ZZD->ZZD_QTCIF  := 0
-    Endif
+	Endif
 
 	ZZD->ZZD_MARTOT := (ZZD->ZZD_MARGEG*ZZD->ZZD_QTLIQ)+ZZD->ZZD_DEICDC
 	ZZD->ZZD_FRE3U  := nFRE3Un
 	ZZD->ZZD_YMUN   := SA1->A1_MUN
 	ZZD->ZZD_YEST   := SA1->A1_EST
 
-    If ZZD->(FieldPos("ZZD_NREDUZ")) > 0
+	If ZZD->(FieldPos("ZZD_NREDUZ")) > 0
 		ZZD->ZZD_NREDUZ:= SA1->A1_NREDUZ
-    Endif
+	Endif
 
-    If QRYSC5->C5_TIPO <> 'D'
+	If QRYSC5->C5_TIPO <> 'D'
 		ZZD->ZZD_GRPVEN  := SA1->A1_GRPVEN
-    Endif
+	Endif
 
 	ZZD->ZZD_DESGRU  := POSICIONE("SBM",1,XFILIAL("SBM")+cGrupo,"BM_DESC")
 	zzd->zzd_itemct  := posicione('SB1',1,xfilial('SB1')+aNota[1],'B1_ITEMCC')
 
-    do case
-    case anota[14] $ 'BB/TB' //unidade de medida
-        if aCliente[8] =='S' // a1_yfilpol - filial polimix
+	do case
+	case anota[14] $ 'BB/TB' //unidade de medida
+		if aCliente[8] =='S' // a1_yfilpol - filial polimix
 			zzd->zzd_itemct := '010104'
-        else
+		else
 			zzd->zzd_itemct := '010102'
-        endif
-    case anota[14] == 'KG'
-        if aCliente[8] =='S'
+		endif
+	case anota[14] == 'KG'
+		if aCliente[8] =='S'
 			zzd->zzd_itemct := '010103'
-        else
+		else
 			zzd->zzd_itemct := '010101'
-        endif
-    endcase
+		endif
+	endcase
 
 	ZZD->ZZD_DESITE:= posicione('CTD',1,xfilial('CTD')+zzd->zzd_itemct,'CTD_DESC01')
 
-    If QRYSC5->C5_TIPO = "D"
+	If QRYSC5->C5_TIPO = "D"
 		ZZD->ZZD_PISNF  := nPisNF * -1
 		ZZD->ZZD_COFNF  := nCOFNF * -1
-    Else
+	Else
 		ZZD->ZZD_PISNF  := nPisNF
 		ZZD->ZZD_COFNF  := nCOFNF
-    Endif
+	Endif
 
 	ZZD->ZZD_FATURA := ''
 	ZZD->ZZD_DTFAT  := ctod('')

@@ -4,12 +4,21 @@
 		{
 			"type": "totvs_language_debug",
 			"request": "launch",
-			"name": "Totvs Language Debug",
+			"name": "PXA",
 			"program": "${command:AskForProgramName}",
 			"cwb": "${workspaceFolder}",
-			"smartclientBin": "C:/totvs/bin/smartclient/smartclient.exe",
+			"smartclientBin": "D:/Totvs/PXA/Protheus12.1.23/smartclient.exe",
 			"isMultiSession": true,
-			"enableTableSync": true
+			"enableTableSync": true,
+			"enableMultiThread": true
 		}
-	]
+	],
+	"lastPrograms": [
+		{
+			"args": [],
+			"label": "sigamdi",
+			"description": ""
+		}
+	],
+	"lastProgramExecuted": "sigamdi"
 }

@@ -55,10 +55,12 @@ Static Function ECO11_01()
 		AAdd(_aItem,{a,soma1(PadL(Alltrim(Str(a-1)),2,"0"))})
 	Next a
 
-	_cQry2 := " SELECT RIGHT('00'+RTRIM(CAST(CODCOLIGADA AS CHAR(02))),2) AS CODEMP,CAST(CODCFO AS CHAR(07)) AS CODCFO, NOMEFANTASIA AS NREDUZ,NOME,CGCCFO,INSCRESTADUAL AS INSCR,"+ CRLF
-	_cQry2 += " CAST(PAGREC AS CHAR(01)) AS PAGREC, RUA,NUMERO,COMPLEMENTO AS COMPLEM,PESSOAFISOUJUR AS PESSOA,CODMUNICIPIO AS COD_MUN,CODETD,CIDADE,"+ CRLF
-	_cQry2 += " BAIRRO,CEP,TELEFONE,CONTATO,EMAIL,ATIVO,LIMITECREDITO AS LC,CONTRIBUINTE AS CONTRIB,INSCRMUNICIPAL AS INSCRM, "+ CRLF
-	_cQry2 += " IDCFO FROM [10.140.1.5].[CorporeRM].dbo.FCFO "+ CRLF
+	_cQry2 := " SELECT RIGHT('00'+RTRIM(CAST(A.CODCOLIGADA AS CHAR(02))),2) AS CODEMP,CAST(A.CODCFO AS CHAR(07)) AS CODCFO, A.NOMEFANTASIA AS NREDUZ,A.NOME,A.CGCCFO,A.INSCRESTADUAL AS INSCR,"+ CRLF
+	_cQry2 += " CAST(A.PAGREC AS CHAR(01)) AS PAGREC, A.RUA,A.NUMERO,A.COMPLEMENTO AS COMPLEM,A.PESSOAFISOUJUR AS PESSOA,A.CODMUNICIPIO AS COD_MUN,A.CODETD,A.CIDADE,"+ CRLF
+	_cQry2 += " A.BAIRRO,A.CEP,A.TELEFONE,A.CONTATO,A.EMAIL,A.ATIVO,A.LIMITECREDITO AS LC,A.CONTRIBUINTE AS CONTRIB,A.INSCRMUNICIPAL AS INSCRM, "+ CRLF
+	_cQry2 += " A.IDCFO,B.NUMEROBANCO AS FORBCO,B.CODIGOAGENCIA AS FORAGE,B.DIGITOAGENCIA AS FORDAG,B.CONTACORRENTE AS FORCTA, B.DIGITOCONTA AS FORDCT  "+ CRLF
+	_cQry2 += " FROM [10.140.1.5].[CorporeRM].dbo.FCFO A "+ CRLF
+	_cQry2 += " LEFT JOIN [10.140.1.5].[CorporeRM].dbo.FDADOSPGTO B ON B.CODCOLCFO = A.CODCOLIGADA AND B.CODCFO = A.CODCFO "+ CRLF
 	_cQry2 += " ORDER BY CODCFO,CODEMP,PAGREC " + CRLF
 
 	TcQuery _cQry2 New Alias "TFOR"
@@ -133,16 +135,17 @@ Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)
 
 	_cQry := " SELECT A.CODCOLIGADA,A.CODFILIAL,CAST(A.CODCFO AS CHAR(07)) AS CODCFO,A.NUMEROMOV,A.SERIE,A.DATAEMISSAO,A.VALORLIQUIDO,A.VALORBRUTO,COALESCE(A.CHAVEACESSONFE,'') AS CHAVENFE,A.VALORFRETE,A.NUMEROMOV,A.HORARIOEMISSAO," + CRLF
 	_cQry += " C.CODIGOPRD,D.CODUNDBASE,B.IDMOV,B.NSEQITMMOV,B.QUANTIDADE,B.PRECOUNITARIO,B.VALORLIQUIDO  AS VALITEM,B.CODLOC,E.VALORICMSDESONERADO,E.FATORREDUCAO," + CRLF
-	_cQry += " E.CODTRB,E.BASEDECALCULO,E.ALIQUOTA,E.VALOR,E.SITTRIBUTARIA,E.MOTDESICMS,F.NOME,F.CODNAT, A.CODTDO ,A.CODTMV,COALESCE(G.CHAVEACESSO,'') AS CHAVE " + CRLF
+	_cQry += " E.CODTRB,E.BASEDECALCULO,E.ALIQUOTA,E.VALOR,E.SITTRIBUTARIA,E.MOTDESICMS,F.NOME,F.CODNAT, A.CODTDO ,A.CODTMV,COALESCE(G.CHAVEACESSO,'') AS CHAVE, " + CRLF
+	_cQry += " O.CODCOLORIGEM AS COLORIG,O.CODFILIALORIGEM AS FILORIG " + CRLF
 	_cQry += " FROM [10.140.1.5].[CorporeRM].dbo.TMOV A " + CRLF
-	_cQry += " INNER JOIN [10.140.1.5].[CorporeRM].dbo.TITMMOV B ON A.CODCOLIGADA = B.CODCOLIGADA AND A.IDMOV = B.IDMOV " + CRLF
-	_cQry += " INNER JOIN [10.140.1.5].[CorporeRM].dbo.TPRD C ON B.IDPRD = C.IDPRD AND A.CODCOLIGADA = C.CODCOLIGADA " + CRLF
-	_cQry += " INNER JOIN [10.140.1.5].[CorporeRM].dbo.TUND D ON B.CODUND = D.CODUND " + CRLF
-	_cQry += " LEFT JOIN [10.140.1.5].[CorporeRM].dbo.TTRBMOV E ON B.IDMOV = E.IDMOV AND B.NSEQITMMOV = E.NSEQITMMOV AND B.CODCOLIGADA = E.CODCOLIGADA " + CRLF
-	_cQry += " INNER JOIN [10.140.1.5].[CorporeRM].dbo.DCFOP F ON B.IDNAT = F.IDNAT AND B.CODCOLIGADA = F.CODCOLIGADA " + CRLF
-	_cQry += " LEFT JOIN [10.140.1.5].[CorporeRM].dbo.TNFEESTADUAL G ON A.CODCOLIGADA = G.CODCOLIGADA AND A.IDMOV = G.IDMOV " + CRLF
+	_cQry += " INNER JOIN [10.140.1.5].[CorporeRM].dbo.TITMMOV      B ON A.CODCOLIGADA     = B.CODCOLIGADA AND A.IDMOV        = B.IDMOV " + CRLF
+	_cQry += " INNER JOIN [10.140.1.5].[CorporeRM].dbo.TPRD         C ON B.IDPRD           = C.IDPRD AND A.CODCOLIGADA        = C.CODCOLIGADA " + CRLF
+	_cQry += " INNER JOIN [10.140.1.5].[CorporeRM].dbo.TUND         D ON B.CODUND          = D.CODUND " + CRLF
+	_cQry += " LEFT JOIN  [10.140.1.5].[CorporeRM].dbo.TTRBMOV      E ON B.IDMOV           = E.IDMOV AND B.NSEQITMMOV         = E.NSEQITMMOV AND B.CODCOLIGADA = E.CODCOLIGADA " + CRLF
+	_cQry += " INNER JOIN [10.140.1.5].[CorporeRM].dbo.DCFOP        F ON B.IDNAT           = F.IDNAT AND B.CODCOLIGADA        = F.CODCOLIGADA " + CRLF
+	_cQry += " LEFT JOIN  [10.140.1.5].[CorporeRM].dbo.TNFEESTADUAL G ON A.CODCOLIGADA     = G.CODCOLIGADA AND A.IDMOV        = G.IDMOV " + CRLF
+	_cQry += " LEFT JOIN  [10.140.1.5].[CorporeRM].dbo.ZTMOVRELAC	O (NOLOCK) on A.IDMOV  = O.IDMOVDESTINO AND A.CODCOLIGADA = O.CODCOLDESTINO AND O.TIPO = 'O' " + CRLF
 	_cQry += " WHERE RTRIM(A.CODCOLIGADA)+RTRIM(A.CODFILIAL) IN ('"+_cFilRM+"') " + CRLF
-	// _cQry += " AND A.TIPO = 'A' " + CRLF
 	_cQry += " AND A.CODCFO IS NOT NULL " + CRLF
 	_cQry += " AND LEFT(CONVERT(char(15), A.DATAEMISSAO, 23),4) + " +CRLF
 	_cQry += " SUBSTRING(CONVERT(char(15), A.DATAEMISSAO, 23),6,2) + " +CRLF
@@ -150,9 +153,8 @@ Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)
 	_cQry += " BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"' " + CRLF
 	_cQry += " AND LEFT(CODTMV,1) = '1' " + CRLF // Movimentos de Compras
 	_cQry += " AND A.STATUS <> 'C' " + CRLF
-	// _cQry += " AND NUMEROMOV = '000000126' " //C18728
-	// _cQry += " AND A.NUMEROMOV = '000000001' " + CRLF
- 	// _cQry += " AND A.CODCFO = 'F03090' " + CRLF
+	//_cQry += " AND NUMEROMOV = '000000003' " //C18728
+ 	// _cQry += "AND A.IDMOV = 439991" + CRLF
     _cQry += " ORDER BY A.CODCOLIGADA,A.CODFILIAL,B.IDMOV,A.NUMEROMOV,A.SERIE,B.NSEQITMMOV,E.CODTRB  " + CRLF
 
 	Memowrite("D:\_Temp\ECO011.txt",_cQry)
@@ -243,7 +245,7 @@ Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)
 			_cKey1   := Alltrim(cValToChar(TRB->CODCOLIGADA))
 			While TRB->(!EOF())  .And. _cKey1 == Alltrim(cValToChar(TRB->CODCOLIGADA))
 
-				If TRB->CODTMV = '1.2.12'
+				If Alltrim(TRB->CODTMV) = '1.2.12'
 					_F1TIPO    := "D"
 
 					//Verifica se o Cliente está cadastrado na tabela ZF6, que relaciona o código RM X Protheus
@@ -252,6 +254,16 @@ Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)
 					If !_lRet
 						return
 					Endif
+				ElseIf Alltrim(TRB->CODTMV) = '1.2.02' .And. Left(TRB->CODNAT,5) $ "1.201/1.202/1.410/1.411"
+					_F1TIPO    := "D"
+
+					//Verifica se o Cliente está cadastrado na tabela ZF6, que relaciona o código RM X Protheus
+					_lRet := CheckZF6(3,_cFil,_cAliasZF6,_cAliasSA2,_cAliasSB1,_cAliasSA1,_cAliasSBM)
+
+					If !_lRet
+						return
+					Endif
+
 				Else
 					_F1TIPO    := "N"
 					//Verifica se o Fornecedor está cadastrado na tabela ZF6, que relaciona o código RM X Protheus
@@ -300,6 +312,7 @@ Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)
 				Endif
 
 				_F1EMISSAO := TRB->DATAEMISSAO
+				_F1YEMPFIL := CheckOrig(_cEmp,_cFil)
 
 				If _F1TIPO  = "D"
 					(_cAliasSA1)->(dbSetOrder(1))
@@ -375,7 +388,8 @@ Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)
 					_D1UM      := TRB->CODUNDBASE
 					_D1QUANT   := TRB->QUANTIDADE
 					_D1VUNIT   := TRB->PRECOUNITARIO
-					_D1TOTAL   := TRB->VALITEM
+					_D1TOTAL   := _D1QUANT * _D1VUNIT
+
 					_D1CF      := Left(StrTran(TRB->CODNAT,".",""),4)
 					// _D1COD     := Alltrim(StrTran(TRB->CODIGOPRD,".",""))
 					_D1COD     := ''
@@ -600,6 +614,7 @@ Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)
 					(_cAliasSD1)->D1_ALIQSOL := _D1ALIQSOL
 					// (_cAliasSD1)->D1_CONTA   := ''
 					// (_cAliasSD1)->D1_CC      := ''
+					(_cAliasSD1)->D1_YEMPFIL := _F1YEMPFIL
 					(_cAliasSD1)->(MsUnLock())
 
 					_F1BRICMS  += _D1BRICMS
@@ -670,7 +685,7 @@ Static Function ECO11_01C(_cEmp,_cFil,_cFilRM)
 				(_cAliasSF1)->F1_ISS     := _F1ISS
 				(_cAliasSF1)->F1_IRRF    := _F1IRRF
 				(_cAliasSF1)->F1_VALIRF  := _F1VALIRF
-
+				(_cAliasSF1)->F1_YEMPFIL := _F1YEMPFIL
 				(_cAliasSF1)->(MsUnLock())
 
 				// GeraSE2(_cAliasSE2,_cKey1,_cIDMov,_cCodFor,_cLojFor,_cNomFor,_F1DOC,_F1SERIE)
@@ -997,6 +1012,11 @@ Static Function GeraFOR(_cFil,_cCNPJ,_cCod,_cLoja,_cAliasSA2)
 	(_cAliasSA2)->A2_INSCRM  := TFOR->INSCRM
 	(_cAliasSA2)->A2_CONTRIB := If(TFOR->CONTRIB= 1,"2","1")
 	(_cAliasSA2)->A2_CONTA   := If(TFOR->CONTRIB= 1,"2","1")
+	(_cAliasSA2)->A2_BANCO   := TFOR->FORBCO
+	(_cAliasSA2)->A2_AGENCIA := TFOR->FORAGE
+	(_cAliasSA2)->A2_XDVAGEN := TFOR->FORDAG
+	(_cAliasSA2)->A2_NUMCON  := TFOR->FORCTA
+	(_cAliasSA2)->A2_XDVCON  := TFOR->FORDCT
 	(_cAliasSA2)->(MsUnLock())
 
 RETURN(NIL)
@@ -1405,3 +1425,19 @@ Static Function LoadSF4()
 Return(_aRetSF4)
 
 
+
+
+Static Function CheckOrig(_cEmp,_cFil)
+
+	Local _cRet		:= ''
+	Local _cOrigRM	:= Alltrim(Str(TRB->COLORIG))+Alltrim(Str(TRB->FILORIG))
+	Local _nPOrig	:= aScan(_aEmp,{|x| x[3] == _cOrigRM })
+	Local _cOrig	:= If(_nPOrig > 0,_aEmp[_nPOrig][2],'')
+
+	If !Empty(_cOrig)
+		_cRet := _cOrig
+	Else
+		_cRet := _cEmp+_cFil
+	Endif
+
+Return(_cRet)

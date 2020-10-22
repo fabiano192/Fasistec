@@ -65,8 +65,8 @@ Static Function ECO15_01()
 	_cInd := "CODCFO + CODEMP + PAGREC"
 	IndRegua("TFOR",_cArq,_cInd,,,"Selecionando Arquivo Trabalho")
 
-	_aEmp:= {{'A','0101','91'},{'A','0102','92'},{'A','0103','93'},{'B','0201','101'},{'B','0203','103'},{'B','0204','104'},{'C','0301','111'},{'C','0303','113'}}
-	// _aEmp:= {{'A','0103','93'}}
+	// _aEmp:= {{'A','0101','91'},{'A','0102','92'},{'A','0103','93'},{'B','0201','101'},{'B','0203','103'},{'B','0204','104'},{'C','0301','111'},{'C','0303','113'}}
+	_aEmp:= {{'A','0103','93'}}
 
 	ProcRegua(Len(_aEmp))
 
@@ -78,9 +78,9 @@ Static Function ECO15_01()
 		_cFil   := Right(_aEmp[AX][2],2)
 		_cFilRM := _aEmp[AX][3]
 
-		// ECO15_02(_cEmp,_cFil,_cFilRM) //SE1
+		ECO15_02(_cEmp,_cFil,_cFilRM) //SE1
 		// ECO15_03(_cEmp,_cFil,_cFilRM) //SE2
-		ECO15_04(_cEmp,_cFil,_cFilRM) //SE5
+		// ECO15_04(_cEmp,_cFil,_cFilRM) //SE5
 
 	Next AX
 
@@ -187,6 +187,8 @@ Static Function ECO15_02(_cEmp,_cFil,_cFilRM) //SE1
 				_cNomCli   := ''
 				_cCodCli   := Left((_cAliasZF6)->ZF6_TOTVS,6)
 				_cLojCli   := Substr((_cAliasZF6)->ZF6_TOTVS,7,2)
+				_cTipo     := If(!Empty(TRB->TMOV),"NF","FT")
+				_cPref     := If(Alltrim(TRB->SERIE) = '@@@','',Alltrim(TRB->SERIE))
 
 				(_cAliasSA1)->(dbSetOrder(1))
 				If (_cAliasSA1)->(MsSeek(xFilial("SA1")+_cCodCli+_cLojCli))
@@ -196,25 +198,15 @@ Static Function ECO15_02(_cEmp,_cFil,_cFilRM) //SE1
 				Endif
 
 				(_cAliasSE1)->(RecLock(_cAliasSE1,.T.))
+				(_cAliasSE1)->E1_YNROTRM   := Alltrim(TRB->DOCUMENTO)+If(!Empty(TRB->PARCELA),' | '+Alltrim(TRB->PARCELA),'')
 				(_cAliasSE1)->E1_FILIAL    := _cFil
-				(_cAliasSE1)->E1_PREFIXO   := If(Alltrim(TRB->SERIE) = '@@@','',Alltrim(TRB->SERIE))
-				(_cAliasSE1)->E1_NUM       := Alltrim(Left(TRB->DOCUMENTO,9))
+				(_cAliasSE1)->E1_PREFIXO   := _cPref
 
-				_cParcela := UPPER(Alltrim(TRB->PARCELA))
+				_aNumParc := GetNumParc("E1",_cFil,_cCodCli,_cLojCli,_cTipo,_cPref,TRB->DOCUMENTO,TRB->PARCELA)
 
-				If Empty(_cParcela)
-					_nAt := At("-",Alltrim(TRB->DOCUMENTO))
-					If _nAt > 0
-						_cParcela := Substr(TRB->DOCUMENTO,_nAt+1)
-					Else
-						If Len(TRB->DOCUMENTO) > 9
-							_cParcela := Substr(TRB->DOCUMENTO,10)
-						Endif
-					Endif
-				Endif
-
-				(_cAliasSE1)->E1_PARCELA   := _cParcela
-				(_cAliasSE1)->E1_TIPO      := If(!Empty(TRB->TMOV),"NF","FT")
+				(_cAliasSE1)->E1_NUM       := _aNumParc[1]
+				(_cAliasSE1)->E1_PARCELA   := _aNumParc[2]
+				(_cAliasSE1)->E1_TIPO      := _cTipo
 				(_cAliasSE1)->E1_NATUREZ   := "N1001"
 				// (_cAliasSE1)->E1_PORTADO   := (TRB->CNABBANCO)
 				// (_cAliasSE1)->E1_AGEDEP    := ??
@@ -249,7 +241,7 @@ Static Function ECO15_02(_cEmp,_cFil,_cFilRM) //SE1
 				(_cAliasSE1)->E1_DESDOBR    := "2"
 				(_cAliasSE1)->E1_PROJPMS    := "2"
 				(_cAliasSE1)->E1_MULTNAT    := "2"
-				
+
 				(_cAliasSE1)->E1_IDRM       := Alltrim(Str(Val(TRB->COLIGADA)))+Alltrim(Str(TRB->FILIAL))+Alltrim(Str(TRB->IDLAN))
 
 				(_cAliasSE1)->(MsUnLock())
@@ -731,6 +723,7 @@ Static Function ECO15_03(_cEmp,_cFil,_cFilRM) //SE2
 				Endif
 
 				(_cAliasSE2)->(RecLock(_cAliasSE2,.T.))
+				(_cAliasSE2)->E2_YNROTRM   := TRB->DOCUMENTO
 				(_cAliasSE2)->E2_FILIAL    := _cFil
 				(_cAliasSE2)->E2_PREFIXO   := If(Alltrim(TRB->SERIE) = '@@@','',Alltrim(TRB->SERIE))
 				(_cAliasSE2)->E2_NUM       := Alltrim(Right(Alltrim(TRB->DOCUMENTO),9))
@@ -1018,35 +1011,36 @@ Static Function ECO15_04(_cEmp,_cFil,_cFilRM) //SE5
 				// 	_cTpFor  := (_cAliasSA2)->A2_TIPO
 				// Endif
 
-				// If 
+				// If
 
 				(_cAliasSE5)->(RecLock(_cAliasSE5,.T.))
+				(_cAliasSE5)->E5_YNROTRM :=
 				(_cAliasSE5)->E5_FILIAL  := _cFil
-				(_cAliasSE5)->E5_DATA    := 
-				(_cAliasSE5)->E5_TIPO    := 
-				(_cAliasSE5)->E5_MOEDA   := 
-				(_cAliasSE5)->E5_VALOR   := 
-				(_cAliasSE5)->E5_NATUREZ := 
-				(_cAliasSE5)->E5_BANCO   := 
-				(_cAliasSE5)->E5_AGENCIA := 
-				(_cAliasSE5)->E5_CONTA   := 
-				(_cAliasSE5)->E5_NUMCHEQ := 
-				(_cAliasSE5)->E5_DOCUMEN := 
-				(_cAliasSE5)->E5_VENCTO  := 
-				(_cAliasSE5)->E5_RECPAG  := 
-				(_cAliasSE5)->E5_BENEF   := 
-				(_cAliasSE5)->E5_HISTOR  := 
-				(_cAliasSE5)->E5_TIPODOC := 
-				(_cAliasSE5)->E5_VLMOED2 := 
-				(_cAliasSE5)->E5_PREFIXO := 
-				(_cAliasSE5)->E5_NUMERO  := 
-				(_cAliasSE5)->E5_PARCELA := 
-				(_cAliasSE5)->E5_CLIFOR  := 
-				(_cAliasSE5)->E5_LOJA    := 
-				(_cAliasSE5)->E5_DTDIGIT := 
-				(_cAliasSE5)->E5_MOTBX   := 
-				(_cAliasSE5)->E5_DTDISPO := 
-				(_cAliasSE5)->E5_FILORIG := 
+				(_cAliasSE5)->E5_DATA    :=
+				(_cAliasSE5)->E5_TIPO    :=
+				(_cAliasSE5)->E5_MOEDA   :=
+				(_cAliasSE5)->E5_VALOR   :=
+				(_cAliasSE5)->E5_NATUREZ :=
+				(_cAliasSE5)->E5_BANCO   :=
+				(_cAliasSE5)->E5_AGENCIA :=
+				(_cAliasSE5)->E5_CONTA   :=
+				(_cAliasSE5)->E5_NUMCHEQ :=
+				(_cAliasSE5)->E5_DOCUMEN :=
+				(_cAliasSE5)->E5_VENCTO  :=
+				(_cAliasSE5)->E5_RECPAG  :=
+				(_cAliasSE5)->E5_BENEF   :=
+				(_cAliasSE5)->E5_HISTOR  :=
+				(_cAliasSE5)->E5_TIPODOC :=
+				(_cAliasSE5)->E5_VLMOED2 :=
+				(_cAliasSE5)->E5_PREFIXO :=
+				(_cAliasSE5)->E5_NUMERO  :=
+				(_cAliasSE5)->E5_PARCELA :=
+				(_cAliasSE5)->E5_CLIFOR  :=
+				(_cAliasSE5)->E5_LOJA    :=
+				(_cAliasSE5)->E5_DTDIGIT :=
+				(_cAliasSE5)->E5_MOTBX   :=
+				(_cAliasSE5)->E5_DTDISPO :=
+				(_cAliasSE5)->E5_FILORIG :=
 
 				// _cParcela := UPPER(Alltrim(TRB->PARCELA))
 
@@ -1111,3 +1105,67 @@ Static Function ECO15_04(_cEmp,_cFil,_cFilRM) //SE5
 Return(Nil)
 
 
+
+
+Static Function GetNumParc(_cTab,_cFil,_cCodCli,_cLojCli,_cTipo,_cPref,_cDoc,_cParcAux)
+
+	Local _aParc    := {}
+	Local _cNum     := ''
+	Local _cParc    := ''
+
+	_nAt := At("-",Alltrim(_cDoc))
+	If _nAt > 0
+		_cNum  := Alltrim(Left(_cDoc,_nAt-1))
+		_cParcAux := Substr(_cDoc,_nAt+1)
+	Else
+		_cNum  := Left(_cDoc,9)
+		If Len(_cDoc) > 9
+			_cParcAux := Substr(_cDoc,10)
+		Endif
+	Endif
+
+	If !Empty(_cParcAux)
+		_cParc := GetNxtParc(_cTab,_cFil,_cCodCli,_cLojCli,_cTipo,_cPref,_cDoc)
+	Endif
+
+	AAdd(_aParc,_cNum)
+	AAdd(_aParc,_cParc)
+
+Return(_aParc)
+
+
+
+Static Function GetNxtParc(_cTab,_cFil,_cCodCli,_cLojCli,_cTipo,_cPref,_cDoc)
+
+	Local _cParce := ''
+	Local _cQryPa := ""
+
+	_cQryPa := " SELECT MAX(E1_PARCELA) AS PARC FROM "+RetSqlName("S"+_cTab)+" "+_cTab+" " +CRLF
+	_cQryPa += " WHERE "+_cTab+".D_E_L_E_T_ = '' AND "+_cTab+"_FILIAL = '"+_cFil+"'  " +CRLF
+	If _cTab = "E1"
+		_cQryPa += " AND "+_cTab+"."+_cTab+"_CLIENTE 	= '"+_cCodCli+"'  " +CRLF
+	ElseIf _cTab = "E2"
+		_cQryPa += " AND "+_cTab+"."+_cTab+"_FORNECE 	= '"+_cCodCli+"'  " +CRLF
+	ElseIf _cTab = "E5"
+		_cQryPa += " AND "+_cTab+"."+_cTab+"_CLIFOR 	= '"+_cCodCli+"'  " +CRLF
+	Endif
+	_cQryPa += " AND "+_cTab+"."+_cTab+"_LOJA 		= '"+_cLojCli+"'  " +CRLF
+	_cQryPa += " AND "+_cTab+"."+_cTab+"_TIPO 		= '"+_cTipo+"'  " +CRLF
+	_cQryPa += " AND "+_cTab+"."+_cTab+"_NUM 		= '"+_cDoc+"'  " +CRLF
+	_cQryPa += " AND "+_cTab+"."+_cTab+"_PREFIXO 	= '"+_cPref+"'  " +CRLF
+
+	TcQuery _cQryPa New Alias "TNEXT"
+
+	If Contar("TNEXT","!EOF()") > 0
+
+		TNEXT->(dbGoTop())
+
+		_cParce := SOMA1(TNEXT->PARC)
+
+	Else
+		_cParce := '01'
+	Endif
+
+	TNEXT->(dbCloseArea())
+
+Return(_cParce)
