@@ -1320,6 +1320,7 @@ Montagem da Dialog 'Exportar Zip'
 /*/
 User Function ASExporXML(nOpc,_cChave,_lExpAut)
 
+	Local _nTenta
 	Local aArea := GetArea()
 	Local aChaves := {}
 	Local aXmlRet := {}
@@ -1472,18 +1473,23 @@ User Function ASExporXML(nOpc,_cChave,_lExpAut)
 						nXAux++
 						nQtdChv++
 					Next nX
-					If oWs:BAIXARXMLDOCUMENTOS()
-						If Type ("oWs:OWSBAIXARXMLDOCUMENTOSRESULT:OWSDOCUMENTORET:OWSBAIXARDOCUMENTORET") <> "U"
-							If Type ("oWs:OWSBAIXARXMLDOCUMENTOSRESULT:OWSDOCUMENTORET:OWSBAIXARDOCUMENTORET") == "A"
-								aXmlRet := oWs:OWSBAIXARXMLDOCUMENTOSRESULT:OWSDOCUMENTORET:OWSBAIXARDOCUMENTORET
-							Else
-								aXmlRet := {oWs:OWSBAIXARXMLDOCUMENTOSRESULT:OWSDOCUMENTORET:OWSBAIXARDOCUMENTORET}
-							EndIf
-						EndIF
+					For _nTenta := 1 to 10
+						If oWs:BAIXARXMLDOCUMENTOS()
+							If Type ("oWs:OWSBAIXARXMLDOCUMENTOSRESULT:OWSDOCUMENTORET:OWSBAIXARDOCUMENTORET") <> "U"
+								If Type ("oWs:OWSBAIXARXMLDOCUMENTOSRESULT:OWSDOCUMENTORET:OWSBAIXARDOCUMENTORET") == "A"
+									aXmlRet := oWs:OWSBAIXARXMLDOCUMENTOSRESULT:OWSDOCUMENTORET:OWSBAIXARDOCUMENTORET
+								Else
+									aXmlRet := {oWs:OWSBAIXARXMLDOCUMENTOSRESULT:OWSDOCUMENTORET:OWSBAIXARDOCUMENTORET}
+								EndIf
+							EndIF
 
-						Processa({|| lRet := VerifProces(oRet,aXmlRet,aParam,@cAviso,_lExpAut)},"Processando","Aguarde, exportando arquivos",.T.)
+							Processa({|| lRet := VerifProces(oRet,aXmlRet,aParam,@cAviso,_lExpAut)},"Processando","Aguarde, exportando arquivos",.T.)
 
-					EndIf
+							_nTenta := 10
+						Else
+							Sleep(1000)
+						EndIf
+					Next _nTenta
 				Else
 					For nY:= 1 to 5
 						aadd(oWs:oWSDOCUMENTOS:oWSDOCUMENTO:oWSBAIXARDOCUMENTO,MANIFESTACAODESTINATARIO_BAIXARDOCUMENTO():New())
@@ -1491,17 +1497,22 @@ User Function ASExporXML(nOpc,_cChave,_lExpAut)
 					Next nY
 					nQtdChv := nQtdChv + 5
 
-					If oWs:BAIXARXMLDOCUMENTOS()
+					For _nTenta := 1 to 10
+						If oWs:BAIXARXMLDOCUMENTOS()
 
-						If Type ("oWs:OWSBAIXARXMLDOCUMENTOSRESULT:OWSDOCUMENTORET:OWSBAIXARDOCUMENTORET") <> "U"
-							If Type ("oWs:OWSBAIXARXMLDOCUMENTOSRESULT:OWSDOCUMENTORET:OWSBAIXARDOCUMENTORET") == "A"
-								aXmlRet := oWs:OWSBAIXARXMLDOCUMENTOSRESULT:OWSDOCUMENTORET:OWSBAIXARDOCUMENTORET
-							Else
-								aXmlRet := {oWs:OWSBAIXARXMLDOCUMENTOSRESULT:OWSDOCUMENTORET:OWSBAIXARDOCUMENTORET}
-							EndIf
-						EndIF
-						Processa({|| lRet := VerifProces(oRet,aXmlRet,aParam,@cAviso,_lExpAut)},"Processando","Aguarde, exportando arquivos",.T.)
-					EndIf
+							If Type ("oWs:OWSBAIXARXMLDOCUMENTOSRESULT:OWSDOCUMENTORET:OWSBAIXARDOCUMENTORET") <> "U"
+								If Type ("oWs:OWSBAIXARXMLDOCUMENTOSRESULT:OWSDOCUMENTORET:OWSBAIXARDOCUMENTORET") == "A"
+									aXmlRet := oWs:OWSBAIXARXMLDOCUMENTOSRESULT:OWSDOCUMENTORET:OWSBAIXARDOCUMENTORET
+								Else
+									aXmlRet := {oWs:OWSBAIXARXMLDOCUMENTOSRESULT:OWSDOCUMENTORET:OWSBAIXARDOCUMENTORET}
+								EndIf
+							EndIF
+							Processa({|| lRet := VerifProces(oRet,aXmlRet,aParam,@cAviso,_lExpAut)},"Processando","Aguarde, exportando arquivos",.T.)
+							_nTenta := 10
+						Else
+							Sleep(1000)
+						EndIf
+					Next _nTenta
 				EndIf
 
 			EndDo
@@ -2587,7 +2598,7 @@ User Function ASVldFilial()
 
 	TcQuery _cQry New Alias "TC00"
 
-	 If Contar("TC00","!EOF()") = 0
+	If Contar("TC00","!EOF()") = 0
 		ShowHelpDlg("AS_MANIF_2", {'Nenhum registro marcado!'},2,{'Não se aplica.'},2)
 		RestArea(_AreaSM0)
 		Return(Nil)

@@ -13,6 +13,7 @@ Importação de XML para as tabelas SDS e SDT
 
 User Function AS_IMPXML(_cTipo)
 	
+	Local _nDet
 	Local _oDlg
 	Local _lGo 		:= .F.
 	Local _oSay
