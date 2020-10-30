@@ -46,7 +46,7 @@ Return (Nil)
 
 Static Function ECO15_01()
 
-	Local AX, a, _cQry2
+	Local AX, _cQry2
 
 	_cQry2 := " SELECT RIGHT('00'+RTRIM(CAST(CODCOLIGADA AS CHAR(02))),2) AS CODEMP,CAST(CODCFO AS CHAR(07)) AS CODCFO, NOMEFANTASIA AS NREDUZ,NOME,CGCCFO,INSCRESTADUAL AS INSCR,"+ CRLF
 	_cQry2 += " CAST(PAGREC AS CHAR(01)) AS PAGREC, RUA,NUMERO,COMPLEMENTO AS COMPLEM,PESSOAFISOUJUR AS PESSOA,CODMUNICIPIO AS COD_MUN,CODETD,CIDADE,"+ CRLF
@@ -119,10 +119,13 @@ Static Function ECO15_02(_cEmp,_cFil,_cFilRM) //SE1
 	_cQry := " SELECT RIGHT('00'+RTRIM(CAST(A.CODCOLIGADA AS CHAR(02))),2) AS COLIGADA,A.CODFILIAL AS FILIAL,A.SERIEDOCUMENTO AS SERIE, A.NUMERODOCUMENTO AS DOCUMENTO,A.PARCELA,A.DATAEMISSAO AS EMISSAO,CAST(A.CODCFO AS CHAR(07)) AS CODCFO, " + CRLF
 	_cQry += " A.DATAVENCIMENTO AS DTVENC,A.DATABAIXA,A.VALORORIGINAL AS VALOR,A.CODIGOBARRA AS CODBARRA,A.VALORBASEIRRF AS VLRBSIRRF,A.VALORIRRF,A.VALORJUROS AS JUROS, " + CRLF
 	_cQry += " A.VALORMULTA AS MULTA,A.VALORDESCONTO AS DESCONTO,A.HISTORICO,A.VALORBAIXADO AS VLBAIXA,COALESCE(T.IDMOV,'') AS TMOV,A.IDLAN " + CRLF
+	// _cQry += " P.NUMEROBANCO AS FORBCO,P.CODIGOAGENCIA AS FORAGE,P.DIGITOAGENCIA AS FORDAG,P.CONTACORRENTE AS FORCTA, P.DIGITOCONTA AS FORDCT " + CRLF
 	_cQry += " FROM  [10.140.1.5].[CorporeRM].dbo.FLAN A " + CRLF
 	_cQry += " LEFT JOIN [10.140.1.5].[CorporeRM].dbo.TMOV T ON T.CODCOLIGADA = A.CODCOLIGADA And T.IDMOV = A.IDMOV " + CRLF
+	// _cQry += " LEFT JOIN [10.140.1.5].[CorporeRM].dbo.FDADOSPGTO P ON P.CODCOLIGADA = A.CODCOLPGTO AND P.CODCOLCFO = A.CODCOLCFO AND P.CODCFO = A.CODCFO AND P.IDPGTO = A.IDPGTO " + CRLF
 	_cQry += " WHERE RTRIM(A.CODCOLIGADA)+RTRIM(A.CODFILIAL) IN ('"+_cFilRM+"') " + CRLF
-	_cQry += " AND PAGREC = '1' " + CRLF
+	_cQry += " AND A.STATUSLAN IN (0,4) " + CRLF
+	_cQry += " AND A.PAGREC = '1' " + CRLF
 	_cQry += " AND LEFT(CONVERT(char(15), A.DATAEMISSAO, 23),4) + " +CRLF
 	_cQry += " SUBSTRING(CONVERT(char(15), A.DATAEMISSAO, 23),6,2) + " +CRLF
 	_cQry += " SUBSTRING(CONVERT(char(15), A.DATAEMISSAO, 23),9,2) " +CRLF
@@ -165,7 +168,8 @@ Static Function ECO15_02(_cEmp,_cFil,_cFilRM) //SE1
 		//Exclui daddos da tabela SE1
 		_cUpd := " DELETE "+_cTabSE1+ " FROM "+_cTabSE1+" WHERE E1_FILIAL = '"+_cFil+"' "
 		_cUpd += " AND E1_EMISSAO BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"' "
-		_cUpd += " AND E1_TIPO <> 'NF' "
+		_cUpd += " AND E1_IDRM <> '' "
+		// _cUpd += " AND E1_TIPO <> 'NF' "
 
 		TCSQLEXEC(_cUpd )
 
@@ -176,8 +180,30 @@ Static Function ECO15_02(_cEmp,_cFil,_cFilRM) //SE1
 			_cKey1   := TRB->COLIGADA
 			While TRB->(!EOF())  .And. _cKey1 == TRB->COLIGADA
 
+				_cColigada := TRB->COLIGADA
+				If TFOR->(MsSeek(TRB->CODCFO + TRB->COLIGADA + "1"))
+					_lGrava := .T.
+				Else
+					If TFOR->(MsSeek(TRB->CODCFO + TRB->COLIGADA ) )
+						_lGrava := .T.
+					Else
+						If TFOR->(MsSeek(TRB->CODCFO + "00" ))
+							_lGrava := .T.
+							_cColigada := "00"
+						Endif
+					Endif
+				Endif
+
 				//Verifica se o Cliente está cadastrado na tabela ZF6, que relaciona o código RM X Protheus
-				_lRet := CheckZF6(2,_cFil,_cAliasZF6,,_cAliasSA1)
+				
+
+				If _lGrava
+					_lRet := CheckZF6(2,_cFil,_cAliasZF6,,_cAliasSA1)
+				Else
+					MSGINFO("Cliente Nao Cadastrado!! "+TRB->CODCFO+" NF: "+Alltrim(TRB->DOCUMENTO))
+					TFOR->(dbCloseArea())
+					Return(.F.)
+				Endif
 
 				If !_lRet
 					Return(Nil)
@@ -567,7 +593,6 @@ Static Function GeraCli(_cFil,_cCNPJ,_cCod,_cLoja,_cAliasSA1)
 	(_cAliasSA1)->A1_COND       := "001"
 	(_cAliasSA1)->(MsUnLock())
 
-
 RETURN(NIL)
 
 
@@ -633,13 +658,14 @@ Static Function ECO15_03(_cEmp,_cFil,_cFilRM) //SE2
 
 	_cQry := " SELECT RIGHT('00'+RTRIM(CAST(A.CODCOLIGADA AS CHAR(02))),2) AS COLIGADA,A.CODFILIAL AS FILIAL,A.SERIEDOCUMENTO AS SERIE, A.NUMERODOCUMENTO AS DOCUMENTO,A.PARCELA,A.DATAEMISSAO AS EMISSAO,CAST(A.CODCFO AS CHAR(07)) AS CODCFO, " + CRLF
 	_cQry += " A.DATAVENCIMENTO AS DTVENC,A.DATABAIXA,A.VALORORIGINAL AS VALOR,A.CODIGOBARRA AS CODBARRA,A.VALORBASEIRRF AS VLRBSIRRF,A.VALORIRRF,A.VALORJUROS AS JUROS, " + CRLF
-	_cQry += " A.VALORMULTA AS MULTA,A.VALORDESCONTO AS DESCONTO,A.HISTORICO,A.VALORBAIXADO AS VLBAIXA,COALESCE(T.IDMOV,'') AS TMOV,A.IDLAN, " + CRLF
+	_cQry += " A.VALORMULTA AS MULTA,A.VALORDESCONTO AS DESCONTO,A.HISTORICO,A.VALORBAIXADO AS VLBAIXA,COALESCE(T.IDMOV,'') AS TMOV,A.IDLAN, A.STATUSLAN, " + CRLF
 	_cQry += " P.NUMEROBANCO AS FORBCO,P.CODIGOAGENCIA AS FORAGE,P.DIGITOAGENCIA AS FORDAG,P.CONTACORRENTE AS FORCTA, P.DIGITOCONTA AS FORDCT " + CRLF
 	_cQry += " FROM  [10.140.1.5].[CorporeRM].dbo.FLAN A " + CRLF
 	_cQry += " LEFT JOIN [10.140.1.5].[CorporeRM].dbo.TMOV T ON T.CODCOLIGADA = A.CODCOLIGADA And T.IDMOV = A.IDMOV " + CRLF
 	_cQry += " LEFT JOIN [10.140.1.5].[CorporeRM].dbo.FDADOSPGTO P ON P.CODCOLIGADA = A.CODCOLPGTO AND P.CODCOLCFO = A.CODCOLCFO AND P.CODCFO = A.CODCFO AND P.IDPGTO = A.IDPGTO " + CRLF
 	_cQry += " WHERE RTRIM(A.CODCOLIGADA)+RTRIM(A.CODFILIAL) IN ('"+_cFilRM+"') " + CRLF
 	_cQry += " AND PAGREC = '2' " + CRLF
+	_cQry += " AND A.STATUSLAN IN (0,4) " + CRLF
 	_cQry += " AND LEFT(CONVERT(char(15), A.DATAEMISSAO, 23),4) + " +CRLF
 	_cQry += " SUBSTRING(CONVERT(char(15), A.DATAEMISSAO, 23),6,2) + " +CRLF
 	_cQry += " SUBSTRING(CONVERT(char(15), A.DATAEMISSAO, 23),9,2) " +CRLF
@@ -682,6 +708,7 @@ Static Function ECO15_03(_cEmp,_cFil,_cFilRM) //SE2
 		//Exclui daddos da tabela SE2
 		_cUpd := " DELETE "+_cTabSE2+ " FROM "+_cTabSE2+" WHERE E2_FILIAL = '"+_cFil+"' "
 		_cUpd += " AND E2_EMISSAO BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"' "
+		_cUpd += " AND E2_IDRM <> '' "
 		// _cUpd += " AND E2_TIPO <> 'NF' "
 
 		TCSQLEXEC(_cUpd )
@@ -737,7 +764,7 @@ Static Function ECO15_03(_cEmp,_cFil,_cFilRM) //SE2
 					_cTpFor  := (_cAliasSA2)->A2_TIPO
 				Endif
 
-				If '58374901' $ Alltrim(TRB->DOCUMENTO)
+				If '20204601' $ Alltrim(TRB->DOCUMENTO)
 					_lPare := .T.
 				Endif
 
@@ -752,7 +779,7 @@ Static Function ECO15_03(_cEmp,_cFil,_cFilRM) //SE2
 				(_cAliasSE2)->E2_PARCELA   := _aNumParc[2]
 				(_cAliasSE2)->E2_TIPO      := _aNumParc[3]
 
-				// (_cAliasSE2)->E2_NATUREZ   := ??
+				(_cAliasSE2)->E2_NATUREZ   := "N3002"
 				// (_cAliasSE2)->E2_PORTADO   := (TRB->CNABBANCO)
 				// (_cAliasSE2)->E2_AGEDEP    := ??
 
@@ -871,7 +898,7 @@ Static Function ECO15_04(_cEmp,_cFil,_cFilRM) //SE5
 	_cQry += " LEFT JOIN [10.140.1.5].[CorporeRM].dbo.FCXA C ON A.CODCOLCXA = C.CODCOLIGADA AND A.CODCXA = C.CODCXA " + CRLF
 	_cQry += " WHERE RTRIM(A.CODCOLIGADA)+RTRIM(A.CODFILIAL) IN ('"+_cFilRM+"') " + CRLF
 	_cQry += " AND A.DATACANCELBAIXA IS NULL " + CRLF
-	_cQry += " AND A.PAGREC = '1' " + CRLF // RECEBER
+	// _cQry += " AND A.PAGREC = '1' " + CRLF // RECEBER
 	_cQry += " AND LEFT(CONVERT(char(15), A.DATABAIXA, 23),4) + " + CRLF
 	_cQry += " SUBSTRING(CONVERT(char(15), A.DATABAIXA, 23),6,2) + " + CRLF
 	_cQry += " SUBSTRING(CONVERT(char(15), A.DATABAIXA, 23),9,2) " + CRLF
@@ -1157,7 +1184,6 @@ Static Function GetNxtParc(_cTab,_cFil,_cCodCli,_cLojCli,_cTipo,_cPref,_cDoc,_cP
 
 	Local _cParce := ''
 	Local _cQryPa := ""
-
 
 	_cQryPa := " SELECT COALESCE(MAX("+_cTab+"_PARCELA),'ZZ') AS PARC FROM S"+_cTab+_cEmp+"0 "+_cTab+" " +CRLF
 	_cQryPa += " WHERE "+_cTab+".D_E_L_E_T_ = '' AND "+_cTab+"_FILIAL = '"+_cFil+"'  " +CRLF
