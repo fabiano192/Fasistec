@@ -78,10 +78,14 @@ Static Function ECO15_01()
 		_cFil   := Right(_aEmp[AX][2],2)
 		_cFilRM := _aEmp[AX][3]
 
-		// ECO15_02(_cEmp,_cFil,_cFilRM) //SE1
-		ECO15_03(_cEmp,_cFil,_cFilRM) //SE2
-		// ECO15_04(_cEmp,_cFil,_cFilRM) //SE5
-
+		If MV_PAR03 == 1
+			ECO15_02(_cEmp,_cFil,_cFilRM) //SE1
+		ElseIf MV_PAR03 == 2
+			ECO15_03(_cEmp,_cFil,_cFilRM) //SE2
+		Else
+			ECO15_02(_cEmp,_cFil,_cFilRM) //SE1
+			ECO15_03(_cEmp,_cFil,_cFilRM) //SE2
+		Endif
 	Next AX
 
 	TFOR->(dbCloseArea())
@@ -114,7 +118,6 @@ Static Function ECO15_02(_cEmp,_cFil,_cFilRM) //SE1
 		TRB->(dbCloseArea())
 	Endif
 
-
 	// _cQry := " SELECT A.CODCOLIGADA AS COLIGADA,A.CODFILIAL AS FILIAL,A.SERIEDOCUMENTO AS SERIE, A.NUMERODOCUMENTO AS DOCUMENTO,A.PARCELA,A.DATAEMISSAO AS EMISSAO,A.CODCFO, " + CRLF
 	_cQry := " SELECT RIGHT('00'+RTRIM(CAST(A.CODCOLIGADA AS CHAR(02))),2) AS COLIGADA,A.CODFILIAL AS FILIAL,A.SERIEDOCUMENTO AS SERIE, A.NUMERODOCUMENTO AS DOCUMENTO,A.PARCELA,A.DATAEMISSAO AS EMISSAO,CAST(A.CODCFO AS CHAR(07)) AS CODCFO, " + CRLF
 	_cQry += " A.DATAVENCIMENTO AS DTVENC,A.DATABAIXA,A.VALORORIGINAL AS VALOR,A.CODIGOBARRA AS CODBARRA,A.VALORBASEIRRF AS VLRBSIRRF,A.VALORIRRF,A.VALORJUROS AS JUROS, " + CRLF
@@ -124,7 +127,7 @@ Static Function ECO15_02(_cEmp,_cFil,_cFilRM) //SE1
 	_cQry += " LEFT JOIN [10.140.1.5].[CorporeRM].dbo.TMOV T ON T.CODCOLIGADA = A.CODCOLIGADA And T.IDMOV = A.IDMOV " + CRLF
 	// _cQry += " LEFT JOIN [10.140.1.5].[CorporeRM].dbo.FDADOSPGTO P ON P.CODCOLIGADA = A.CODCOLPGTO AND P.CODCOLCFO = A.CODCOLCFO AND P.CODCFO = A.CODCFO AND P.IDPGTO = A.IDPGTO " + CRLF
 	_cQry += " WHERE RTRIM(A.CODCOLIGADA)+RTRIM(A.CODFILIAL) IN ('"+_cFilRM+"') " + CRLF
-	_cQry += " AND A.STATUSLAN IN (0,4) " + CRLF
+	_cQry += " AND A.STATUSLAN IN (0,4) AND A.CODTDO <>'99' AND NFOUDUP <> 1 " + CRLF
 	_cQry += " AND A.PAGREC = '1' " + CRLF
 	_cQry += " AND LEFT(CONVERT(char(15), A.DATAEMISSAO, 23),4) + " +CRLF
 	_cQry += " SUBSTRING(CONVERT(char(15), A.DATAEMISSAO, 23),6,2) + " +CRLF
@@ -195,7 +198,7 @@ Static Function ECO15_02(_cEmp,_cFil,_cFilRM) //SE1
 				Endif
 
 				//Verifica se o Cliente está cadastrado na tabela ZF6, que relaciona o código RM X Protheus
-				
+
 
 				If _lGrava
 					_lRet := CheckZF6(2,_cFil,_cAliasZF6,,_cAliasSA1)
@@ -224,11 +227,16 @@ Static Function ECO15_02(_cEmp,_cFil,_cFilRM) //SE1
 				(_cAliasSE1)->(RecLock(_cAliasSE1,.T.))
 				(_cAliasSE1)->E1_YNROTRM   := Alltrim(TRB->DOCUMENTO)+If(!Empty(TRB->PARCELA),' | '+Alltrim(TRB->PARCELA),'')
 				(_cAliasSE1)->E1_FILIAL    := _cFil
-				(_cAliasSE1)->E1_PREFIXO   := _cPref
 
 				_aNumParc := GetNumParc("E1",_cFil,_cCodCli,_cLojCli,_cPref,TRB->DOCUMENTO,TRB->PARCELA)
 
-				(_cAliasSE1)->E1_NUM       := _aNumParc[1]
+				If Len(Alltrim(TRB->DOCUMENTO)) > 9
+					(_cAliasSE1)->E1_PREFIXO   := Left(TRB->DOCUMENTO,3)
+					(_cAliasSE1)->E1_NUM       := Substr(TRB->DOCUMENTO,4)
+				Else
+					(_cAliasSE1)->E1_PREFIXO   := _cPref
+					(_cAliasSE1)->E1_NUM       := _aNumParc[1]
+				Endif
 				(_cAliasSE1)->E1_PARCELA   := _aNumParc[2]
 				(_cAliasSE1)->E1_TIPO      := _aNumParc[3]
 				(_cAliasSE1)->E1_NATUREZ   := "N1001"
@@ -311,9 +319,10 @@ Static Function ATUSX1()
 	cPerg := "ECO015"
 	aRegs := {}
 
-//    	   Grupo/Ordem/Pergunta                /perg_spa /perg_eng/Variavel/Tipo/Tamanho/Decimal/Presel/GSC/Valid          /Var01    /Def01            /defspa1/defeng1/Cnt01/Var02/Def02            /Defspa2/defeng2/Cnt02/Var03/Def03  /defspa3/defeng3/Cnt03/Var04/Def04/defspa4/defeng4/Cnt04/Var05/Def05/deefspa5/defeng5/Cnt05/F3
-	U_CRIASX1(cPerg,"01","Data De?                ",""       ,""      ,"mv_ch1","D" ,08     ,0      ,0     ,"G",""            ,"MV_PAR01",""               ,""     ,""     ,""   ,""   ,""               ,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""   ,"")
-	U_CRIASX1(cPerg,"02","Data Ate ?              ",""       ,""      ,"mv_ch2","D" ,08     ,0      ,0     ,"G",""            ,"MV_PAR02",""               ,""     ,""     ,""   ,""   ,""               ,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""   ,"")
+//    	   Grupo/Ordem/Pergunta                     /perg_spa /perg_eng/Variavel/Tipo/Tamanho/Decimal/Presel/GSC/Valid        /Var01    /Def01             /defspa1/defeng1/Cnt01/Var02/Def02      /Defspa2/defeng2/Cnt02/Var03/Def03  /defspa3/defeng3/Cnt03/Var04/Def04/defspa4/defeng4/Cnt04/Var05/Def05/deefspa5/defeng5/Cnt05/F3
+	U_CRIASX1(cPerg,"01","Data De?                ",""       ,""      ,"mv_ch1","D" ,08     ,0      ,0     ,"G",""            ,"MV_PAR01",""               ,""     ,""     ,""   ,""   ,""         ,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""   ,"")
+	U_CRIASX1(cPerg,"02","Data Ate ?              ",""       ,""      ,"mv_ch2","D" ,08     ,0      ,0     ,"G",""            ,"MV_PAR02",""               ,""     ,""     ,""   ,""   ,""         ,""     ,""     ,""   ,""   ,""     ,""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""   ,"")
+	U_CRIASX1(cPerg,"03","Importar Movimento ?    ",""       ,""      ,"mv_ch3","N" ,01     ,0      ,0     ,"C",""            ,"MV_PAR03","Receber"        ,""     ,""     ,""   ,""   ,"Pagar"    ,""     ,""     ,""   ,""   ,"Ambos",""     ,""     ,""   ,""   ,""   ,""     ,""     ,""   ,""   ,""   ,""      ,""     ,""   ,"")
 
 Return (Nil)
 
@@ -665,7 +674,7 @@ Static Function ECO15_03(_cEmp,_cFil,_cFilRM) //SE2
 	_cQry += " LEFT JOIN [10.140.1.5].[CorporeRM].dbo.FDADOSPGTO P ON P.CODCOLIGADA = A.CODCOLPGTO AND P.CODCOLCFO = A.CODCOLCFO AND P.CODCFO = A.CODCFO AND P.IDPGTO = A.IDPGTO " + CRLF
 	_cQry += " WHERE RTRIM(A.CODCOLIGADA)+RTRIM(A.CODFILIAL) IN ('"+_cFilRM+"') " + CRLF
 	_cQry += " AND PAGREC = '2' " + CRLF
-	_cQry += " AND A.STATUSLAN IN (0,4) " + CRLF
+	_cQry += " AND A.STATUSLAN IN (0,4) AND A.CODTDO <>'99' AND NFOUDUP <> 1 " + CRLF
 	_cQry += " AND LEFT(CONVERT(char(15), A.DATAEMISSAO, 23),4) + " +CRLF
 	_cQry += " SUBSTRING(CONVERT(char(15), A.DATAEMISSAO, 23),6,2) + " +CRLF
 	_cQry += " SUBSTRING(CONVERT(char(15), A.DATAEMISSAO, 23),9,2) " +CRLF
@@ -789,6 +798,9 @@ Static Function ECO15_03(_cEmp,_cFil,_cFilRM) //SE2
 
 				(_cAliasSE2)->E2_EMISSAO    := TRB->EMISSAO
 				(_cAliasSE2)->E2_EMIS1      := TRB->EMISSAO
+
+				(_cAliasSE2)->E2_DATALIB    := TRB->EMISSAO
+				(_cAliasSE2)->E2_USUALIB    := "ECO015"
 
 				(_cAliasSE2)->E2_VENCTO     := TRB->DTVENC
 				(_cAliasSE2)->E2_VENCREA    := TRB->DTVENC
