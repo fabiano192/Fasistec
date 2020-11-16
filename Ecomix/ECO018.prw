@@ -47,30 +47,32 @@ Return (Nil)
 Static Function ECO18_01()
 
 	Local AX
-    Local _cQry2 := ''
+	Local _cQry2 := ''
 
 	// _cQry2 := " SELECT * FROM  [10.140.1.5].[CorporeRM].dbo.PFUNC A (NOLOCK) " + CRLF
 	// _cQry2 += " INNER JOIN [10.140.1.5].[CorporeRM].dbo.PPESSOA B (NOLOCK) ON A.CODPESSOA = B.CODIGO " + CRLF
 	// _cQry2 += " ORDER BY CODCOLIGADA,CHAPA " + CRLF
 
-    _cQry2 += " SELECT A.CODCOLIGADA AS COLIGADA, A.CHAPA, B.NOME,B.NOMESOCIAL,B.CPF,A.PISPASEP,B.CARTIDENTIDADE AS RG,B.ORGEMISSORIDENT AS RGORG, B.UFCARTIDENT AS RGUF, B.DTEMISSAOIDENT AS RGEMI,  " + CRLF
-    _cQry2 += " B.CARTEIRATRAB AS CP,B.SERIECARTTRAB AS CPSER,B.UFCARTTRAB AS CPUF,B.DTCARTTRAB AS CPDT,B.CARTMOTORISTA AS CNH,B.TIPOCARTHABILIT AS CNHTP,B.DTVENCHABILIT AS CNHVCTO, " + CRLF
-    _cQry2 += " B.DTEMISSAOCNH AS CNHEMI,B.ORGEMISSORCNH AS CNHORI, B.UFCNH AS CNHUF,B.CERTIFRESERV AS RESERV,B.TITULOELEITOR AS TITELE,B.ZONATITELEITOR AS ZONAELE, " + CRLF
-    _cQry2 += " B.SECAOTITELEITOR AS SECAOELE,B.DTTITELEITOR AS DTTITELE, B.RUA AS RUA, B.COMPLEMENTO AS COMPLEM, B.NUMERO AS NUMEND, B.CODMUNICIPIO AS CODMUN,B.ESTADO AS ESTADO, " + CRLF
-    _cQry2 += " B.CEP AS CEP, B.CIDADE AS CIDADE, B.TELEFONE1 AS FONE1, B.NATURALIDADE AS NATURAL,B.ESTADOCIVIL AS ESTCIVIL,B.SEXO AS SEXO, A.NRODEPIRRF AS DEPIR, A.NRODEPSALFAM AS DEPSF, " + CRLF
-    _cQry2 += " B.DTNASCIMENTO AS DTNASC,A.DATAADMISSAO AS DTADMISSA,A.DTOPCAOFGTS AS DTOPCAO,A.DATADEMISSAO AS DTDEMISSA, " + CRLF
-    _cQry2 += " A.CODBANCOPAGTO AS PGTOBCO ,A.CODAGENCIAPAGTO AS PGTOAGE, A.CONTAPAGAMENTO AS PGTOCTA, " + CRLF
-    _cQry2 += " A.CODBANCOFGTS AS BCOFGTS,A.CONTAFGTS AS CTAFGTS,A.CODSITUACAO AS SITFOL,A.CODFUNCAO AS CODFUNC, " + CRLF
-    _cQry2 += " C.ID AS FUNID,C.NOME AS FUNNOME,C.CBO,C.CBO2002, " + CRLF
-    _cQry2 += " A.CODSINDICATO AS CODSIND,D.NOME AS SINDNOME,D.CNPJ AS SINDCNPJ,D.RUA AS SINDRUA,D.NUMERO AS SINDNRO,D.COMPLEMENTO AS SINDCOMPL, " + CRLF
-    _cQry2 += " D.BAIRRO AS SINDBAIR,D.ESTADO AS SINDUF,D.CEP AS SINDCEP,D.CIDADE AS SINDMUN,D.TELEFONE AS SINDFONE,COALESCE(A.PERCENTADIANT,0) AS PERCADTO, " + CRLF
-    _cQry2 += " A.SALARIO,A.SITUACAORAIS AS SITRAIS,A.VINCULORAIS AS VINCRAIS,B.APELIDO,B.CORRACA,B.EMAIL, " + CRLF
-    _cQry2 += " A.CODRECEBIMENTO AS RECBTO " + CRLF
-    _cQry2 += " FROM [10.140.1.5].[CorporeRM].dbo.PFUNC		A (NOLOCK) " + CRLF
-    _cQry2 += " INNER JOIN [10.140.1.5].[CorporeRM].dbo.PPESSOA	B (NOLOCK) ON A.CODPESSOA = B.CODIGO " + CRLF
-    _cQry2 += " LEFT JOIN  [10.140.1.5].[CorporeRM].dbo.PFUNCAO	C (NOLOCK) ON A.CODCOLIGADA = C.CODCOLIGADA AND A.CODFUNCAO = C.CODIGO " + CRLF
-    _cQry2 += " LEFT JOIN  [10.140.1.5].[CorporeRM].dbo.PSINDIC D (NOLOCK) ON A.CODCOLIGADA = D.CODCOLIGADA AND A.CODSINDICATO = D.CODIGO " + CRLF
-    _cQry2 += " ORDER BY A.CODCOLIGADA,A.CHAPA " + CRLF
+	_cQry2 += " SELECT RIGHT('00'+RTRIM(CAST(A.CODCOLIGADA AS CHAR(02))),2) AS COLIGADA, A.CHAPA, B.NOME,B.NOMESOCIAL,B.CPF,A.PISPASEP,B.CARTIDENTIDADE AS RG,B.ORGEMISSORIDENT AS RGORG, B.UFCARTIDENT AS RGUF, B.DTEMISSAOIDENT AS RGEMI,  " + CRLF
+	_cQry2 += " B.CARTEIRATRAB AS CP,B.SERIECARTTRAB AS CPSER,B.UFCARTTRAB AS CPUF,B.DTCARTTRAB AS CPDT,B.CARTMOTORISTA AS CNH,B.TIPOCARTHABILIT AS CNHTP,B.DTVENCHABILIT AS CNHVCTO, " + CRLF
+	_cQry2 += " B.DTEMISSAOCNH AS CNHEMI,B.ORGEMISSORCNH AS CNHORI, B.UFCNH AS CNHUF,B.CERTIFRESERV AS RESERV,B.TITULOELEITOR AS TITELE,B.ZONATITELEITOR AS ZONAELE, " + CRLF
+	_cQry2 += " B.SECAOTITELEITOR AS SECAOELE,B.DTTITELEITOR AS DTTITELE, B.RUA AS RUA, B.COMPLEMENTO AS COMPLEM, B.NUMERO AS NUMEND, B.CODMUNICIPIO AS CODMUN,B.ESTADO AS ESTADO, " + CRLF
+	_cQry2 += " B.CEP AS CEP, B.CIDADE AS CIDADE, B.BAIRRO AS BAIRRO, B.TELEFONE1 AS FONE1, B.NATURALIDADE AS NATURAL,B.ESTADOCIVIL AS ESTCIVIL,B.SEXO AS SEXO, A.NRODEPIRRF AS DEPIR, A.NRODEPSALFAM AS DEPSF, " + CRLF
+	_cQry2 += " B.DTNASCIMENTO AS DTNASC,A.DATAADMISSAO AS DTADMISSA,A.DTOPCAOFGTS AS DTOPCAO,A.DATADEMISSAO AS DTDEMISSA, " + CRLF
+	_cQry2 += " A.CODBANCOPAGTO AS PGTOBCO ,A.CODAGENCIAPAGTO AS PGTOAGE, A.CONTAPAGAMENTO AS PGTOCTA, " + CRLF
+	_cQry2 += " A.CODBANCOFGTS AS BCOFGTS,A.CONTAFGTS AS CTAFGTS,A.CODSITUACAO AS SITFOL,A.CODFUNCAO AS CODFUNC, " + CRLF
+	_cQry2 += " C.ID AS FUNID,C.NOME AS FUNNOME,C.CBO,C.CBO2002, " + CRLF
+	_cQry2 += " A.CODSINDICATO AS CODSIND,D.NOME AS SINDNOME,D.CNPJ AS SINDCNPJ,D.RUA AS SINDRUA,D.NUMERO AS SINDNRO,D.COMPLEMENTO AS SINDCOMPL, " + CRLF
+	_cQry2 += " D.BAIRRO AS SINDBAIR,D.ESTADO AS SINDUF,D.CEP AS SINDCEP,D.CIDADE AS SINDMUN,D.TELEFONE AS SINDFONE,COALESCE(A.PERCENTADIANT,0) AS PERCADTO, " + CRLF
+	_cQry2 += " A.SALARIO,A.SITUACAORAIS AS SITRAIS,A.VINCULORAIS AS VINCRAIS,B.APELIDO,B.CORRACA,B.EMAIL, " + CRLF
+	_cQry2 += " A.CODRECEBIMENTO AS RECBTO, " + CRLF
+	_cQry2 += " E.CODIGO AS TURNCOD,E.DESCRICAO AS TURNDESC " + CRLF
+	_cQry2 += " FROM       [10.140.1.5].[CorporeRM].dbo.PFUNC	 A (NOLOCK) " + CRLF
+	_cQry2 += " INNER JOIN [10.140.1.5].[CorporeRM].dbo.PPESSOA	 B (NOLOCK) ON A.CODPESSOA = B.CODIGO " + CRLF
+	_cQry2 += " LEFT JOIN  [10.140.1.5].[CorporeRM].dbo.PFUNCAO	 C (NOLOCK) ON A.CODCOLIGADA = C.CODCOLIGADA AND A.CODFUNCAO = C.CODIGO " + CRLF
+	_cQry2 += " LEFT JOIN  [10.140.1.5].[CorporeRM].dbo.PSINDIC  D (NOLOCK) ON A.CODCOLIGADA = D.CODCOLIGADA AND A.CODSINDICATO = D.CODIGO " + CRLF
+	_cQry2 += " LEFT JOIN  [10.140.1.5].[CorporeRM].dbo.AHORARIO E (NOLOCK) ON A.CODCOLIGADA = E.CODCOLIGADA AND A.CODHORARIO = E.CODIGO " + CRLF
+	_cQry2 += " ORDER BY A.CODCOLIGADA,A.CHAPA " + CRLF
 
 	TcQuery _cQry2 New Alias "TFUN"
 
@@ -105,8 +107,8 @@ ORDER BY A.CODCOLIGADA,A.CHAPA
 	_cInd := "COLIGADA + CHAPA "
 	IndRegua("TFUN",_cArq,_cInd,,,"Selecionando Arquivo Trabalho")
 
-	// _aEmp:= {{'A','0101','91'},{'A','0102','92'},{'A','0103','93'},{'B','0201','101'},{'B','0203','103'},{'B','0204','104'},{'C','0301','111'},{'C','0303','113'}}
-	_aEmp:= {{'A','0103','93'}}
+	_aEmp:= {{'A','0101','91'},{'A','0102','92'},{'A','0103','93'},{'B','0201','101'},{'B','0203','103'},{'B','0204','104'},{'C','0301','111'},{'C','0303','113'}}
+	// _aEmp:= {{'A','0101','91'},{'A','0102','92'},{'A','0103','93'}}
 
 	ProcRegua(Len(_aEmp))
 
@@ -133,12 +135,14 @@ Static Function ECO18_02(_cEmp,_cFil,_cFilRM)
 	Local _aAreaSRA  := SRA->( GetArea() )
 	Local _aAreaRCE  := RCE->( GetArea() )
 	Local _aAreaSRJ  := SRJ->( GetArea() )
+	Local _aAreaSR6  := SR6->( GetArea() )
 	Local _aAreaSRV  := SRV->( GetArea() )
 	Local _aAreaZF6  := ZF6->( GetArea() )
 	Local _aAreaSRD  := SRD->( GetArea() )
 	Local _cAliasSRA := ''
 	Local _cAliasRCE := ''
 	Local _cAliasSRJ := ''
+	Local _cAliasSR6 := ''
 	Local _cAliasSRV := ''
 	Local _cAliasZF6 := ''
 	Local _cAliasSRD := ''
@@ -148,6 +152,7 @@ Static Function ECO18_02(_cEmp,_cFil,_cFilRM)
 	Local _lOutSRA   := .F.
 	Local _lOutRCE   := .F.
 	Local _lOutSRJ   := .F.
+	Local _lOutSR6   := .F.
 	Local _lOutSRV   := .F.
 	Local _lOutZF6   := .F.
 	Local _lOutSRD   := .F.
@@ -160,16 +165,22 @@ Static Function ECO18_02(_cEmp,_cFil,_cFilRM)
 	Endif
 
 	_cQry += " SELECT RIGHT('00'+RTRIM(CAST(A.CODCOLIGADA AS CHAR(02))),2) AS COLIGADA, A.CHAPA AS CHAPA, A.ANOCOMP AS ANOCOMP, A.MESCOMP AS MESCOMP, A.CODEVENTO AS CODEVEN,  " + CRLF
-	_cQry += " A.DTPAGTO AS DTPAGTO, A.REF AS HORAS, A.VALOR AS VALOR, " + CRLF
+	_cQry += " A.DTPAGTO AS DTPAGTO, A.REF AS HORAS, A.VALOR AS VALOR, A.NROPERIODO AS SEMANA," + CRLF
 	_cQry += " B.CODIGO AS RVCOD,B.PROVDESCBASE AS RVTIPOCOD,B.VALHORDIAREF AS RVTIPO,B.PORCINCID AS RVPERC,B.INCINSS AS RVINSS,B.INCIRRF AS RVIR, " + CRLF
 	_cQry += " B.INCFGTS AS RVFGTS,B.INCRAIS AS RVRAIS,B.INCIRRFFERIAS AS RVINSSFER,B.INCINSS13 AS RVREF13,B.INCIRRF13,B.DESCRICAO AS RVDESC,B.ID AS RVCODFOL,B.NATRUBRICA AS RVNATUREZ" + CRLF
 	_cQry += " FROM [10.140.1.5].[CorporeRM].dbo.PFFINANC A (NOLOCK) " + CRLF
 	_cQry += " INNER JOIN [10.140.1.5].[CorporeRM].dbo.PEVENTO B (NOLOCK) ON A.CODCOLIGADA = B.CODCOLIGADA AND A.CODEVENTO = B.CODIGO " + CRLF
 	_cQry += " WHERE RTRIM(A.CODCOLIGADA) = '9'  " + CRLF
-	_cQry += " AND LEFT(CONVERT(char(15), A.DTPAGTO, 23),4) + " + CRLF
-	_cQry += " SUBSTRING(CONVERT(char(15), A.DTPAGTO, 23),6,2) + " + CRLF
-	_cQry += " SUBSTRING(CONVERT(char(15), A.DTPAGTO, 23),9,2)  " + CRLF
-	_cQry += " BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"' " + CRLF
+
+	// _cQry += " AND LEFT(CONVERT(char(15), A.DTPAGTO, 23),4) + " + CRLF
+	// _cQry += " SUBSTRING(CONVERT(char(15), A.DTPAGTO, 23),6,2) + " + CRLF
+	// _cQry += " SUBSTRING(CONVERT(char(15), A.DTPAGTO, 23),9,2)  " + CRLF
+	// _cQry += " BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"' " + CRLF
+	_cQry += " AND CAST(A.ANOCOMP AS CHAR(4))+RIGHT('00'+RTRIM(CAST(A.MESCOMP AS CHAR(2))),2) " + CRLF
+	_cQry += " BETWEEN '"+LEFT(DTOS(MV_PAR01),6)+"' AND '"+LEFT(DTOS(MV_PAR02),6)+"'  " + CRLF
+	// _cQry += " AND A.CHAPA = '00001'
+
+
 	_cQry += " ORDER BY COLIGADA,ANOCOMP,MESCOMP,CHAPA,CODEVEN " + CRLF
 
 	Memowrite("D:\_Temp\ECO018A.txt",_cQry)
@@ -183,6 +194,7 @@ Static Function ECO18_02(_cEmp,_cFil,_cFilRM)
 		_cAliasSRA := "SRA"
 		_cAliasRCE := "RCE"
 		_cAliasSRJ := "SRJ"
+		_cAliasSR6 := "SR6"
 		_cAliasSRV := "SRV"
 		_cAliasZF6 := "ZF6"
 		_cAliasSRD := "SRD"
@@ -199,6 +211,10 @@ Static Function ECO18_02(_cEmp,_cFil,_cFilRM)
 			_cAliasSRJ  := "TSRJ"
 			_lOutSRJ := .T.
 		Endif
+		If EmpOpenFile("TSR6","SR6",1,.T., _cEmp,@_cModo)
+			_cAliasSR6  := "TSR6"
+			_lOutSR6 := .T.
+		Endif
 		If EmpOpenFile("TSRV","SRV",1,.T., _cEmp,@_cModo)
 			_cAliasSRV := "TSRV"
 			_lOutSRV := .T.
@@ -213,11 +229,12 @@ Static Function ECO18_02(_cEmp,_cFil,_cFilRM)
 		Endif
 	Endif
 
-	If !Empty(_cAliasSRA) .And. !Empty(_cAliasRCE) .And. !Empty(_cAliasSRJ) .And. !Empty(_cAliasSRV) .And. !Empty(_cAliasZF6) .And. !Empty(_cAliasSRD)
+	If !Empty(_cAliasSRA) .And. !Empty(_cAliasRCE) .And. !Empty(_cAliasSRJ) .And. !Empty(_cAliasSR6) .And. !Empty(_cAliasSRV) .And. !Empty(_cAliasZF6) .And. !Empty(_cAliasSRD)
 
 		//Exclui daddos da tabela SRD
-		_cUpd := " DELETE "+_cTabSRD+ " FROM "+_cTabSRD+" WHERE E1_FILIAL = '"+_cFil+"' "
-		_cUpd += " AND RD.DATPGT BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"' "
+		_cUpd := " DELETE "+_cTabSRD+ " FROM "+_cTabSRD+" WHERE RD_FILIAL = '"+_cFil+"' "
+		// _cUpd += " AND RD_DATPGT BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"' "
+		_cQry += " AND RD_DATARQ BETWEEN '"+LEFT(DTOS(MV_PAR01),6)+"' AND '"+LEFT(DTOS(MV_PAR02),6)+"'  " + CRLF
 
 		TCSQLEXEC(_cUpd )
 
@@ -230,14 +247,14 @@ Static Function ECO18_02(_cEmp,_cFil,_cFilRM)
 
 				(_cAliasSRV)->(dbOrderNickName("INDSRVRM"))
 				If !(_cAliasSRV)->(MsSeek(xFilial("SRV")+Alltrim(TRB->CODEVEN)))
-					GeraVerba(_cFil,TRB->CODEVEN)
+					GeraVerba(_cAliasSRV,_cFil,TRB->CODEVEN)
 				Endif
 
 				_cVerba   := (_cAliasSRV)->RV_COD
 
 				(_cAliasSRA)->(dbSetOrder(1))
 				If !(_cAliasSRA)->(MsSeek(xFilial("SRA")+Alltrim(TRB->CHAPA)))
-					If !GeraFun()
+					If !GeraFun(_CALIASSRA,_cAliasSRJ,_cAliasRCE,_cAliasSR6,_cAliasZF6)
 						Return(Nil)
 					Endif
 				Endif
@@ -245,12 +262,13 @@ Static Function ECO18_02(_cEmp,_cFil,_cFilRM)
 				(_cAliasSRD)->(RecLock(_cAliasSRD,.T.))
 				(_cAliasSRD)->RD_FILIAL    := _cFil
 				(_cAliasSRD)->RD_MAT       := TRB->CHAPA
-				(_cAliasSRD)->RD_DATARQ    := TRB->ANOCOMP
-				(_cAliasSRD)->RD_MES       := TRB->MESCOMP
+				(_cAliasSRD)->RD_DATARQ    := cValtoChar(TRB->ANOCOMP)+PadL(cValToChar(TRB->MESCOMP),2,"0")
+				(_cAliasSRD)->RD_MES       := PadL(cValToChar(TRB->MESCOMP),2,"0")
 				(_cAliasSRD)->RD_PD        := _cVerba
-				(_cAliasSRD)->DATPGT       := TRB->DTPAGTO
+				(_cAliasSRD)->RD_DATPGT    := TRB->DTPAGTO
 				(_cAliasSRD)->RD_HORAS     := TRB->HORAS
 				(_cAliasSRD)->RD_VALOR     := TRB->VALOR
+				(_cAliasSRD)->RD_SEMANA    := PadL(cValToChar(TRB->SEMANA),2,"0")
 				(_cAliasSRD)->(MsUnLock())
 
 				TRB->(dbSkip())
@@ -263,6 +281,7 @@ Static Function ECO18_02(_cEmp,_cFil,_cFilRM)
 		RestArea( _aAreaSRA )
 		RestArea( _aAreaRCE )
 		RestArea( _aAreaSRJ )
+		RestArea( _aAreaSR6 )
 		RestArea( _aAreaSRV )
 		RestArea( _aAreaZF6 )
 		RestArea( _aAreaSRD )
@@ -279,6 +298,9 @@ Static Function ECO18_02(_cEmp,_cFil,_cFilRM)
 	ENDIF
 	If _lOutSRJ
 		TSRJ->(dbCloseArea())
+	ENDIF
+	If _lOutSR6
+		TSR6->(dbCloseArea())
 	ENDIF
 	If _lOutSRV
 		TSRV->(dbCloseArea())
@@ -310,31 +332,31 @@ Return (Nil)
 
 
 
-Static Function GeraVerba(_cFil,_cCodEve)
+Static Function GeraVerba(_cAliasSRV,_cFil,_cCodEve)
 
 	Local _cQryNxt := ''
 	Local _cCod    := ''
 
-	_cQryNxt := " SELECT MAX(RV_COD) AS COD FROM "+RetSqlName("SRV")+" RV (NOLOCK) " +CRLF
+	_cQryNxt := " SELECT COALESCE(MAX(RV_COD),'') AS COD FROM "+RetSqlName("SRV")+" RV (NOLOCK) " +CRLF
 	_cQryNxt += " WHERE RV.D_E_L_E_T_ = '' AND RV_FILIAL = '"+xFilial("SRV")+"' " +CRLF
-	If TRB->PROVDESCBASE = 'P'
-		_cQryNxt += " AND A2_COD < '400' " +CRLF
-	ElseIf TRB->PROVDESCBASE = 'D'
-		_cQryNxt += " AND A2_COD BETWEEN '401' AND '799' " +CRLF
+	If TRB->RVTIPOCOD = 'P'
+		_cQryNxt += " AND RV_COD < '400' " +CRLF
+	ElseIf TRB->RVTIPOCOD = 'D'
+		_cQryNxt += " AND RV_COD BETWEEN '401' AND '799' " +CRLF
 	Else
-		_cQryNxt += " AND A2_COD > '800' " +CRLF
+		_cQryNxt += " AND RV_COD > '800' " +CRLF
 	Endif
 
 	TcQuery _cQryNxt New Alias "TNEXT"
 
-	If Contar("TNEXT","!EOF()")  > 0
-		TNEXT->(dbGoTop())
+	TNEXT->(dbGoTop())
 
+	If !Empty(TNEXT->COD)
 		_cCod := SOMA1(TNEXT->COD)
 	Else
-		If TRB->PROVDESCBASE = 'P'
+		If TRB->RVTIPOCOD = 'P'
 			_cCod := '001'
-		ElseIf TRB->PROVDESCBASE = 'D'
+		ElseIf TRB->RVTIPOCOD = 'D'
 			_cCod := '401'
 		Else
 			_cCod := '801'
@@ -349,15 +371,14 @@ Static Function GeraVerba(_cFil,_cCodEve)
 	(_cAliasSRV)->RV_TIPOCOD    := TRB->RVTIPOCOD
 	(_cAliasSRV)->RV_TIPO       := TRB->RVTIPO
 	(_cAliasSRV)->RV_PERC       := TRB->RVPERC
-	(_cAliasSRV)->RV_INSS       := TRB->RVINSS
-	(_cAliasSRV)->RV_IR         := TRB->RVIR
-	(_cAliasSRV)->RV_FGTS       := TRB->RVFGTS
-	(_cAliasSRV)->RV_RAIS       := TRB->RVRAIS
-	(_cAliasSRV)->RV_INSSFER    := TRB->RVINSSFER
-	(_cAliasSRV)->RV_REF13      := TRB->RVREF13
-	// (_cAliasSRV)->RV_REF13      := TRB->RVREF13
+	(_cAliasSRV)->RV_INSS       := If(TRB->RVINSS=0,'N','S')
+	(_cAliasSRV)->RV_IR         := If(TRB->RVIR=0,'N','S')
+	(_cAliasSRV)->RV_FGTS       := If(TRB->RVFGTS=0,'N','S')
+	// (_cAliasSRV)->RV_RAIS       := TRB->RVRAIS
+	(_cAliasSRV)->RV_INSSFER    := If(TRB->RVINSSFER=0,"2","1")
+	(_cAliasSRV)->RV_REF13      := If(TRB->RVREF13=0,"N","S")
 	(_cAliasSRV)->RV_DESC       := TRB->RVDESC
-	(_cAliasSRV)->RV_CODFOL     := TRB->RVCODFOL
+	// (_cAliasSRV)->RV_CODFOL     := TRB->RVCODFOL
 	(_cAliasSRV)->RV_NATUREZ    := TRB->RVNATUREZ
 	(_cAliasSRV)->RV_YCODRM     := TRB->RVCOD
 	(_cAliasSRV)->(MsUnLock())
@@ -366,16 +387,38 @@ Return(NIL)
 
 
 
-Static Function GeraFun()
+Static Function GeraFun(_CALIASSRA,_cAliasSRJ,_cAliasRCE,_cAliasSR6,_cAliasZF6)
 
-	Local _lRet := .T.
+	Local _lRet      := .T.
+	Local a
+	Local _aStrSRA   := {}
+	Local _cCorRaca  := ''
 
 	If TFUN->(MsSeek(TRB->COLIGADA + Alltrim(TRB->CHAPA)))
+
+		_aStrSRA := SRA->(dbStruct())
+				/* 
+		RM		Protheus	Desc
+		0		1			INDIGENA
+		2		2			Branca
+		4		4			Preta/Negra
+		6		6			Amarela
+		8		8			Parda
+		9		9			Não informado
+		10		9			Não declarado
+		*/
+
+		If cValToChar(TFUN->CORRACA) = "0"
+			_cCorRaca   := "1"
+		ElseIf cValToChar(TFUN->CORRACA) = "10" .Or. Empty(cValToChar(TFUN->CORRACA))
+			_cCorRaca    := "9"
+		Else
+			_cCorRaca    := cValToChar(TFUN->CORRACA)
+		Endif
 
 		(_cAliasSRA)->(RecLock(_cAliasSRA,.T.))
 		(_cAliasSRA)->RA_FILIAL     := xFilial("SRA")
 		(_cAliasSRA)->RA_MAT        := TFUN->CHAPA
-		// (_cAliasSRA)->RA_CC         := TFUN->
 		(_cAliasSRA)->RA_NOME       := TFUN->NOME
 		(_cAliasSRA)->RA_CIC        := TFUN->CPF
 		(_cAliasSRA)->RA_PIS        := TFUN->PISPASEP
@@ -393,9 +436,7 @@ Static Function GeraFun()
 		(_cAliasSRA)->RA_CNHORG     := TFUN->CNHORI
 		(_cAliasSRA)->RA_DTEMCNH    := TFUN->CNHEMI
 		(_cAliasSRA)->RA_DTVCCNH    := TFUN->CNHVCTO
-		// (_cAliasSRA)->RA_CATCNH     := TFUN->CNHTP
 		(_cAliasSRA)->RA_UFCNH      := TFUN->CNHUF
-
 		(_cAliasSRA)->RA_RESERVI    := TFUN->RESERV
 		(_cAliasSRA)->RA_TITULOE    := TFUN->TITELE
 		(_cAliasSRA)->RA_ZONASEC    := Alltrim(TFUN->ZONAELE)+'/'+Alltrim(TFUN->SECAOELE)
@@ -408,45 +449,73 @@ Static Function GeraFun()
 		(_cAliasSRA)->RA_ESTADO     := TFUN->ESTADO
 		(_cAliasSRA)->RA_CEP        := TFUN->CEP
 		(_cAliasSRA)->RA_TELEFON    := TFUN->FONE1
-		// (_cAliasSRA)->RA_PAI        := TFUN->
-		// (_cAliasSRA)->RA_MAE        := TFUN->
 		(_cAliasSRA)->RA_NATURAL    := UPPER(TFUN->NATURAL)
 		(_cAliasSRA)->RA_NACIONA    := '10'
 		(_cAliasSRA)->RA_ESTCIVI    := TFUN->ESTCIVIL
 		(_cAliasSRA)->RA_SEXO       := TFUN->SEXO
-		(_cAliasSRA)->RA_DEPIR      := TFUN->DEPIR
-		(_cAliasSRA)->RA_DEPSF      := TFUN->DEPSF
+		(_cAliasSRA)->RA_DEPIR      := PadL(cValToChar(TFUN->DEPIR),2,"0")
+		(_cAliasSRA)->RA_DEPSF      := PadL(cValToChar(TFUN->DEPSF),2,"0")
 		(_cAliasSRA)->RA_NASC       := TFUN->DTNASC
 		(_cAliasSRA)->RA_ADMISSA    := TFUN->DTADMISSA
 		(_cAliasSRA)->RA_OPCAO      := TFUN->DTOPCAO
 		(_cAliasSRA)->RA_DEMISSA    := TFUN->DTDEMISSA
-		// (_cAliasSRA)->RA_VCTOEXP    := TFUN->
-		// (_cAliasSRA)->RA_VCTEXP2    := TFUN->
 		(_cAliasSRA)->RA_BCDEPSA    := Alltrim(TFUN->PGTOBCO) + Alltrim(TFUN->PGTOAGE)
 		(_cAliasSRA)->RA_CTDEPSA    := Alltrim(TFUN->PGTOCTA)
 		(_cAliasSRA)->RA_BCDPFGT    := Alltrim(TFUN->BCOFGTS)
 		(_cAliasSRA)->RA_CTDPFGT    := Alltrim(TFUN->CTAFGTS)
-
 		(_cAliasSRA)->RA_SITFOLH    := GetSitFol(TFUN->SITFOL)
 		(_cAliasSRA)->RA_HRSMES     := 220
 		(_cAliasSRA)->RA_HRSEMAN    := 44
 		(_cAliasSRA)->RA_CHAPA      := TFUN->CHAPA
-		// (_cAliasSRA)->RA_TNOTRAB    := TFUN->
-		(_cAliasSRA)->RA_CODFUNC    := GetFuncao(TFUN->CODFUNC)
+		(_cAliasSRA)->RA_TNOTRAB    := GetTurno(_cAliasSR6,_cAliasZF6,TFUN->TURNCOD)
+		(_cAliasSRA)->RA_CODFUNC    := GetFuncao(_cAliasSRJ,TFUN->CODFUNC)
 		(_cAliasSRA)->RA_CBO        := TFUN->CBO
-		// (_cAliasSRA)->RA_PGCTSIN    := 
 		(_cAliasSRA)->RA_ALTCBO     := 'N'
-		(_cAliasSRA)->RA_SINDICA    := GetSind(TFUN->CODSIND)
-		(_cAliasSRA)->RA_PROCESS    := "00001"
+		(_cAliasSRA)->RA_SINDICA    := GetSind(_cAliasRCE,TFUN->CODSIND)
+		(_cAliasSRA)->RA_PROCES     := "00001"
 		(_cAliasSRA)->RA_PERCADT    := TFUN->PERCADTO
+		(_cAliasSRA)->RA_CATFUNC    := 'M'
+		(_cAliasSRA)->RA_TIPOPGT    := TFUN->RECBTO
+		(_cAliasSRA)->RA_SALARIO    := TFUN->SALARIO
+		(_cAliasSRA)->RA_ALTEND     := 'N'
+		(_cAliasSRA)->RA_ALTCP      := 'N'
+		(_cAliasSRA)->RA_ALTPIS     := 'N'
+		(_cAliasSRA)->RA_ALTADM     := 'N'
+		(_cAliasSRA)->RA_ALTOPC     := 'N'
+		(_cAliasSRA)->RA_ALTNOME    := 'N'
+		(_cAliasSRA)->RA_CODRET     := '0561'
+		(_cAliasSRA)->RA_CRACHA     := TFUN->CHAPA
+		(_cAliasSRA)->RA_APELIDO    := TFUN->APELIDO
+		(_cAliasSRA)->RA_PERCSAT    := 0
+		(_cAliasSRA)->RA_ACUMBH     := 'N'
+		(_cAliasSRA)->RA_RACACOR    := _cCorRaca
+		(_cAliasSRA)->RA_RECMAIL    := 'N'
+		(_cAliasSRA)->RA_EMAIL      := TFUN->EMAIL
+		(_cAliasSRA)->RA_PERFGTS    := 0
+		(_cAliasSRA)->RA_TPMAIL     := '1'
+		(_cAliasSRA)->RA_MSBLQL     := If(Empty(TFUN->DTDEMISSA),"2","1")
+		(_cAliasSRA)->RA_TPDEFFI    := '0'
+		(_cAliasSRA)->RA_RESEXT     := '2'
+		(_cAliasSRA)->RA_CLAURES    := '1'
+		(_cAliasSRA)->RA_HOPARC     := '2'
+		(_cAliasSRA)->RA_COMPSAB    := '2'
+		(_cAliasSRA)->RA_HRSDIA     := 7.333
+		(_cAliasSRA)->RA_ADCPERI    := "1
+		(_cAliasSRA)->RA_ADCINS     := "1"
+		(_cAliasSRA)->RA_REGRA      := "01"
+		(_cAliasSRA)->RA_CTPCD      := '2'
+		// (_cAliasSRA)->RA_CC         := TFUN->
+		// (_cAliasSRA)->RA_CATCNH     := TFUN->CNHTP
+		// (_cAliasSRA)->RA_PAI        := TFUN->
+		// (_cAliasSRA)->RA_MAE        := TFUN->
+		// (_cAliasSRA)->RA_VCTOEXP    := TFUN->
+		// (_cAliasSRA)->RA_VCTEXP2    := TFUN->
+		// (_cAliasSRA)->RA_PGCTSIN    :=
 		// (_cAliasSRA)->RA_ADTPOSE    :=
 		// (_cAliasSRA)->RA_CESTAB     := TFUN->
 		// (_cAliasSRA)->RA_VALEREF    := TFUN->
 		// (_cAliasSRA)->RA_SEGUROV    := TFUN->
 		// (_cAliasSRA)->RA_PENSALI    := TFUN->
-		(_cAliasSRA)->RA_CATFUNC    := 'M'
-		(_cAliasSRA)->RA_TIPOPGT    := TFUN->RECBTO
-		(_cAliasSRA)->RA_SALARIO    := TFUN->SALARIO
 		// (_cAliasSRA)->RA_PERICUL    := TFUN->
 		// (_cAliasSRA)->RA_INSMIN     := TFUN->
 		// (_cAliasSRA)->RA_INSMED     := TFUN->
@@ -457,38 +526,13 @@ Static Function GeraFun()
 		// (_cAliasSRA)->RA_GRINRAI    := TFUN->
 		// (_cAliasSRA)->RA_RESCRAI    := TFUN->
 		// (_cAliasSRA)->RA_MESTRAB    := TFUN->
-		(_cAliasSRA)->RA_ALTEND     := 'N'
-		(_cAliasSRA)->RA_ALTCP      := 'N'
-		(_cAliasSRA)->RA_ALTPIS     := 'N'
-		(_cAliasSRA)->RA_ALTADM     := 'N'
-		(_cAliasSRA)->RA_ALTOPC     := 'N'
-		(_cAliasSRA)->RA_ALTNOME    := 'N'
-		(_cAliasSRA)->RA_CODRET     := '0561'
-		(_cAliasSRA)->RA_CRACHA     := TFUN->CHAPA
 		// (_cAliasSRA)->RA_REGRA      := TFUN->
 		// (_cAliasSRA)->RA_SEQTURN    := TFUN->
 		// (_cAliasSRA)->RA_SENHA      := TFUN->
 		// (_cAliasSRA)->RA_TPCONTR    := TFUN->
-		(_cAliasSRA)->RA_APELIDO    := TFUN->APELIDO
-		(_cAliasSRA)->RA_PERCSAT    := 0
 		// (_cAliasSRA)->RA_BHFOL      := TFUN->
 		// (_cAliasSRA)->RA_BRPDH      := TFUN->
-		(_cAliasSRA)->RA_ACUMBH     := 'N'
-		// (_cAliasSRA)->RA_RACACOR    := TFUN->
-		(_cAliasSRA)->RA_RECMAIL    := 'N'
-		(_cAliasSRA)->RA_EMAIL      := TFUN->EMAIL
-		(_cAliasSRA)->RA_PERFGTS    := 0
-		(_cAliasSRA)->RA_TPMAIL     := '1'
-		(_cAliasSRA)->RA_MSBLQL     := If(Empty(TFUN->DTDEMISSA),2,1)
-		(_cAliasSRA)->RA_TPDEFFI    := '0'
-		(_cAliasSRA)->RA_RESEXT     := '2'
-		(_cAliasSRA)->RA_CLAURES    := '1'
-		(_cAliasSRA)->RA_HOPARC     := '2'
-		(_cAliasSRA)->RA_COMPSAB    := '2'
 		// (_cAliasSRA)->RA_MUNNASC    := TFUN->
-		(_cAliasSRA)->RA_HRSDIA     := 7.333
-		(_cAliasSRA)->RA_ADCPERI    := 1
-		(_cAliasSRA)->RA_ADCINS     := 1
 		// (_cAliasSRA)->RA_
 		// (_cAliasSRA)->RA_
 		// (_cAliasSRA)->RA_
@@ -499,8 +543,12 @@ Static Function GeraFun()
 		// (_cAliasSRA)->RA_
 		// (_cAliasSRA)->RA_
 		// (_cAliasSRA)->RA_
+		For a := 1 to Len(_aStrSRA)
+			If !Alltrim(_aStrSRA[a][1]) $ '|RA_FILIAL|RA_MAT|RA_NOME|RA_CIC|RA_PIS|RA_RG|RA_RGORG|RA_RGEXP|RA_ORGEMRG|RA_RGUF|RA_DTRGEXP|RA_NUMCP|RA_SERCP|RA_UFCP|RA_DTCPEXP|RA_HABILIT|RA_CNHORG|RA_DTEMCNH|RA_DTVCCNH|RA_UFCNH|RA_RESERVI|RA_TITULOE|RA_ZONASEC|RA_ENDEREC|RA_NUMENDE|RA_COMPLEM|RA_BAIRRO|RA_MUNICIP|RA_CODMUN|RA_ESTADO|RA_CEP|RA_TELEFON|RA_NATURAL|RA_NACIONA|RA_ESTCIVI|RA_SEXO|RA_DEPIR|RA_DEPSF|RA_NASC|RA_ADMISSA|RA_OPCAO|RA_DEMISSA|RA_BCDEPSA|RA_CTDEPSA|RA_BCDPFGT|RA_CTDPFGT|RA_SITFOLH|RA_HRSMES|RA_HRSEMAN|RA_CHAPA|RA_TNOTRAB|RA_CODFUNC|RA_CBO|RA_ALTCBO|RA_SINDICA|RA_PROCES|RA_PERCADT|RA_CATFUNC|RA_TIPOPGT|RA_SALARIO|RA_ALTEND|RA_ALTCP|RA_ALTPIS|RA_ALTADM|RA_ALTOPC|RA_ALTNOME|RA_CODRET|RA_CRACHA|RA_APELIDO|RA_PERCSAT|RA_ACUMBH|RA_RACACOR|RA_RECMAIL|RA_EMAIL|RA_PERFGTS|RA_TPMAIL|RA_MSBLQL|RA_TPDEFFI|RA_RESEXT|RA_CLAURES|RA_HOPARC|RA_COMPSAB|RA_HRSDIA|RA_ADCPERI|RA_ADCINS|RA_REGRA|RA_CTPCD'
+				&((_cAliasSRA)+"->"+_aStrSRA[a][1]) := CriaVar(_aStrSRA[a][1])
+			Endif
+		Next a
 		(_cAliasSRA)->(MsUnLock())
-
 
 	Else
 		MsgAlert('Chapa '+Alltrim(TRB->CHAPA)+' não encontrada nas tabelas PFUNC/PPESSOA.')
@@ -554,22 +602,28 @@ Return(_cSitFol)
 
 
 
-Static Function GetFuncao(_cCod)
+Static Function GetFuncao(_cAliasSRJ,_cCod)
 
+	Local a
 	Local _cCodFun := PADL(Alltrim(TFUN->CODFUNC),TAMSX3("RJ_FUNCAO")[1],"0")
-
-	// (_cAliasZF6)->(dbSetOrder(1))
-	// If !(_cAliasZF6)->(MsSeek(xFilial("ZF6")+"SRJ"+PADR("RJ_FUNCAO",TAMSX3("ZF6_CAMPO")[1])+Alltrim(TFUN->CODFUNC)))
+	Local _aStrSRJ := {}
 
 	(_cAliasSRJ)->(dbSetOrder(1))
 	If !(_cAliasSRJ)->(MsSeek( xFilial("SRJ")+_cCodFun))
+
+		_aStrSRJ := SRJ->(dbStruct())
 
 		(_cAliasSRJ)->(RecLock(_cAliasSRJ,.T.))
 		(_cAliasSRJ)->RJ_FILIAL  := xFilial("SRJ")
 		(_cAliasSRJ)->RJ_FUNCAO  := _cCodFun
 		(_cAliasSRJ)->RJ_DESC    := Alltrim(TFUN->FUNNOME)
-		(_cAliasSRJ)->RJ_CODCBO  := Alltrim(TFUN->CBO2002)
-		(_cAliasSRJ)->RJ_CBO     := Alltrim(TFUN->CBO)
+		(_cAliasSRJ)->RJ_CODCBO  := Alltrim(StrTran(TFUN->CBO2002,"-",""))
+		(_cAliasSRJ)->RJ_CBO     := Alltrim(StrTran(TFUN->CBO,"-",""))
+		For a := 1 to Len(_aStrSRJ)
+			If !Alltrim(_aStrSRJ[a][1]) $ 'RJ_FILIAL|RJ_FUNCAO|RJ_DESC|RJ_CODCBO|RJ_CBO'
+				&((_cAliasSRJ)+"->"+_aStrSRJ[a][1]) := CriaVar(_aStrSRJ[a][1])
+			Endif
+		Next a
 		// (_cAliasSRJ)->RJ_MAOBRA  :=
 		// (_cAliasSRJ)->RJ_CARGO   :=
 		// (_cAliasSRJ)->RJ_SALARIO :=
@@ -610,17 +664,21 @@ Return(_cCodFun)
 
 
 
-Static Function GetSind(_cCodSind)
+Static Function GetSind(_cAliasRCE,_cCodSind)
+
+	Local a
+	Local _aStrRCE := {}
 
 	(_cAliasRCE)->(dbSetOrder(1))
 	If !(_cAliasRCE)->(MsSeek(xFilial(_cAliasRCE)+_cCodSind))
 
+		_aStrRCE := RCE->(dbStruct())
+
 		(_cAliasRCE)->(RecLock(_cAliasRCE,.T.))
-		(_cAliasRCE)->RCE_FILIAL := ''
+		(_cAliasRCE)->RCE_FILIAL := xFilial(_cAliasRCE)
 		(_cAliasRCE)->RCE_CODIGO := _cCodSind
 		(_cAliasRCE)->RCE_DESCRI := TFUN->SINDNOME
 		(_cAliasRCE)->RCE_CGC    := Alltrim(StrTran(StrTran(StrTran(TFUN->SINDCNPJ,".",""),"-",""),"/",""))
-		// (_cAliasRCE)->RCE_ENTSIN
 		(_cAliasRCE)->RCE_ENDER  := TFUN->SINDRUA
 		(_cAliasRCE)->RCE_NUMER  := TFUN->SINDNRO
 		(_cAliasRCE)->RCE_COMPLE := TFUN->SINDCOMPL
@@ -629,6 +687,15 @@ Static Function GetSind(_cCodSind)
 		(_cAliasRCE)->RCE_UF     := TFUN->SINDUF
 		(_cAliasRCE)->RCE_MUNIC  := TFUN->SINDMUN
 		(_cAliasRCE)->RCE_FONE   := TFUN->SINDFONE
+
+		For a := 1 to Len(_aStrRCE)
+			If !Alltrim(_aStrRCE[a][1]) $ '|RCE_FILIAL|RCE_CODIGO|RCE_DESCRI|RCE_CGC|RCE_ENDER|RCE_NUMER|RCE_COMPLE|RCE_BAIRRO|RCE_CEP|RCE_UF|RCE_MUNIC|RCE_FONE'
+				&((_cAliasRCE)+"->"+_aStrRCE[a][1]) := CriaVar(_aStrRCE[a][1])
+			Endif
+		Next a
+
+
+		// (_cAliasRCE)->RCE_ENTSIN
 		// (_cAliasRCE)->RCE_MESDIS
 		// (_cAliasRCE)->RCE_MESANT
 		// (_cAliasRCE)->RCE_MED01
@@ -755,3 +822,62 @@ Static Function GetSind(_cCodSind)
 	Endif
 
 Return(_cCodSind)
+
+
+
+
+
+Static Function GetTurno(_cAliasSR6,_cAliasZF6,_cCod)
+
+	Local a
+	Local _cCodTur := ''
+	Local _aStrSR6 := {}
+	Local _cQryNxt := ''
+
+	(_cAliasSR6)->(dbSetOrder(3))
+	If !(_cAliasSR6)->(MsSeek(xFilial("SR6")+Alltrim(_cCod)))
+
+		_aStrSR6 := SR6->(dbStruct())
+
+		_cQryNxt := " SELECT COALESCE(MAX(R6_TURNO),'') AS COD FROM "+RetSqlName("SR6")+" R6 (NOLOCK) " +CRLF
+		_cQryNxt += " WHERE R6.D_E_L_E_T_ = '' AND R6_FILIAL = '"+xFilial("SR6")+"' " +CRLF
+
+		TcQuery _cQryNxt New Alias "TNEXT"
+
+		TNEXT->(dbGoTop())
+
+		If !Empty(TNEXT->COD)
+			_cCodTur := SOMA1(TNEXT->COD)
+		Else
+			_cCodTur := '001'
+		Endif
+
+		TNEXT->(dbCloseArea())
+
+		(_cAliasSR6)->(RecLock(_cAliasSR6,.T.))
+		(_cAliasSR6)->R6_FILIAL  := xFilial("SR6")
+		(_cAliasSR6)->R6_TURNO   := _cCodTur
+		(_cAliasSR6)->R6_DESC    := Alltrim(TFUN->TURNDESC)
+		(_cAliasSR6)->R6_YCODRM  := _cCod
+		For a := 1 to Len(_aStrSR6)
+			If !Alltrim(_aStrSR6[a][1]) $ 'R6_FILIAL|R6_TURNO|R6_DESC|R6_YCODRM'
+				&((_cAliasSR6)+"->"+_aStrSR6[a][1]) := CriaVar(_aStrSR6[a][1])
+			Endif
+		Next a
+		(_cAliasSR6)->(MsUnLock())
+
+		// (_cAliasZF6)->(RecLock(_cAliasZF6,.T.))
+		// (_cAliasZF6)->ZF6_FILIAL := _cFil
+		// (_cAliasZF6)->ZF6_TABELA := "SR6"
+		// (_cAliasZF6)->ZF6_CAMPO  := "R6_TURNO"
+		// (_cAliasZF6)->ZF6_CODRM  := _cCod
+		// (_cAliasZF6)->ZF6_IDRM   := _cCod
+		// (_cAliasZF6)->ZF6_TOTVS  := _cCodTur
+		// (_cAliasZF6)->ZF6_DESC   := Alltrim(TFUN->TURNDESC)
+		// (_cAliasZF6)->(MsUnLock())
+
+	Else
+		_cCodTur := (_cAliasSR6)->R6_TURNO
+	Endif
+
+Return(_cCodTur)

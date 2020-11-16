@@ -48,6 +48,8 @@ Static Function ECO15_01()
 
 	Local AX, _cQry2
 
+	Private _cDtCorte := dtos(ctod('11/11/2020'))
+
 	_cQry2 := " SELECT RIGHT('00'+RTRIM(CAST(CODCOLIGADA AS CHAR(02))),2) AS CODEMP,CAST(CODCFO AS CHAR(07)) AS CODCFO, NOMEFANTASIA AS NREDUZ,NOME,CGCCFO,INSCRESTADUAL AS INSCR,"+ CRLF
 	_cQry2 += " CAST(PAGREC AS CHAR(01)) AS PAGREC, RUA,NUMERO,COMPLEMENTO AS COMPLEM,PESSOAFISOUJUR AS PESSOA,CODMUNICIPIO AS COD_MUN,CODETD,CIDADE,"+ CRLF
 	_cQry2 += " BAIRRO,CEP,TELEFONE,CONTATO,EMAIL,ATIVO,LIMITECREDITO AS LC,CONTRIBUINTE AS CONTRIB,INSCRMUNICIPAL AS INSCRM, "+ CRLF
@@ -127,12 +129,20 @@ Static Function ECO15_02(_cEmp,_cFil,_cFilRM) //SE1
 	_cQry += " LEFT JOIN [10.140.1.5].[CorporeRM].dbo.TMOV T ON T.CODCOLIGADA = A.CODCOLIGADA And T.IDMOV = A.IDMOV " + CRLF
 	// _cQry += " LEFT JOIN [10.140.1.5].[CorporeRM].dbo.FDADOSPGTO P ON P.CODCOLIGADA = A.CODCOLPGTO AND P.CODCOLCFO = A.CODCOLCFO AND P.CODCFO = A.CODCFO AND P.IDPGTO = A.IDPGTO " + CRLF
 	_cQry += " WHERE RTRIM(A.CODCOLIGADA)+RTRIM(A.CODFILIAL) IN ('"+_cFilRM+"') " + CRLF
-	_cQry += " AND A.STATUSLAN IN (0,4) AND A.CODTDO <>'99' AND NFOUDUP <> 1 " + CRLF
+	_cQry += " AND A.STATUSLAN IN (0,1,4) AND A.CODTDO <>'99' AND NFOUDUP <> 1 " + CRLF
+	// _cQry += " AND A.STATUSLAN IN (0,4) AND A.CODTDO <>'99' AND NFOUDUP <> 1 " + CRLF
 	_cQry += " AND A.PAGREC = '1' " + CRLF
 	_cQry += " AND LEFT(CONVERT(char(15), A.DATAEMISSAO, 23),4) + " +CRLF
 	_cQry += " SUBSTRING(CONVERT(char(15), A.DATAEMISSAO, 23),6,2) + " +CRLF
 	_cQry += " SUBSTRING(CONVERT(char(15), A.DATAEMISSAO, 23),9,2) " +CRLF
 	_cQry += " BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"' " + CRLF
+
+	_cQry += " AND LEFT(CONVERT(char(15), A.DATAEMISSAO, 23),4) + " + CRLF
+	_cQry += " SUBSTRING(CONVERT(char(15), A.DATAEMISSAO, 23),6,2) + " + CRLF
+	_cQry += " SUBSTRING(CONVERT(char(15), A.DATAEMISSAO, 23),9,2) " + CRLF
+	_cQry += " >= '"+_cDtCorte+"' " + CRLF
+	// _cQry += " >= '20201111'" + CRLF
+	
 	_cQry += " ORDER BY COLIGADA,FILIAL " + CRLF
 
 	Memowrite("D:\_Temp\ECO015A.txt",_cQry)
@@ -171,7 +181,9 @@ Static Function ECO15_02(_cEmp,_cFil,_cFilRM) //SE1
 		//Exclui daddos da tabela SE1
 		_cUpd := " DELETE "+_cTabSE1+ " FROM "+_cTabSE1+" WHERE E1_FILIAL = '"+_cFil+"' "
 		_cUpd += " AND E1_EMISSAO BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"' "
-		_cUpd += " AND E1_IDRM <> '' "
+		_cUpd += " AND E1_IDRM <> ''  AND E1_SALDO = E1_VALOR"
+		_cUpd += " AND E1_EMISSAO >= '"+_cDtCorte+"' " + CRLF
+		// _cUpd += " AND E1_EMISSAO >= '20201111' " + CRLF
 		// _cUpd += " AND E1_TIPO <> 'NF' "
 
 		TCSQLEXEC(_cUpd )
@@ -224,59 +236,66 @@ Static Function ECO15_02(_cEmp,_cFil,_cFilRM) //SE1
 					_cTpCli  := (_cAliasSA1)->A1_TIPO
 				Endif
 
-				(_cAliasSE1)->(RecLock(_cAliasSE1,.T.))
-				(_cAliasSE1)->E1_YNROTRM   := Alltrim(TRB->DOCUMENTO)+If(!Empty(TRB->PARCELA),' | '+Alltrim(TRB->PARCELA),'')
-				(_cAliasSE1)->E1_FILIAL    := _cFil
+				_cIDRM := Alltrim(Str(Val(TRB->COLIGADA)))+Alltrim(Str(TRB->FILIAL))+Alltrim(Str(TRB->IDLAN))
+				
+				(_cAliasSE1)->(dbOrderNickName("INDSE1Z"))
+				If (_cAliasSE1)->(!MsSeek(_cFil + _cIDRM ))
 
-				_aNumParc := GetNumParc("E1",_cFil,_cCodCli,_cLojCli,_cPref,TRB->DOCUMENTO,TRB->PARCELA)
+					(_cAliasSE1)->(RecLock(_cAliasSE1,.T.))
+					(_cAliasSE1)->E1_YNROTRM   := Alltrim(TRB->DOCUMENTO)+If(!Empty(TRB->PARCELA),' | '+Alltrim(TRB->PARCELA),'')
+					(_cAliasSE1)->E1_FILIAL    := _cFil
 
-				If Len(Alltrim(TRB->DOCUMENTO)) > 9
-					(_cAliasSE1)->E1_PREFIXO   := Left(TRB->DOCUMENTO,3)
-					(_cAliasSE1)->E1_NUM       := Substr(TRB->DOCUMENTO,4)
-				Else
-					(_cAliasSE1)->E1_PREFIXO   := _cPref
-					(_cAliasSE1)->E1_NUM       := _aNumParc[1]
+					_aNumParc := GetNumParc("E1",_cFil,_cCodCli,_cLojCli,_cPref,TRB->DOCUMENTO,TRB->PARCELA)
+
+					If Len(Alltrim(TRB->DOCUMENTO)) > 9
+						(_cAliasSE1)->E1_PREFIXO   := Left(TRB->DOCUMENTO,3)
+						(_cAliasSE1)->E1_NUM       := Substr(TRB->DOCUMENTO,4)
+					Else
+						(_cAliasSE1)->E1_PREFIXO   := _cPref
+						(_cAliasSE1)->E1_NUM       := _aNumParc[1]
+					Endif
+					(_cAliasSE1)->E1_PARCELA   := _aNumParc[2]
+					(_cAliasSE1)->E1_TIPO      := _aNumParc[3]
+					(_cAliasSE1)->E1_NATUREZ   := "N1001"
+					// (_cAliasSE1)->E1_PORTADO   := (TRB->CNABBANCO)
+					// (_cAliasSE1)->E1_AGEDEP    := ??
+
+					(_cAliasSE1)->E1_CLIENTE    := _cCodCli
+					(_cAliasSE1)->E1_LOJA       := _cLojCli
+					(_cAliasSE1)->E1_NOMCLI     := _cNomCli
+
+					(_cAliasSE1)->E1_EMISSAO    := TRB->EMISSAO
+					(_cAliasSE1)->E1_EMIS1      := TRB->EMISSAO
+
+					(_cAliasSE1)->E1_VENCTO     := TRB->DTVENC
+					(_cAliasSE1)->E1_VENCREA    := TRB->DTVENC
+					(_cAliasSE1)->E1_VENCORI    := TRB->DTVENC
+					(_cAliasSE1)->E1_BAIXA      := TRB->DATABAIXA
+
+					(_cAliasSE1)->E1_VALOR      := TRB->VALOR
+					(_cAliasSE1)->E1_VLCRUZ     := TRB->VALOR
+					(_cAliasSE1)->E1_CODBAR     := TRB->CODBARRA
+					(_cAliasSE1)->E1_BASEIRF    := TRB->VLRBSIRRF
+					(_cAliasSE1)->E1_IRRF       := TRB->VALORIRRF
+					(_cAliasSE1)->E1_VALLIQ     := TRB->VALOR + TRB->JUROS + TRB->MULTA - TRB->DESCONTO
+					(_cAliasSE1)->E1_JUROS      := TRB->JUROS
+					(_cAliasSE1)->E1_MULTA      := TRB->MULTA
+					(_cAliasSE1)->E1_DESCONT    := TRB->DESCONTO
+					(_cAliasSE1)->E1_MOEDA      := 1
+
+					(_cAliasSE1)->E1_HIST       := TRB->HISTORICO
+					(_cAliasSE1)->E1_SALDO      := If(TRB->VLBAIXA >= TRB->VALOR, 0 , TRB->VALOR - TRB->VLBAIXA)
+
+					(_cAliasSE1)->E1_MODSPB     := "1"
+					(_cAliasSE1)->E1_DESDOBR    := "2"
+					(_cAliasSE1)->E1_PROJPMS    := "2"
+					(_cAliasSE1)->E1_MULTNAT    := "2"
+
+					(_cAliasSE1)->E1_IDRM       := Alltrim(Str(Val(TRB->COLIGADA)))+Alltrim(Str(TRB->FILIAL))+Alltrim(Str(TRB->IDLAN))
+					(_cAliasSE1)->E1_IDCNAB     := PADL(TRB->IDLAN,10,"0")
+
+					(_cAliasSE1)->(MsUnLock())
 				Endif
-				(_cAliasSE1)->E1_PARCELA   := _aNumParc[2]
-				(_cAliasSE1)->E1_TIPO      := _aNumParc[3]
-				(_cAliasSE1)->E1_NATUREZ   := "N1001"
-				// (_cAliasSE1)->E1_PORTADO   := (TRB->CNABBANCO)
-				// (_cAliasSE1)->E1_AGEDEP    := ??
-
-				(_cAliasSE1)->E1_CLIENTE    := _cCodCli
-				(_cAliasSE1)->E1_LOJA       := _cLojCli
-				(_cAliasSE1)->E1_NOMCLI     := _cNomCli
-
-				(_cAliasSE1)->E1_EMISSAO    := TRB->EMISSAO
-				(_cAliasSE1)->E1_EMIS1      := TRB->EMISSAO
-
-				(_cAliasSE1)->E1_VENCTO     := TRB->DTVENC
-				(_cAliasSE1)->E1_VENCREA    := TRB->DTVENC
-				(_cAliasSE1)->E1_VENCORI    := TRB->DTVENC
-				(_cAliasSE1)->E1_BAIXA      := TRB->DATABAIXA
-
-				(_cAliasSE1)->E1_VALOR      := TRB->VALOR
-				(_cAliasSE1)->E1_VLCRUZ     := TRB->VALOR
-				(_cAliasSE1)->E1_CODBAR     := TRB->CODBARRA
-				(_cAliasSE1)->E1_BASEIRF    := TRB->VLRBSIRRF
-				(_cAliasSE1)->E1_IRRF       := TRB->VALORIRRF
-				(_cAliasSE1)->E1_VALLIQ     := TRB->VALOR + TRB->JUROS + TRB->MULTA - TRB->DESCONTO
-				(_cAliasSE1)->E1_JUROS      := TRB->JUROS
-				(_cAliasSE1)->E1_MULTA      := TRB->MULTA
-				(_cAliasSE1)->E1_DESCONT    := TRB->DESCONTO
-				(_cAliasSE1)->E1_MOEDA      := 1
-
-				(_cAliasSE1)->E1_HIST       := TRB->HISTORICO
-				(_cAliasSE1)->E1_SALDO      := If(TRB->VLBAIXA >= TRB->VALOR, 0 , TRB->VALOR - TRB->VLBAIXA)
-
-				(_cAliasSE1)->E1_MODSPB     := "1"
-				(_cAliasSE1)->E1_DESDOBR    := "2"
-				(_cAliasSE1)->E1_PROJPMS    := "2"
-				(_cAliasSE1)->E1_MULTNAT    := "2"
-
-				(_cAliasSE1)->E1_IDRM       := Alltrim(Str(Val(TRB->COLIGADA)))+Alltrim(Str(TRB->FILIAL))+Alltrim(Str(TRB->IDLAN))
-
-				(_cAliasSE1)->(MsUnLock())
 
 				TRB->(dbSkip())
 			EndDo
@@ -674,11 +693,18 @@ Static Function ECO15_03(_cEmp,_cFil,_cFilRM) //SE2
 	_cQry += " LEFT JOIN [10.140.1.5].[CorporeRM].dbo.FDADOSPGTO P ON P.CODCOLIGADA = A.CODCOLPGTO AND P.CODCOLCFO = A.CODCOLCFO AND P.CODCFO = A.CODCFO AND P.IDPGTO = A.IDPGTO " + CRLF
 	_cQry += " WHERE RTRIM(A.CODCOLIGADA)+RTRIM(A.CODFILIAL) IN ('"+_cFilRM+"') " + CRLF
 	_cQry += " AND PAGREC = '2' " + CRLF
-	_cQry += " AND A.STATUSLAN IN (0,4) AND A.CODTDO <>'99' AND NFOUDUP <> 1 " + CRLF
+	_cQry += " AND A.STATUSLAN IN (0,1,4) AND A.CODTDO <>'99' AND NFOUDUP <> 1 " + CRLF
+	// _cQry += " AND A.STATUSLAN IN (0,4) AND A.CODTDO <>'99' AND NFOUDUP <> 1 " + CRLF
 	_cQry += " AND LEFT(CONVERT(char(15), A.DATAEMISSAO, 23),4) + " +CRLF
 	_cQry += " SUBSTRING(CONVERT(char(15), A.DATAEMISSAO, 23),6,2) + " +CRLF
 	_cQry += " SUBSTRING(CONVERT(char(15), A.DATAEMISSAO, 23),9,2) " +CRLF
 	_cQry += " BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"' " + CRLF
+
+	_cQry += " AND LEFT(CONVERT(char(15), A.DATAEMISSAO, 23),4) + " + CRLF
+	_cQry += " SUBSTRING(CONVERT(char(15), A.DATAEMISSAO, 23),6,2) + " + CRLF
+	_cQry += " SUBSTRING(CONVERT(char(15), A.DATAEMISSAO, 23),9,2) " + CRLF
+	_cQry += " >= '"+_cDtCorte+"' " + CRLF
+	// _cQry += " >= '20201101'" + CRLF
 	_cQry += " ORDER BY COLIGADA,FILIAL,SERIE,DOCUMENTO " + CRLF
 
 	Memowrite("D:\_Temp\ECO015B.txt",_cQry)
@@ -717,7 +743,9 @@ Static Function ECO15_03(_cEmp,_cFil,_cFilRM) //SE2
 		//Exclui daddos da tabela SE2
 		_cUpd := " DELETE "+_cTabSE2+ " FROM "+_cTabSE2+" WHERE E2_FILIAL = '"+_cFil+"' "
 		_cUpd += " AND E2_EMISSAO BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"' "
-		_cUpd += " AND E2_IDRM <> '' "
+		_cUpd += " AND E2_IDRM <> ''  AND E2_SALDO = E2_VALOR "
+		_cUpd += " AND E2_EMISSAO >= '"+_cDtCorte+"' " + CRLF
+		// _cUpd += " AND E2_EMISSAO >= '20201111'" + CRLF
 		// _cUpd += " AND E2_TIPO <> 'NF' "
 
 		TCSQLEXEC(_cUpd )

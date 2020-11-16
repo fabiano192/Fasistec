@@ -52,7 +52,7 @@ USER FUNCTION EXPRM()
 
 				// _aTabImp := {'SA1020','SA1030'}
 
-				U_IMPRM(_aTabImp)
+				// U_IMPRM(_aTabImp)
 			Endif
 		Else
 			MsgInfo("Não foi marcado nenhuma tabela para Importação.")
@@ -289,23 +289,23 @@ EMP_OLD		FILIAL_OLD		M0_CODIGO	M0_CODFIL
 11			03				03			03
 */
 
-	For n := 1 to Len(_aEmp)
-		U_RMCriarDTC("ZF6",_aEmp[n][1])
+	// For n := 1 to Len(_aEmp)
+	// 	U_RMCriarDTC("ZF6",_aEmp[n][1])
 
-		_cArq	:= "\TAB_RM\"+_cPasta+"\ZF6"+_aEmp[n][2]+"0.dtc"		//Gera o nome do arquivo
-		_cInd	:= "\TAB_RM\"+_cPasta+"\ZF6"+_aEmp[n][2]+"0"			//Indice do arquivo
-		_cTabZ  := "ZF6"+_aEmp[n][2]
+	// 	_cArq	:= "\TAB_RM\"+_cPasta+"\ZF6"+_aEmp[n][2]+"0.dtc"		//Gera o nome do arquivo
+	// 	_cInd	:= "\TAB_RM\"+_cPasta+"\ZF6"+_aEmp[n][2]+"0"			//Indice do arquivo
+	// 	_cTabZ  := "ZF6"+_aEmp[n][2]
 
-		TRM->(dbCloseArea())
+	// 	TRM->(dbCloseArea())
 
-		dbUseArea( .T.,"CTREECDX", _cArq,_cTabZ, .T., .F. )
-		dbSelectArea(_cTabZ)
+	// 	dbUseArea( .T.,"CTREECDX", _cArq,_cTabZ, .T., .F. )
+	// 	dbSelectArea(_cTabZ)
 
-		IndRegua( _cTabZ, _cInd, ZF6->( IndexKey( 1 )))
+	// 	IndRegua( _cTabZ, _cInd, ZF6->( IndexKey( 1 )))
 
-		dbClearIndex()
-		dbSetIndex(_cInd + OrdBagExt() )
-	Next n
+	// 	dbClearIndex()
+	// 	dbSetIndex(_cInd + OrdBagExt() )
+	// Next n
 
 Return()
 

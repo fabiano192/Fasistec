@@ -17,8 +17,8 @@ USER FUNCTION RM_SA1E(_oProcess,_cTab,_cPasta,_cBDados)
 
 	_cQry := " SELECT CODCOLIGADA AS 'EMP',* FROM "+_cBDados+".FCFO " + CRLF
 	// _cQry += " WHERE PAGREC = 3 " + CRLF
-	_cQry += " WHERE PAGREC <> 2 " + CRLF
-	_cQry += " AND RTRIM(CODCOLIGADA) IN  ('0','9','10','11') " + CRLF
+	// _cQry += " WHERE PAGREC <> 2 " + CRLF
+	_cQry += " WHERE RTRIM(CODCOLIGADA) IN  ('0','9','10','11') " + CRLF
 	_cQry += " AND CGCCFO IS NOT NULL " + CRLF
 	// _cQry += " AND (CGCCFO <> '' OR CODCFO = 'F00226') " + CRLF
 	_cQry += " AND CGCCFO <> '' " + CRLF
@@ -82,14 +82,14 @@ USER FUNCTION RM_SA1E(_oProcess,_cTab,_cPasta,_cBDados)
 
 					_cAliZF6 := 'ZF6'+_cCodEmp
 
-					(_cAliZF6)->(RecLock(_cAliZF6,.T.))
-					(_cAliZF6)->ZF6_FILIAL := _cFil
-					(_cAliZF6)->ZF6_TABELA := "SA1"
-					(_cAliZF6)->ZF6_CAMPO  := "A1_COD"
-					(_cAliZF6)->ZF6_CODRM  := TCLI->CODCFO
-					(_cAliZF6)->ZF6_IDRM   := TCLI->IDCFO
-					(_cAliZF6)->ZF6_TOTVS  := _cCod+_cLoja
-					(_cAliZF6)->(MsUnLock())
+					// (_cAliZF6)->(RecLock(_cAliZF6,.T.))
+					// (_cAliZF6)->ZF6_FILIAL := _cFil
+					// (_cAliZF6)->ZF6_TABELA := "SA1"
+					// (_cAliZF6)->ZF6_CAMPO  := "A1_COD"
+					// (_cAliZF6)->ZF6_CODRM  := TCLI->CODCFO
+					// (_cAliZF6)->ZF6_IDRM   := TCLI->IDCFO
+					// (_cAliZF6)->ZF6_TOTVS  := _cCod+_cLoja
+					// (_cAliZF6)->(MsUnLock())
 
 					TCLI->(dbSkip())
 				EndDo
@@ -109,43 +109,52 @@ Return(Nil)
 User Function RM_GeraCli(_cAlias,_cFil,_cCod,_cLoja,_cCNPJ)
 
 	(_cAlias)->(RecLock(_cAlias,.T.))
-	(_cAlias)->A1_YID     := TCLI->IDCFO
-	(_cAlias)->A1_FILIAL  := _cFil
-	(_cAlias)->A1_YCODRM  := TCLI->CODCFO
-	(_cAlias)->A1_COD     := _cCod
-	(_cAlias)->A1_LOJA    := _cLoja
-	(_cAlias)->A1_PESSOA  := TCLI->PESSOAFISOUJUR
-	(_cAlias)->A1_NOME    := UPPER(U_RM_NoAcento(TCLI->NOME))
-	(_cAlias)->A1_NREDUZ  := UPPER(U_RM_NoAcento(TCLI->NOMEFANTASIA))
-	(_cAlias)->A1_END     := UPPER(U_RM_NoAcento(Alltrim(TCLI->RUA)))+" "+UPPER(U_RM_NoAcento(ALLTRIM(TCLI->NUMERO)))
-	(_cAlias)->A1_COMPLEM := UPPER(U_RM_NoAcento(Alltrim(TCLI->COMPLEMENTO)))
-	// (_cAlias)->A1_TIPO    := TCLI-> ????
-	(_cAlias)->A1_EST     := TCLI->CODETD
-	(_cAlias)->A1_COD_MUN := TCLI->CODMUNICIPIO
-	(_cAlias)->A1_MUN     := UPPER(U_RM_NoAcento(Alltrim(TCLI->CIDADE)))
-	(_cAlias)->A1_BAIRRO  := UPPER(U_RM_NoAcento(Alltrim(TCLI->BAIRRO)))
-	// (_cAlias)->A1_NATUREZ := TCLI->
-	(_cAlias)->A1_CEP     := TCLI->CEP
-	// (_cAlias)->A1_DDD     := TCLI->
-	(_cAlias)->A1_TEL     := TCLI->TELEFONE
-	(_cAlias)->A1_PAIS    := "105"
-	(_cAlias)->A1_CGC     := _cCNPJ
-	(_cAlias)->A1_CONTATO := TCLI->CONTATO
-	(_cAlias)->A1_INSCR   := TCLI->INSCRESTADUAL
-	(_cAlias)->A1_CODPAIS := "01058"
-	(_cAlias)->A1_SATIV1  := "1"
-	(_cAlias)->A1_SATIV2  := "1"
-	(_cAlias)->A1_SATIV3  := "1"
-	(_cAlias)->A1_SATIV4  := "1"
-	(_cAlias)->A1_SATIV5  := "1"
-	(_cAlias)->A1_SATIV6  := "1"
-	(_cAlias)->A1_SATIV7  := "1"
-	(_cAlias)->A1_SATIV8  := "1"
-	(_cAlias)->A1_EMAIL   := TCLI->EMAIL
-	(_cAlias)->A1_MSBLQL  := If(TCLI->ATIVO=1,"2","1")
-	(_cAlias)->A1_LC      := TCLI->LIMITECREDITO
-	(_cAlias)->A1_INSCRM  := TCLI->INSCRMUNICIPAL
-	(_cAlias)->A1_CONTRIB  := If(TCLI->CONTRIBUINTE=1,"2","1")
+	(_cAlias)->A1_YID        := TCLI->IDCFO
+	(_cAlias)->A1_FILIAL     := _cFil
+	(_cAlias)->A1_YCODRM     := TCLI->CODCFO
+	(_cAlias)->A1_COD        := _cCod
+	(_cAlias)->A1_LOJA       := _cLoja
+	(_cAlias)->A1_PESSOA     := TCLI->PESSOAFISOUJUR
+	(_cAlias)->A1_NOME       := UPPER(U_RM_NoAcento(TCLI->NOME))
+	(_cAlias)->A1_NREDUZ     := UPPER(U_RM_NoAcento(TCLI->NOMEFANTASIA))
+	(_cAlias)->A1_END        := UPPER(U_RM_NoAcento(Alltrim(TCLI->RUA)))+" "+UPPER(U_RM_NoAcento(ALLTRIM(TCLI->NUMERO)))
+	(_cAlias)->A1_COMPLEM    := UPPER(U_RM_NoAcento(Alltrim(TCLI->COMPLEMENTO)))
+	// If Alltrim(_cCFOP ) $ "5401/5403"
+	// 	(_cAlias)->A1_TIPO       := "S"
+	// Else
+	// 	(_cAlias)->A1_TIPO       := "R"
+	// Endif
+	(_cAlias)->A1_EST        := TCLI->CODETD
+	(_cAlias)->A1_COD_MUN    := TCLI->CODMUNICIPIO
+	(_cAlias)->A1_MUN        := UPPER(U_RM_NoAcento(Alltrim(TCLI->CIDADE)))
+	(_cAlias)->A1_BAIRRO     := UPPER(U_RM_NoAcento(Alltrim(TCLI->BAIRRO)))
+	(_cAlias)->A1_NATUREZ    := "N1001"
+	(_cAlias)->A1_CEP        := StrTran(TCLI->CEP,".","")
+	(_cAlias)->A1_TEL        := TCLI->TELEFONE
+	(_cAlias)->A1_PAIS       := "105"
+	(_cAlias)->A1_CGC        := _cCNPJ
+	(_cAlias)->A1_CONTATO    := TCLI->CONTATO
+	(_cAlias)->A1_INSCR      := IIF (Empty(TCLI->INSCRESTADUAL),"ISENTO",TCLI->INSCRESTADUAL)
+	(_cAlias)->A1_CODPAIS    := "01058"
+	(_cAlias)->A1_SATIV1     := "1"
+	(_cAlias)->A1_SATIV2     := "1"
+	(_cAlias)->A1_SATIV3     := "1"
+	(_cAlias)->A1_SATIV4     := "1"
+	(_cAlias)->A1_SATIV5     := "1"
+	(_cAlias)->A1_SATIV6     := "1"
+	(_cAlias)->A1_SATIV7     := "1"
+	(_cAlias)->A1_SATIV8     := "1"
+	(_cAlias)->A1_EMAIL      := TCLI->EMAIL
+	(_cAlias)->A1_EMAILNF    := TCLI->EMAIL
+	(_cAlias)->A1_MSBLQL     := If(TCLI->ATIVO=1,"2","1")
+	(_cAlias)->A1_LC         := TCLI->LIMITECREDITO
+	(_cAlias)->A1_INSCRM     := TCLI->INSCRMUNICIPAL
+	(_cAlias)->A1_CONTRIB    := If(TCLI->CONTRIBUINTE=1,"2","1")
+	(_cAlias)->A1_XNOMV      := "."
+	(_cAlias)->A1_CONTA      := "10102020000001"
+	(_cAlias)->A1_YTPCLI     := "1"
+	(_cAlias)->A1_YCTARA     := "20101150000002"
+	(_cAlias)->A1_COND       := "001"
 	(_cAlias)->(MsUnLock())
 
 RETURN(nIL)

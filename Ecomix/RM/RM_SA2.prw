@@ -17,8 +17,8 @@ USER FUNCTION RM_SA2E(_oProcess,_cTab,_cPasta,_cBDados)
 
 	_cQry := " SELECT CODCOLIGADA AS 'EMP',* FROM "+_cBDados+".FCFO " + CRLF
 	// _cQry += " WHERE PAGREC = 3 " + CRLF
-	_cQry += " WHERE PAGREC <> 1 " + CRLF
-	_cQry += " AND RTRIM(CODCOLIGADA) IN  ('0','9','10','11') " + CRLF
+	// _cQry += " WHERE PAGREC <> 1 " + CRLF
+	_cQry += " WHERE RTRIM(CODCOLIGADA) IN  ('0','9','10','11') " + CRLF
 	_cQry += " AND CGCCFO IS NOT NULL " + CRLF
 	_cQry += " AND CGCCFO <> '' " + CRLF
 	// _cQry += " AND (CGCCFO <> '' OR CO1DCFO = 'F00226') " + CRLF
@@ -73,14 +73,14 @@ USER FUNCTION RM_SA2E(_oProcess,_cTab,_cPasta,_cBDados)
 
 					_cAliZF6 := 'ZF6'+_cCodEmp
 
-					(_cAliZF6)->(RecLock(_cAliZF6,.T.))
-					(_cAliZF6)->ZF6_FILIAL := _cFil
-					(_cAliZF6)->ZF6_TABELA := "SA2"
-					(_cAliZF6)->ZF6_CAMPO  := "A2_COD"
-					(_cAliZF6)->ZF6_CODRM  := TFOR->CODCFO
-					(_cAliZF6)->ZF6_IDRM   := TFOR->IDCFO
-					(_cAliZF6)->ZF6_TOTVS  := _cCod+_cLoja
-					(_cAliZF6)->(MsUnLock())
+					// (_cAliZF6)->(RecLock(_cAliZF6,.T.))
+					// (_cAliZF6)->ZF6_FILIAL := _cFil
+					// (_cAliZF6)->ZF6_TABELA := "SA2"
+					// (_cAliZF6)->ZF6_CAMPO  := "A2_COD"
+					// (_cAliZF6)->ZF6_CODRM  := TFOR->CODCFO
+					// (_cAliZF6)->ZF6_IDRM   := TFOR->IDCFO
+					// (_cAliZF6)->ZF6_TOTVS  := _cCod+_cLoja
+					// (_cAliZF6)->(MsUnLock())
 
 					TFOR->(dbSkip())
 				EndDo
@@ -114,20 +114,24 @@ User Function RM_GeraFor(_cAlias,_cFil,_cCod,_cLoja,_cCNPJ)
 	(_cAlias)->A2_COD_MUN := TFOR->CODMUNICIPIO
 	(_cAlias)->A2_MUN     := UPPER(U_RM_NoAcento(Alltrim(TFOR->CIDADE)))
 	(_cAlias)->A2_BAIRRO  := UPPER(U_RM_NoAcento(Alltrim(TFOR->BAIRRO)))
-	// (_cAlias)->A2_NATUREZ := TFOR->
-	(_cAlias)->A2_CEP     := TFOR->CEP
-	// (_cAlias)->A2_DDD     := TFOR->
+	(_cAlias)->A2_NATUREZ := "N3002"
+	(_cAlias)->A2_CEP     := StrTran(TFOR->CEP,".","")
 	(_cAlias)->A2_TEL     := TFOR->TELEFONE
 	(_cAlias)->A2_PAIS    := "105"
 	(_cAlias)->A2_CGC     := _cCNPJ
 	(_cAlias)->A2_CONTATO := TFOR->CONTATO
-	(_cAlias)->A2_INSCR   := TFOR->INSCRESTADUAL
+	(_cAlias)->A2_INSCR   := IIF (EMPTY(TFOR->INSCRESTADUAL),"ISENTO","")
 	(_cAlias)->A2_CODPAIS := "01058"
 	(_cAlias)->A2_EMAIL   := TFOR->EMAIL
 	(_cAlias)->A2_MSBLQL  := If(TFOR->ATIVO=1,"2","1")
-	// (_cAlias)->A2_LC      := TFOR->LIMITECREDITO
 	(_cAlias)->A2_INSCRM  := TFOR->INSCRMUNICIPAL
-	(_cAlias)->A2_CONTRIB  := If(TFOR->CONTRIBUINTE=1,"2","1")
+	(_cAlias)->A2_CONTRIB := If(TFOR->CONTRIBUINTE= 1,"2","1")
+	(_cAlias)->A2_CONTA   := If(TFOR->CONTRIBUINTE= 1,"2","1")
+	// (_cAlias)->A2_BANCO   := TFOR->FORBCO
+	// (_cAlias)->A2_AGENCIA := TFOR->FORAGE
+	// (_cAlias)->A2_XDVAGEN := TFOR->FORDAG
+	// (_cAlias)->A2_NUMCON  := TFOR->FORCTA
+	// (_cAlias)->A2_XDVCON  := TFOR->FORDCT
 	(_cAlias)->(MsUnLock())
 
 Return(Nil)
@@ -222,3 +226,8 @@ USER FUNCTION RM_SA2I(_oProcess,_cTab,_cPasta)
 	RestArea( _aArea )
 
 Return(Nil)
+
+
+
+Alltrim(A2_CGC) $ '|29603580821|30369540824|43052497000102|43919968001877|44000941000109|46392155000111|47960950000121|50921345000156|61132718000126|61471207000139|66970229002704|74523952000126|85232578000126|93057229891|96353750000116'
+
