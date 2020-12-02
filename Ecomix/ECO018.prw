@@ -136,6 +136,7 @@ Static Function ECO18_02(_cEmp,_cFil,_cFilRM)
 	Local _aArea     := GetArea()
 	Local _aAreaSRA  := SRA->( GetArea() )
 	Local _aAreaSRB  := SRB->( GetArea() )
+	Local _aAreaSRF  := SRF->( GetArea() )
 	Local _aAreaRCE  := RCE->( GetArea() )
 	Local _aAreaCTT  := CTT->( GetArea() )
 
@@ -151,6 +152,7 @@ Static Function ECO18_02(_cEmp,_cFil,_cFilRM)
 	Local _aAreaSRD  := SRD->( GetArea() )
 	Local _cAliasSRA := ''
 	Local _cAliasSRB := ''
+	Local _cAliasSRF := ''
 	Local _cAliasRCE := ''
 	Local _cAliasRFQ := ''
 	Local _cAliasRCH := ''
@@ -167,6 +169,7 @@ Static Function ECO18_02(_cEmp,_cFil,_cFilRM)
 	Local _cSvFilAnt := cFilAnt //Salva a Filial Anterior
 	Local _lOutSRA   := .F.
 	Local _lOutSRB   := .F.
+	Local _lOutSRF   := .F.
 	Local _lOutRCE   := .F.
 	Local _lOutRFQ   := .F.
 	Local _lOutRCH   := .F.
@@ -215,6 +218,7 @@ Static Function ECO18_02(_cEmp,_cFil,_cFilRM)
 	If Alltrim(cEmpAnt) = _cEmp
 		_cAliasSRA := "SRA"
 		_cAliasSRB := "SRB"
+		_cAliasSRF := "SRF"
 		_cAliasRCE := "RCE"
 		_cAliasRFQ := "RFQ"
 		_cAliasRCH := "RCH"
@@ -234,6 +238,10 @@ Static Function ECO18_02(_cEmp,_cFil,_cFilRM)
 		If EmpOpenFile("TSRB","SRB",1,.T., _cEmp,@_cModo)
 			_cAliasSRB  := "TSRB"
 			_lOutSRB := .T.
+		Endif
+		If EmpOpenFile("TSRF","SRF",1,.T., _cEmp,@_cModo)
+			_cAliasSRF  := "TSRF"
+			_lOutSRF := .T.
 		Endif
 		If EmpOpenFile("TRCE","RCE",1,.T., _cEmp,@_cModo)
 			_cAliasRCE  := "TRCE"
@@ -281,7 +289,7 @@ Static Function ECO18_02(_cEmp,_cFil,_cFilRM)
 		Endif
 	Endif
 
-	If !Empty(_cAliasSRA) .And. !Empty(_cAliasSRB) .And. !Empty(_cAliasRCE)  .And. !Empty(_cAliasRFQ) .And. !Empty(_cAliasRCH) .And. !Empty(_cAliasRCF) .And. !Empty(_cAliasRCG) .And.;
+	If !Empty(_cAliasSRA) .And. !Empty(_cAliasSRB) .And. !Empty(_cAliasSRF) .And. !Empty(_cAliasRCE)  .And. !Empty(_cAliasRFQ) .And. !Empty(_cAliasRCH) .And. !Empty(_cAliasRCF) .And. !Empty(_cAliasRCG) .And.;
 			!Empty(_cAliasCTT) .And. !Empty(_cAliasSRJ) .And. !Empty(_cAliasSR6) .And. !Empty(_cAliasSRV) .And. !Empty(_cAliasZF6) .And. !Empty(_cAliasSRD)
 
 		//Exclui daddos da tabela SRD
@@ -307,7 +315,7 @@ Static Function ECO18_02(_cEmp,_cFil,_cFilRM)
 
 				(_cAliasSRA)->(dbSetOrder(1))
 				If !(_cAliasSRA)->(MsSeek(xFilial("SRA")+Alltrim(TRB->CHAPA)))
-					If !GeraFun(_CALIASSRA,_cAliasSRJ,_cAliasRCE,_cAliasSR6,_cAliasZF6,_cAliasCTT,_cAliasSRB)
+					If !GeraFun(_CALIASSRA,_cAliasSRJ,_cAliasRCE,_cAliasSR6,_cAliasZF6,_cAliasCTT,_cAliasSRB,_cAliasSRF)
 						Return(Nil)
 					Endif
 				Endif
@@ -359,6 +367,7 @@ Static Function ECO18_02(_cEmp,_cFil,_cFilRM)
 
 		RestArea( _aAreaSRA )
 		RestArea( _aAreaSRB )
+		RestArea( _aAreaSRF )
 		RestArea( _aAreaRCE )
 		RestArea( _aAreaRFQ )
 		RestArea( _aAreaRCH )
@@ -380,6 +389,9 @@ Static Function ECO18_02(_cEmp,_cFil,_cFilRM)
 	ENDIF
 	If _lOutSRB
 		TSRB->(dbCloseArea())
+	ENDIF
+	If _lOutSRF
+		TSRF->(dbCloseArea())
 	ENDIF
 	If _lOutRCE
 		TRCE->(dbCloseArea())
@@ -490,7 +502,7 @@ Return(NIL)
 
 
 
-Static Function GeraFun(_CALIASSRA,_cAliasSRJ,_cAliasRCE,_cAliasSR6,_cAliasZF6,_cAliasCTT,_cAliasSRB)
+Static Function GeraFun(_CALIASSRA,_cAliasSRJ,_cAliasRCE,_cAliasSR6,_cAliasZF6,_cAliasCTT,_cAliasSRB,_cAliasSRF)
 
 	Local _lRet      := .T.
 	Local a
@@ -1360,6 +1372,7 @@ Return(_aRet)
 
 Static Function LoadFerias(_cAliasSRF,_cColigada,_cChapa)
 
+	Local a
 	Local _cQryFer := ''
 	Local _aStrSRF := {}
 
@@ -1397,8 +1410,7 @@ Static Function LoadFerias(_cAliasSRF,_cColigada,_cChapa)
 
 			For a := 1 to Len(_aStrSRF)
 				If !Alltrim(_aStrSRF[a][1]) $ 'RF_FILIAL|RF_MAT|RF_DATABAS|RF_DFERANT|RF_DFERVAT|RF_PD|RF_DATAATU|RF_DATAFIM|RF_DIASDIR|RF_STATUS'
-					_nPosInfo := aScan(_aInfo,{|x|x[1] = Alltrim(_aStrSRF[a][1]) })
-					&((_cAliasSRF)+"->"+_aStrSRF[a][1]) := _aInfo[_nPosInfo][2]
+					&((_cAliasSRF)+"->"+_aStrSRF[a][1]) := CriaVar(_aStrSRF[a][1])
 				Endif
 			Next a
 			(_cAliasSRF)->(MsUnLock())

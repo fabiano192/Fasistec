@@ -774,7 +774,7 @@ Static Function CheckZF6(_nOpc,_cFil,_cAliasZF6,_cAliasSA1,_cAliasSB1,_cAliasSA2
 
 				(_cAliasSA2)->(dbSetOrder(3))
 				If !(_cAliasSA2)->(MsSeek(xFilial("SA2")+_cCNPJ))
-					GeraFOR(_cFil,_cCNPJ,@_cCod,@_cLoja,_cAliasSA2)
+					GeraFOR(_cFil,_cCNPJ,@_cCod,@_cLoja)
 				Else
 					_cCod  := (_cAliasSA2)->A2_COD
 					_cLoja := (_cAliasSA2)->A2_LOJA
