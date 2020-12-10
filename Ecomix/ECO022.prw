@@ -155,24 +155,29 @@ Static Function ECO22A(_lSched,_cTipo)
 
 
 		ElseIf _cTipo = 'Fornecedor'
+			_lAchou := .F.
 			SA2->(dbSetOrder(3))
 			If !SA2->(MsSeek(xFilial("SA2")+_cCNPJ))
-				GeraFor(_cCNPJ,@_cCod,@_cLoja)
-				If !_lSched
-					MsgInfo('Código Protheus '+_cCod+'/'+_cLoja+' para o registro '+Alltrim(TCAD->CODCFO)+'.')
+				SA2->(dbOrderNickName("INDSA21"))
+				If !SA2->(MsSeek(xFilial("SA2")+cValToChar(TCAD->IDCFO)))
+					GeraFor(_cCNPJ,@_cCod,@_cLoja)
+					If !_lSched
+						MsgInfo('Código Protheus '+_cCod+'/'+_cLoja+' para o registro '+Alltrim(TCAD->CODCFO)+'.')
+					Endif
+				Else
+					_lAchou := .T.
 				Endif
 			Else
+				_lAchou := .T.
+			Endif
+
+			If _lAchou
 
 				_cCod  := SA2->A2_COD
 				_cLoja := SA2->A2_LOJA
 
 				If !_lSched
 					MsgAlert('Cadastro para o CNPJ '+_cCNPJ+' já existente com o código Protheus '+_cCod+'/'+_cLoja+'!')
-					// If MsgYesNo('Cadastro para o CNPJ '+_cCNPJ+' já existente com o código Protheus '+_cCod+'/'+_cLoja+'! Deseja efetuar um novo cadastro para o mesmo CNPJ?')
-					// 	_cCod  := ''
-					// 	_cLoja := ''
-					// 	GeraFor(_cCNPJ,@_cCod,@_cLoja)
-					// Endif
 				Endif
 
 			Endif
@@ -258,7 +263,7 @@ Static Function GetNxtA1(_cCod,_cLoja)
 	If Empty(_cCod)
 
 		_cQrySA1 := " SELECT MAX(A1_COD) AS COD FROM "+RetSqlName("SA1")+" A1 " +CRLF
-		_cQrySA1 += " WHERE A1.D_E_L_E_T_ = '' AND A1_FILIAL = '"+xFilial("SA1")+"' " +CRLF
+		_cQrySA1 += " WHERE A1.D_E_L_E_T_ = '' AND A1_FILIAL = '"+xFilial("SA1")+"' AND LEFT(A1_COD,1) = 'C' " +CRLF
 
 		TcQuery _cQrySA1 New Alias "TNEXT"
 
@@ -302,6 +307,7 @@ Static Function GeraFOR(_cCNPJ,_cCod,_cLoja)
 	GetNxtA2(@_cCod,@_cLoja)
 
 	SA2->(RecLock("SA2",.T.))
+	SA2->A2_YIDRM   := cValToChar(TCAD->IDCFO)
 	SA2->A2_COD     := _cCod
 	SA2->A2_LOJA    := _cLoja
 	SA2->A2_NOME    := UPPER(U_RM_NoAcento(TCAD->NOME))
@@ -344,7 +350,8 @@ Static Function GetNxtA2(_cCod,_cLoja)
 	If Empty(_cCod)
 
 		_cQrySA2 := " SELECT MAX(A2_COD) AS COD FROM "+RetSqlName("SA2")+" A2 " +CRLF
-		_cQrySA2 += " WHERE A2.D_E_L_E_T_ = '' AND A2_FILIAL = '"+xFilial("SA2")+"' " +CRLF
+		_cQrySA2 += " WHERE A2.D_E_L_E_T_ = '' AND A2_FILIAL = '"+xFilial("SA2")+"' AND LEFT(A2_COD,1) = 'F' " +CRLF
+		_cQrySA2 += " AND LEFT(A2_COD,4) NOT IN ('FGTS','FNIA','FSS0','FERI') " +CRLF
 
 		TcQuery _cQrySA2 New Alias "TNEXT"
 
